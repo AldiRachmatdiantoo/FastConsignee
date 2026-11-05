@@ -1,0 +1,14 @@
+{
+  "name": "fastconsignee-api-contract",
+  "private": true,
+  "scripts": {
+    "lint": "npm run lint:redocly && npm run lint:owasp",
+    "lint:redocly": "redocly lint openapi.yaml --config redocly.yaml",
+    "lint:owasp": "spectral lint openapi.yaml --ruleset .spectral.yaml --fail-severity warn"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.76.0",
+    "@stoplight/spectral-cli": "6.17.0",
+    "@stoplight/spectral-owasp-ruleset": "2.0.1"
+  }
+}

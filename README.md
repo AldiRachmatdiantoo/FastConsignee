@@ -1,7 +1,6 @@
 # PRD FastConsignee
 
 Nov 6, 2026
-
 FastConsignee adalah kasir untuk toko konsinyasi: pembeli membayar sekali, lalu bagian tiap penitip dan komisi toko terkirim dalam satu transaksi Solana. Versi hackathon berjalan di Devnet dan harus terkumpul di Devpost sebelum Nov 8, 2026, pukul 21:00 WIB.
 
 ## Latar belakang
@@ -110,8 +109,8 @@ Pemilik toko mendapat komisi otomatis dan menangani refund. Data penitip dan bar
 | T-3 | Sebagai pemilik toko, saya ingin potongan refund diambil dari penjualan penitip berikutnya agar dana talangan toko kembali. | Penjualan berikutnya mengurangi bagian penitip sampai potongan lunas. Rincian pembagian menampilkan potongan itu. | Sebaiknya |
 | T-4 | Sebagai pemilik toko, saya ingin melihat ringkasan penjualan dan komisi agar tahu kinerja toko. | Dasbor menampilkan total penjualan, total komisi, dan jumlah transaksi. Tiap transaksi tertaut ke Solana Explorer. | Sebaiknya |
 | T-5 | Sebagai pemilik toko, saya ingin mengatur barang, harga, dan komisi agar tiap penjualan terbagi sesuai kesepakatan. | Komisi bisa berbeda per barang. Harga dan komisi tersimpan untuk penjualan berikutnya. | Kalau sempat |
-| T-6 | Sebagai pemilik toko, saya ingin mendaftarkan penitip dan wallet-nya agar pembayaran sampai ke penerima yang benar. | Alamat wallet divalidasi. Kalau memakai USDC, token account dibuat saat pendaftaran. | Kalau sempat |
-| T-7 | Sebagai pemilik toko, saya ingin akses dibatasi per peran agar kasir dan penitip hanya melihat data yang menjadi haknya. | JWT memuat peran pengguna. API menolak akses antarperan dengan status 403. | Wajib |
+| T-6 | Sebagai pemilik toko, saya ingin mendaftarkan penitip dan wallet-nya agar pembayaran sampai ke penerima yang benar. | Alamat wallet divalidasi. Pembayaran memakai SOL, jadi tidak ada token account yang dibuat. | Kalau sempat |
+| T-7 | Sebagai pemilik toko, saya ingin akses dibatasi per peran agar kasir dan penitip hanya melihat data yang menjadi haknya. | JWT membuktikan identitas, dan peran dibaca dari akun. API menolak akses antarperan dengan status 403. | Wajib |
 | T-8 | Sebagai pemilik toko, saya ingin menautkan wallet toko dengan tanda tangan agar komisi masuk ke wallet yang terbukti milik toko dan refund keluar dari wallet itu. | Wallet tertaut setelah tanda tangan nonce terverifikasi. Dasbor terbuka setelah wallet tertaut. | Wajib |
 
 ## User flow
@@ -120,19 +119,19 @@ Tiga alur ini menunjukkan urutan layar dan cabang kegagalan utama. Alur lain cuk
 
 ### Alur pembayaran
 
-![Pembeli membayar sekali, dan dana langsung terbagi](docs/img/alur-pembayaran.png)
+![Alur pembayaran](docs/img/alur-pembayaran.png)
 
 Kedua cabang gagal melepas reservasi stok, lalu kasir membuat QR baru.
 
 ### Alur login dan wallet
 
-![Pemilik toko dan penitip masuk dasbor setelah wallet terbukti miliknya](docs/img/alur-login.png)
+![Alur login dan wallet](docs/img/alur-login.png)
 
 Pemilik toko dan penitip yang belum menautkan wallet baru bisa masuk dasbor setelah tanda tangannya valid. Wallet toko dipakai untuk menerima komisi dan membayar refund.
 
 ### Alur refund
 
-![Toko menalangi refund, lalu memotong bagian penitip berikutnya](docs/img/alur-refund.png)
+![Alur refund](docs/img/alur-refund.png)
 
 Kalau refund gagal, saldo dan catatan tidak berubah, lalu pemilik toko bisa mencoba lagi.
 
@@ -222,10 +221,16 @@ Stack sudah ditetapkan dengan biaya nol.
 | Autentikasi | OAuth Google lewat Supabase Auth, JWT diverifikasi API Go |
 | Biaya | Nol, hanya memakai paket gratis |
 | Hosting API | Satu instance gratis dengan ping cron eksternal setiap 10 menit |
+| Kontrak API | OpenAPI 3.1, error RFC 9457, dan lint Redocly serta OWASP |
+| Peran | JWT membuktikan identitas, dan peran dibaca dari database supaya pencabutannya langsung berlaku |
+| Masa berlaku QR | 5 menit, ditambah masa tenggang 2 menit sebelum order kedaluwarsa dan stok dilepas |
+| Batalkan order | Tidak ada endpoint batal, karena QR hanya berlaku sebentar dan stoknya lepas sendiri |
+| Stok saat refund | Tidak bertambah otomatis, karena barang yang kembali bisa rusak. Pemilik toko mengubah stok sendiri |
+| Nilai refund per unit | Total baris dibagi jumlah barang secara kumulatif, jadi seluruh refund satu baris sama persis dengan yang dibayar |
 
 ## Arsitektur sistem
 
-![Request aplikasi masuk lewat load balancer ke API Go](docs/img/arsitektur.png)
+![Arsitektur sistem FastConsignee](docs/img/arsitektur.png)
 
 Phantom menerima transaksi dari API Go, lalu mengirimnya langsung ke Solana setelah pembeli menyetujuinya.
 
@@ -253,19 +258,284 @@ backend/
 - **Service:** memegang aturan bisnis dan batas transaksi database.
 - **Repository:** hanya berisi query, tanpa aturan bisnis.
 
+## Kontrak API
+
+Kontrak API ditulis dalam OpenAPI 3.1 di [api/openapi.yaml](https://github.com/AldiRachmatdiantoo/FastConsignee/blob/main/api/openapi.yaml), dan mengikat frontend serta backend. Kontrak memuat 28 operasi yang mencakup 28 dari 29 FR. FR-21 tidak punya endpoint karena seed data dimuat lewat skrip.
+
+| Fitur | Endpoint | Peran |
+| --- | --- | --- |
+| Health | `GET /healthz` | Publik |
+| Akun dan wallet | `GET /api/v1/me`, `POST /api/v1/wallet/nonce`, `POST /api/v1/wallet/link` | Semua peran login |
+| Barang | `GET` dan `POST /api/v1/items`, `GET` dan `PATCH /api/v1/items/{id}` | Kasir membaca, pemilik toko mengubah |
+| Penitip | `GET` dan `POST /api/v1/consignors`, `GET` dan `PATCH /api/v1/consignors/{id}` | Pemilik toko |
+| Order | `POST /api/v1/orders/preview`, `GET` dan `POST /api/v1/orders`, `GET /api/v1/orders/{id}`, `GET /api/v1/orders/{id}/status` | Kasir dan pemilik toko |
+| Pembayaran | `GET /api/v1/public/orders/{id}`, `GET` dan `POST /api/v1/solana-pay/orders/{id}` | Publik |
+| Refund | `POST /api/v1/orders/{id}/refunds`, `GET /api/v1/refunds`, `GET /api/v1/refunds/{id}`, `POST /api/v1/refunds/{id}/signature` | Pemilik toko |
+| Dasbor | `GET /api/v1/dashboard/consignor/sales`, `/deductions`, `/stock`, dan `GET /api/v1/dashboard/store/summary` | Penitip dan pemilik toko |
+
+Kontrak mengikuti aturan berikut:
+
+- **Error:** format RFC 9457 dengan `application/problem+json`, ditambah `code` untuk klien dan `request_id` untuk log. Endpoint Solana Pay memakai bentuk sederhana karena dibaca wallet.
+- **Idempotency:** buat order dan buat refund wajib memakai header `Idempotency-Key`.
+- **Pagination:** daftar memakai cursor, jadi hasilnya stabil walaupun data bertambah.
+- **Rate limit:** 120 permintaan per menit per akun, 60 per IP, dan 30 per order. Tiap jawaban memuat header `RateLimit-*`.
+- **Uang:** Rupiah dan basis point memakai bilangan bulat, sedangkan lamport dikirim sebagai string supaya presisinya tidak hilang di JavaScript.
+- **Batas input:** semua teks, angka, dan daftar punya batas, dan kolom yang tidak dikenal ditolak.
+- **Keabsahan:** kontrak lolos lint Redocly dan OWASP API Security dari Spectral tanpa temuan. Pengecualiannya tercatat dengan alasan di `api/.spectral.yaml`.
+
 ## Database
 
 Semua query utama wajib punya indeks, dan query berurutan dalam satu alur wajib memakai transaksi.
 
+### Diagram relasi
+
+Database punya 12 tabel dalam bentuk normal ketiga (3NF).
+
+```mermaid
+erDiagram
+    stores ||--o{ users : "memiliki"
+    stores ||--o{ consignors : "menaungi"
+    users ||--o| consignors : "menjadi akun"
+    consignors ||--o{ items : "menitipkan"
+    users ||--o{ orders : "membuat"
+    orders ||--|{ order_lines : "memuat"
+    items ||--o{ order_lines : "terjual di"
+    orders ||--|{ order_splits : "dibagi ke"
+    consignors |o--o{ order_splits : "menerima"
+    order_lines ||--o{ refunds : "dikembalikan lewat"
+    users ||--o{ refunds : "menyetujui"
+    refunds ||--o| deductions : "menghasilkan"
+    deductions ||--o{ deduction_settlements : "dilunasi lewat"
+    order_splits ||--o{ deduction_settlements : "melunasi"
+    order_lines ||--o| certificates : "menerbitkan"
+    users ||--o{ wallet_nonces : "meminta"
+
+    stores {
+        uuid id PK
+        text name
+        text icon_url "nullable"
+        text wallet_address UK "nullable"
+        timestamptz wallet_linked_at "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    users {
+        uuid id PK
+        uuid store_id FK
+        text role "cashier, store_owner, consignor"
+        text email UK
+        text name
+        text auth_subject UK "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    consignors {
+        uuid id PK
+        uuid store_id FK
+        uuid user_id FK,UK
+        text name
+        text wallet_address UK "nullable"
+        timestamptz wallet_verified_at "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    items {
+        uuid id PK
+        uuid consignor_id FK
+        text name
+        bigint price_idr
+        int commission_bps
+        int stock_on_hand
+        boolean active
+        boolean certificate_enabled
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders {
+        uuid id PK
+        uuid created_by FK
+        text status "pending, confirmed, expired, failed"
+        text reference UK
+        bigint idr_per_sol
+        timestamptz rate_quoted_at
+        text payer_wallet "nullable"
+        text signature UK "nullable"
+        text failure_code "nullable"
+        text idempotency_key
+        text request_hash
+        timestamptz expires_at
+        timestamptz confirmed_at "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    order_lines {
+        uuid id PK
+        uuid order_id FK
+        uuid item_id FK
+        int quantity
+        bigint unit_price_idr "salinan saat dijual"
+        int commission_bps "salinan saat dijual"
+        bigint discount_idr
+        text discount_borne_by "nullable"
+    }
+    order_splits {
+        uuid id PK
+        uuid order_id FK
+        uuid consignor_id FK "null berarti toko"
+        text wallet_address "salinan saat order dibuat"
+        bigint amount_lamports
+        timestamptz created_at
+    }
+    refunds {
+        uuid id PK
+        uuid order_line_id FK
+        uuid created_by FK
+        text status
+        bigint amount_idr
+        bigint amount_lamports
+        bigint consignor_deduction_idr
+        text source_wallet
+        text reference UK
+        text signature UK "nullable"
+        text reason "nullable"
+        text idempotency_key
+        text request_hash
+        timestamptz expires_at
+        timestamptz completed_at "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    deductions {
+        uuid id PK
+        uuid refund_id FK,UK
+        timestamptz created_at
+    }
+    deduction_settlements {
+        uuid id PK
+        uuid deduction_id FK
+        uuid order_split_id FK
+        bigint amount_idr
+        timestamptz created_at
+    }
+    certificates {
+        uuid id PK
+        uuid order_line_id FK,UK
+        text status
+        text mint_address "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    wallet_nonces {
+        uuid id PK
+        uuid user_id FK
+        text address
+        text nonce UK
+        timestamptz expires_at
+        timestamptz consumed_at "nullable"
+        timestamptz created_at
+    }
+```
+
+### Tabel
+
+| Tabel | Isi | Aturan penting |
+| --- | --- | --- |
+| stores | Data toko dan wallet toko | Wallet unik dan baru terisi setelah tanda tangan terverifikasi |
+| users | Akun kasir, pemilik toko, dan penitip | Email unik, dan akun dicocokkan lewat `auth_subject` lalu email terverifikasi |
+| consignors | Profil penitip dan wallet-nya | Satu akun hanya menjadi satu penitip |
+| items | Katalog barang | Harga di atas 0, komisi 0 sampai 10000 bps, stok tidak negatif |
+| orders | Kepala order, kurs, dan data pembayaran | `reference` dan `signature` unik, dan kunci idempotency unik per pembuat |
+| order\_lines | Barang dalam order | Satu barang hanya sekali per order, dan diskon wajib punya penanggung |
+| order\_splits | Penerima dan lamport yang diminta dari transaksi | Satu baris per penerima per order, dan `consignor_id` kosong berarti toko |
+| refunds | Refund satu unit barang | Hanya satu refund berjalan per baris order |
+| deductions | Potongan yang berlaku setelah refund selesai | Satu potongan per refund |
+| deduction\_settlements | Pelunasan potongan dari order berikutnya | Hanya dihitung kalau ordernya `pending` atau `confirmed` |
+| certificates | NFT sertifikat keaslian | Satu sertifikat per baris order |
+| wallet\_nonces | Nonce penautan wallet | Sekali pakai dan punya batas waktu |
+
+### Relasi
+
+Data keuangan tidak pernah dihapus, jadi semua relasi memakai `RESTRICT`. Hanya nonce yang ikut terhapus, karena tidak punya nilai riwayat.
+
+| Induk | Anak | Kardinalitas | Foreign key | ON DELETE |
+| --- | --- | --- | --- | --- |
+| stores | users | 1 ke banyak | `users.store_id` | RESTRICT |
+| users | consignors | 1 ke 0 atau 1 | `consignors(store_id, user_id)` ke `users(store_id, id)` | RESTRICT |
+| stores | consignors | 1 ke banyak | Ikut foreign key komposit di atas | RESTRICT |
+| consignors | items | 1 ke banyak | `items.consignor_id` | RESTRICT |
+| users | orders | 1 ke banyak | `orders.created_by` | RESTRICT |
+| orders | order\_lines | 1 ke 1 atau lebih | `order_lines.order_id` | RESTRICT |
+| items | order\_lines | 1 ke banyak | `order_lines.item_id` | RESTRICT |
+| orders | order\_splits | 1 ke 1 atau lebih | `order_splits.order_id` | RESTRICT |
+| consignors | order\_splits | 0 atau 1 ke banyak | `order_splits.consignor_id` | RESTRICT |
+| order\_lines | refunds | 1 ke banyak | `refunds.order_line_id` | RESTRICT |
+| users | refunds | 1 ke banyak | `refunds.created_by` | RESTRICT |
+| refunds | deductions | 1 ke 0 atau 1 | `deductions.refund_id` | RESTRICT |
+| deductions | deduction\_settlements | 1 ke banyak | `deduction_settlements.deduction_id` | RESTRICT |
+| order\_splits | deduction\_settlements | 1 ke banyak | `deduction_settlements.order_split_id` | RESTRICT |
+| order\_lines | certificates | 1 ke 0 atau 1 | `certificates.order_line_id` | RESTRICT |
+| users | wallet\_nonces | 1 ke banyak | `wallet_nonces.user_id` | CASCADE |
+
+### Normalisasi 3NF
+
+- **1NF:** tiap kolom berisi satu nilai. Barang dalam order, penerima, dan pelunasan potongan punya tabel sendiri.
+- **2NF:** semua tabel memakai primary key satu kolom, jadi tidak ada kolom yang bergantung pada sebagian key.
+- **3NF:** kolom bukan key hanya bergantung pada key tabelnya. Toko dari barang dibaca lewat penitip, toko dari order dibaca lewat pembuatnya, dan email penitip hanya ada di `users`.
+- **`consignors.store_id`:** tetap 3NF karena `user_id` unik, sehingga `user_id` juga candidate key. Foreign key komposit memastikan toko penitip sama dengan toko akunnya.
+
+Nilai berikut dihitung saat dibaca, bukan disimpan:
+
+| Nilai | Cara menghitung |
+| --- | --- |
+| Stok tertahan | Jumlah `quantity` dari order `pending` |
+| Stok tersedia | `stock_on_hand` dikurangi stok tertahan |
+| Total order, bagian penitip, dan komisi | Fungsi Go dari `order_lines` |
+| Jumlah barang yang sudah di-refund | Jumlah refund `completed` per baris order |
+| Wallet tujuan refund | `orders.payer_wallet` |
+| Nilai potongan | `refunds.consignor_deduction_idr` dari refund yang sudah punya baris `deductions` |
+| Sisa potongan dan status lunas | Nilai potongan dikurangi pelunasan pada order `pending` atau `confirmed` |
+
+Kolom berikut terlihat seperti salinan, tetapi sebenarnya fakta milik transaksi itu:
+
+- **`order_lines.unit_price_idr` dan `commission_bps`:** harga dan komisi saat dijual, karena nilai di `items` bisa berubah.
+- **`order_splits.wallet_address` dan `amount_lamports`:** yang diminta dari transaksi Solana, karena penitip bisa mengganti wallet.
+- **`refunds.source_wallet`, `amount_idr`, `amount_lamports`, dan `consignor_deduction_idr`:** nilai saat refund disusun, karena pemilik toko bisa mengganti wallet.
+
+Stok tertahan sengaja tidak disimpan. Jadi perubahan status order sudah cukup untuk melepas reservasi, dan tidak ada angka reservasi yang bisa berbeda dari order-nya.
+
+### Indeks
+
 | Indeks | Jenis | Fungsi |
 | --- | --- | --- |
-| orders(reference) | Unik | Menemukan order dari transaksi Solana |
-| orders(signature) | Unik | Mencegah order tercatat dua kali |
-| consignors(wallet) | Unik | Satu wallet hanya tertaut ke satu penitip |
-| orders(status, expires\_at) | Parsial, order menunggu | Dipakai worker pembayaran |
-| orders(store\_id, created\_at) | Biasa | Dipakai dasbor pemilik toko |
-| splits(consignor\_id, created\_at) | Biasa | Dipakai dasbor penitip |
-| Semua foreign key | Biasa | Postgres tidak mengindeksnya otomatis |
+| users(email), users(auth\_subject) | Unik | Mencocokkan akun Google |
+| users(store\_id, id) | Unik | Target foreign key komposit, dan mencari akun per toko |
+| stores(wallet\_address), consignors(wallet\_address) | Unik | Satu wallet hanya tertaut ke satu pemilik |
+| consignors(user\_id) | Unik | Satu akun hanya menjadi satu penitip |
+| consignors(store\_id) | Biasa | Daftar penitip dan pembatasan data per toko |
+| items(consignor\_id, active) | Biasa | Katalog dan stok penitip |
+| items(name) | GIN trigram | Pencarian nama barang |
+| orders(reference), orders(signature) | Unik | Menemukan order dari transaksi, dan mencegah order tercatat dua kali |
+| orders(created\_by, idempotency\_key) | Unik | Mencegah order ganda |
+| orders(expires\_at) saat status `pending` | Parsial | Dipakai worker pembayaran |
+| orders(created\_by, created\_at, id) | Biasa | Riwayat order dan pagination |
+| orders(confirmed\_at) saat status `confirmed` | Parsial | Dipakai dasbor |
+| order\_lines(order\_id, item\_id) | Unik | Satu barang hanya sekali per order |
+| order\_lines(item\_id) | Biasa | Menghitung stok tertahan |
+| order\_splits(order\_id, consignor\_id) | Unik, NULLS NOT DISTINCT | Satu baris per penerima, termasuk toko |
+| order\_splits(consignor\_id) | Biasa | Dipakai dasbor penitip |
+| refunds(reference), refunds(signature) | Unik | Menemukan refund dari transaksi |
+| refunds(created\_by, idempotency\_key) | Unik | Mencegah refund ganda |
+| refunds(order\_line\_id) saat status berjalan | Unik parsial | Hanya satu refund berjalan per baris order |
+| refunds(order\_line\_id) | Biasa | Foreign key dan jumlah barang yang di-refund |
+| refunds(expires\_at) saat status berjalan | Parsial | Dipakai worker refund |
+| deductions(refund\_id) | Unik | Satu potongan per refund |
+| deduction\_settlements(deduction\_id, order\_split\_id) | Unik | Satu pelunasan per potongan per penerima |
+| deduction\_settlements(order\_split\_id) | Biasa | Foreign key |
+| certificates(order\_line\_id) | Unik | Satu sertifikat per baris order |
+| wallet\_nonces(nonce) | Unik | Nonce hanya bisa dipakai sekali |
+| wallet\_nonces(user\_id) | Biasa | Foreign key |
+
+### Transaksi database
 
 Transaksi database dipakai di tiga alur:
 
@@ -274,6 +544,8 @@ Transaksi database dipakai di tiga alur:
 - **Refund:** menyimpan refund dan potongan penitip.
 
 Transaksi database tidak bisa membungkus transaksi Solana. Jadi transaksi database tidak boleh tetap terbuka selama menunggu RPC Solana.
+
+Buat order mengunci baris barang dengan urutan ID yang tetap, jadi dua order bersamaan tidak bisa menjual stok terakhir dua kali dan tidak saling deadlock. Worker mengambil order dengan `FOR UPDATE SKIP LOCKED`, supaya tiap order hanya dikerjakan satu proses.
 
 ## Load balancer dan caching
 
@@ -301,7 +573,7 @@ Testing mencakup 13 jenis, dan hanya pembayaran lewat Phantom di HP yang dilakuk
 | --- | --- | --- |
 | Unit | Pembagian, komisi, pembulatan, potongan | Go testing |
 | Property dan fuzz | Jumlah bagian selalu sama dengan total | Go fuzzing |
-| Repository | Query, indeks, dan transaksi di Postgres sungguhan | Testcontainers |
+| Repository | Query, indeks, dan transaksi di Postgres sungguhan | Postgres lokal lewat TEST\_DATABASE\_URL |
 | Service | Aturan bisnis dengan repository tiruan | Mock atau fake |
 | Handler dan API | Status code, validasi, auth | httptest |
 | Solana | Isi transaksi dan pembayaran nyata | Local validator, Devnet |
@@ -364,13 +636,15 @@ Risiko terbesar adalah alur Transaction Request, jadi bagian itu diuji paling aw
 | Scope besar untuk solo dalam sekitar 45 jam. | Selesaikan alur pembayaran lebih dulu, lalu ikuti urutan kerja yang diputuskan. |
 | Batas paket gratis bisa habis atau berubah, termasuk Render, Supabase, dan RPC Devnet publik. | Cek batasnya di dokumentasi resmi sebelum deploy. |
 | Paket gratis Vercel diperkirakan hanya untuk penggunaan non-komersial. | Cek ulang sebelum FastConsignee dipakai secara komersial. |
+| Wallet bisa mengirim transaksi setelah masa tenggang, karena wallet mengganti blockhash sendiri. | Masa tenggang 2 menit menutup kasus umum. Kalau dana tetap masuk setelah order kedaluwarsa, pemilik toko mengembalikannya manual. |
 
 ## Pertanyaan terbuka
 
-Dua pertanyaan pertama perlu dijawab sebelum coding dimulai.
+Pertanyaan pertama perlu diputuskan sebelum kode backend dipakai untuk pengumpulan.
 
-- [ ] Apakah kode yang dibuat sebelum opening boleh dipakai? Cek aturan resmi.
-- [ ] Jam berapa batas resminya? Panduan menulis 21:00 dan 22:45 WIB, tetapi konversi dari EST menghasilkan 22:00 dan 23:45 WIB. Sampai dicek, PRD ini memakai jam yang lebih awal.
+- [ ] Apakah kode yang dibuat sebelum opening boleh dipakai? Contest Terms MLH untuk Fall 2025 sampai Spring 2026 menyatakan semua pekerjaan harus dilakukan selama acara, dan pekerjaan sebelum acara bisa menggugurkan proyek. Aturan khusus acara ini belum terbaca, jadi kode backend disimpan di branch lokal dan belum di-push.
+- [x] Jam berapa batas resminya? Laman MLH menulis pengumpulan awal Minggu 22:00 WIB dan final Minggu 23:45 WIB. Acara dimulai Sabtu 00:00 WIB.
+- [ ] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Bagian ini perlu disiapkan sebelum submit.
 - [x] Dikerjakan solo atau tim? Solo.
 - [x] Pembayaran memakai SOL atau USDC? SOL di Devnet.
 - [ ] Apakah satu proyek boleh ikut Best Beginner Hack dan DeFi Track sekaligus?

@@ -1,0 +1,6 @@
+extends:
+  - recommended
+
+rules:
+  # Server lokal dipakai sampai URL produksi ada.
+  no-server-example.com: off

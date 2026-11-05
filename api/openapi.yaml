@@ -1,0 +1,2973 @@
+openapi: 3.1.0
+info:
+  title: FastConsignee API
+  version: 0.1.0
+  summary: Kontrak API kasir konsinyasi dengan pembagian dana dalam satu transaksi Solana.
+  contact:
+    name: FastConsignee
+    url: https://github.com/AldiRachmatdiantoo/FastConsignee
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+  description: |
+    Kontrak ini mengikat frontend Next.js dan backend Go. Semua fitur di PRD tercakup di sini,
+    termasuk yang berprioritas Sebaiknya dan Kalau sempat. Tiap operasi mencatat kebutuhannya di
+    `x-fr`, prioritasnya di `x-priority`, peran yang boleh memanggilnya di `x-roles`, dan kode
+    error khususnya di `x-error-codes`.
+
+    ## Autentikasi dan peran
+    Login memakai Google lewat Supabase Auth langsung dari frontend, jadi API tidak punya endpoint
+    login. Frontend mengirim JWT Supabase di header `Authorization: Bearer <token>`, dan API
+    memverifikasinya. JWT membuktikan identitas, lalu peran dibaca dari akun di database, sehingga
+    pencabutan peran langsung berlaku tanpa menunggu JWT kedaluwarsa. Akun yang belum terdaftar di toko
+    menerima `403 ROLE_NOT_ASSIGNED`.
+
+    | Peran | Nilai | Akses |
+    | --- | --- | --- |
+    | Kasir | `cashier` | Katalog, membuat order, order yang dibuatnya sendiri |
+    | Pemilik toko | `store_owner` | Semua data toko, termasuk refund, barang, dan penitip |
+    | Penitip | `consignor` | Dasbor miliknya sendiri |
+
+    Pembeli tidak login. Endpoint `public` dan `solana-pay` terbuka, dan keamanannya bergantung pada
+    ID order UUIDv4 yang tidak bisa ditebak.
+
+    Pemilik toko dan penitip yang belum menautkan wallet hanya boleh memanggil `GET /api/v1/me` dan
+    `/api/v1/wallet/*`. Semua endpoint lain menjawab `403 WALLET_NOT_LINKED`.
+
+    ## Uang
+    - Harga dan bagian dihitung dalam Rupiah sebagai bilangan bulat, dengan akhiran `_idr`.
+    - Nilai SOL memakai lamport (1 SOL = 1.000.000.000 lamport), dengan akhiran `_lamports`. Nilainya
+      dikirim sebagai string supaya tidak kehilangan presisi di JavaScript.
+    - Komisi memakai basis point, dengan akhiran `_bps` (2000 berarti 20%).
+    - Browser hanya mengirim `item_id`, jumlah, dan diskon. Harga, bagian, dan penerima selalu dihitung
+      server.
+
+    Urutan perhitungan pembagian:
+    1. `line_total_idr` = harga x jumlah, dikurangi diskon baris.
+    2. Bagian penitip = pembulatan ke bawah dari harga x jumlah x (10000 - `commission_bps`) / 10000.
+       Komisi toko adalah sisanya, jadi sisa pembulatan Rupiah masuk ke toko.
+    3. Diskon diserap seluruhnya oleh pihak yang menanggungnya. Diskon tidak boleh melebihi bagian
+       pihak itu pada baris tersebut.
+    4. Bagian digabung per penerima. Potongan refund yang belum lunas dikurangkan dari penitip dan
+       ditambahkan ke toko.
+    5. `total_lamports` = pembulatan ke atas dari `total_idr` x 1.000.000.000 / `idr_per_sol`.
+    6. Lamport tiap penitip = pembulatan ke bawah dari `amount_idr` x 1.000.000.000 / `idr_per_sol`.
+       Toko menerima sisanya, jadi jumlah semua penerima selalu sama dengan `total_lamports`.
+
+    ## Status real-time
+    Status memakai polling, bukan WebSocket atau SSE, supaya API tetap stateless dan JWT tetap di
+    header. Klien memanggil endpoint status tiap 2 detik selama order masih `pending`. Status tidak
+    pernah di-cache.
+
+    Status `confirmed`, `expired`, dan `failed` bersifat final. Mencoba lagi berarti membuat order baru
+    dengan `Idempotency-Key` baru. Keranjang disimpan di klien, jadi tidak ada resource keranjang di
+    server.
+
+    QR berlaku 5 menit. Setelah `expires_at`, server berhenti menyusun transaksi, tetapi order tetap
+    `pending` dan stoknya tetap tertahan selama masa tenggang 2 menit. Masa ini mencakup transaksi yang
+    sudah terkirim sesaat sebelum batas waktu, supaya dana yang sudah terbagi tidak bertemu stok yang
+    sudah dilepas. Durasi keduanya diatur konfigurasi server.
+
+    ## Idempotency
+    `POST /api/v1/orders` dan `POST /api/v1/orders/{order_id}/refunds` wajib memakai header
+    `Idempotency-Key`. Kunci yang sama dengan isi yang sama mengembalikan hasil pertama dan header
+    `Idempotency-Replayed: true`. Kunci yang sama dengan isi berbeda menjawab
+    `409 IDEMPOTENCY_KEY_REUSED`.
+
+    ## Error
+    Semua error mengikuti RFC 9457 dengan media type `application/problem+json`, kecuali endpoint
+    `solana-pay` yang memakai `SolanaPayError` karena dibaca wallet. Klien mengambil keputusan dari
+    `code`, bukan dari `title` atau `detail`. Kesalahan per kolom ada di `errors`.
+
+    Tiap jawaban memuat header `X-Request-Id`, yang nilainya sama dengan `request_id` pada error.
+
+    ## Pagination
+    Daftar memakai cursor: kirim `next_cursor` sebagai `cursor`, dan `null` berarti data sudah habis.
+
+    ## Rate limit
+    Endpoint yang butuh login dibatasi per akun, sedangkan endpoint `public` dan `solana-pay` dibatasi
+    per IP dan per order. `/healthz` dikecualikan. Batas bawaannya 120 permintaan per menit per akun,
+    60 per menit per IP, dan 30 per menit per order, jadi polling 2 detik masih aman. Jawaban `429`
+    memuat `Retry-After` dan header `RateLimit-*`.
+
+    ## CORS
+    Endpoint `solana-pay` dipanggil wallet dari origin apa pun, jadi harus menjawab preflight `OPTIONS`
+    dan mengirim `Access-Control-Allow-Origin: *`. Endpoint lain hanya menerima origin frontend.
+  x-requirements-without-endpoint:
+    FR-21: Seed data dimuat lewat migrasi atau skrip seed, bukan lewat API.
+servers:
+  - url: http://localhost:8080
+    description: Lokal. URL produksi ditetapkan setelah deploy ke Render.
+    x-internal: true
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+    description: Health check untuk cron dan load balancer.
+  - name: Auth
+    description: Profil pengguna dan penautan wallet.
+  - name: Items
+    description: Katalog dan pengaturan barang.
+  - name: Consignors
+    description: Pendaftaran penitip oleh pemilik toko.
+  - name: Orders
+    description: Rincian pembagian, pembuatan order, dan riwayat.
+  - name: Payment
+    description: Layar bayar pembeli dan Solana Pay Transaction Request.
+  - name: Refunds
+    description: Refund satu barang dari wallet toko ke wallet pembayar.
+  - name: Dashboard
+    description: Dasbor penitip dan pemilik toko.
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      tags: [Health]
+      summary: Memeriksa API hidup
+      description: Dipanggil cron eksternal dan load balancer. Tidak terkena rate limit.
+      security: []
+      x-nfr: [NFR-23]
+      x-priority: Wajib
+      x-roles: [public]
+      responses:
+        '200':
+          description: API hidup.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/me:
+    get:
+      operationId: getMe
+      tags: [Auth]
+      summary: Membaca profil pengguna yang login
+      description: |
+        Frontend memanggil ini setelah login untuk menentukan layar berikutnya. Kalau
+        `wallet_required` bernilai true dan `wallet` bernilai null, frontend membuka penautan wallet.
+      x-fr: [FR-25, FR-26]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner, consignor]
+      x-error-codes: [ROLE_NOT_ASSIGNED]
+      responses:
+        '200':
+          description: Profil pengguna.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/wallet/nonce:
+    post:
+      operationId: createWalletNonce
+      tags: [Auth]
+      summary: Meminta pesan untuk ditandatangani
+      description: |
+        Membuat nonce sekali pakai untuk alamat wallet. Klien menandatangani `message` apa adanya
+        dengan wallet tersebut. Menandatangani pesan tidak memakai saldo dan tidak mengirim transaksi.
+      x-fr: [FR-27]
+      x-priority: Wajib
+      x-roles: [store_owner, consignor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletNonceRequest'
+      responses:
+        '201':
+          description: Nonce dibuat.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletNonce'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/wallet/link:
+    post:
+      operationId: linkWallet
+      tags: [Auth]
+      summary: Menautkan wallet dengan tanda tangan
+      description: |
+        Memverifikasi tanda tangan, lalu menautkan wallet ke toko untuk `store_owner` atau ke penitip
+        untuk `consignor`. Pemanggilan ulang dengan wallet lain mengganti wallet tertaut, dan order
+        yang sudah dibuat tetap memakai wallet lama.
+      x-fr: [FR-27]
+      x-priority: Wajib
+      x-roles: [store_owner, consignor]
+      x-error-codes: [NONCE_INVALID, SIGNATURE_INVALID, WALLET_ALREADY_LINKED]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletLinkRequest'
+      responses:
+        '200':
+          description: Wallet tertaut.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/items:
+    get:
+      operationId: listItems
+      tags: [Items]
+      summary: Membaca katalog barang
+      description: Barang dengan `stock_available` 0 tetap tampil, tetapi tidak bisa dipilih kasir.
+      x-fr: [FR-01, FR-02]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      parameters:
+        - name: q
+          in: query
+          description: Mencari nama barang.
+          schema:
+            type: string
+            maxLength: 100
+        - name: consignor_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: active
+          in: query
+          description: Bawaannya hanya barang aktif.
+          schema:
+            type: boolean
+            default: true
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar barang.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      operationId: createItem
+      tags: [Items]
+      summary: Menambah barang
+      description: Barang baru langsung aktif dan masuk katalog. Penitipnya harus berasal dari toko yang sama.
+      x-fr: [FR-22]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemCreate'
+      responses:
+        '201':
+          description: Barang dibuat.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/items/{item_id}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    get:
+      operationId: getItem
+      tags: [Items]
+      summary: Membaca satu barang
+      description: Memuat stok fisik, stok tertahan, dan stok yang bisa dijual.
+      x-fr: [FR-01]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      responses:
+        '200':
+          description: Data barang.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      operationId: updateItem
+      tags: [Items]
+      summary: Mengubah barang
+      description: |
+        Perubahan harga dan komisi berlaku untuk penjualan berikutnya, karena order menyimpan salinan
+        nilainya. Barang tidak dihapus supaya riwayat tetap utuh, jadi kirim `active: false` untuk
+        menariknya dari katalog.
+      x-fr: [FR-22]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      x-error-codes: [STOCK_BELOW_RESERVED]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemUpdate'
+      responses:
+        '200':
+          description: Barang diubah.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/consignors:
+    get:
+      operationId: listConsignors
+      tags: [Consignors]
+      summary: Membaca daftar penitip
+      description: Memuat status wallet tiap penitip, supaya pemilik toko tahu siapa yang belum bisa menerima dana.
+      x-fr: [FR-23]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar penitip.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsignorList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      operationId: createConsignor
+      tags: [Consignors]
+      summary: Mendaftarkan penitip
+      description: |
+        Alamat wallet divalidasi formatnya dan berstatus `unverified` sampai penitip menandatanganinya
+        lewat `POST /api/v1/wallet/link`. Email dipakai untuk mencocokkan akun Google penitip. Pembayaran
+        memakai SOL, jadi tidak ada token account yang dibuat.
+      x-fr: [FR-23]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      x-error-codes: [CONSIGNOR_EMAIL_TAKEN, WALLET_ALREADY_LINKED]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsignorCreate'
+      responses:
+        '201':
+          description: Penitip terdaftar.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consignor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/consignors/{consignor_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConsignorId'
+    get:
+      operationId: getConsignor
+      tags: [Consignors]
+      summary: Membaca satu penitip
+      description: Penitip dari toko lain menjawab `404 NOT_FOUND`.
+      x-fr: [FR-23]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      responses:
+        '200':
+          description: Data penitip.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consignor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      operationId: updateConsignor
+      tags: [Consignors]
+      summary: Mengubah data penitip
+      description: Wallet tidak bisa diubah lewat endpoint ini. Hanya penitip yang bisa menggantinya dengan tanda tangan.
+      x-fr: [FR-23]
+      x-priority: Kalau sempat
+      x-roles: [store_owner]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsignorUpdate'
+      responses:
+        '200':
+          description: Penitip diubah.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consignor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/orders/preview:
+    post:
+      operationId: previewOrder
+      tags: [Orders]
+      summary: Menghitung rincian pembagian
+      description: |
+        Menghitung total, diskon, dan bagian tiap penerima tanpa menyimpan apa pun dan tanpa
+        mereservasi stok. Kurs di sini belum dikunci, dan baru dikunci saat order dibuat.
+      x-fr: [FR-02, FR-03, FR-04, FR-05, FR-06, FR-17, FR-28]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      x-error-codes:
+        - INSUFFICIENT_STOCK
+        - TOO_MANY_CONSIGNORS
+        - DISCOUNT_TOO_LARGE
+        - RECIPIENT_WALLET_MISSING
+        - STORE_WALLET_NOT_LINKED
+        - BELOW_RENT_MINIMUM
+        - RATE_UNAVAILABLE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRequest'
+            examples:
+              twoConsignors:
+                summary: Dua barang dari dua penitip
+                value:
+                  lines:
+                    - item_id: 11111111-1111-4111-8111-111111111111
+                      quantity: 1
+                    - item_id: 22222222-2222-4222-8222-222222222222
+                      quantity: 2
+      responses:
+        '200':
+          description: Rincian pembagian.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPreview'
+              examples:
+                twoConsignors:
+                  summary: Jumlah semua penerima sama dengan total
+                  value:
+                    subtotal_idr: 200000
+                    discount_idr: 0
+                    total_idr: 200000
+                    total_lamports: '80000000'
+                    rate:
+                      idr_per_sol: 2500000
+                      quoted_at: '2026-11-07T03:00:00Z'
+                    lines:
+                      - item_id: 11111111-1111-4111-8111-111111111111
+                        item_name: Tas rajut
+                        consignor:
+                          id: 33333333-3333-4333-8333-333333333333
+                          name: Rajut Bu Sari
+                        quantity: 1
+                        unit_price_idr: 100000
+                        commission_bps: 2000
+                        discount: null
+                        line_total_idr: 100000
+                        commission_idr: 20000
+                        consignor_share_idr: 80000
+                      - item_id: 22222222-2222-4222-8222-222222222222
+                        item_name: Selai nanas
+                        consignor:
+                          id: 44444444-4444-4444-8444-444444444444
+                          name: Dapur Pak Budi
+                        quantity: 2
+                        unit_price_idr: 50000
+                        commission_bps: 1500
+                        discount: null
+                        line_total_idr: 100000
+                        commission_idr: 15000
+                        consignor_share_idr: 85000
+                    recipients:
+                      - recipient_type: consignor
+                        consignor_id: 33333333-3333-4333-8333-333333333333
+                        name: Rajut Bu Sari
+                        wallet_address: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU
+                        share_idr: 80000
+                        deduction_idr: 0
+                        recovered_idr: 0
+                        amount_idr: 80000
+                        amount_lamports: '32000000'
+                      - recipient_type: consignor
+                        consignor_id: 44444444-4444-4444-8444-444444444444
+                        name: Dapur Pak Budi
+                        wallet_address: 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+                        share_idr: 85000
+                        deduction_idr: 0
+                        recovered_idr: 0
+                        amount_idr: 85000
+                        amount_lamports: '34000000'
+                      - recipient_type: store
+                        consignor_id: null
+                        name: Toko Titip Bersama
+                        wallet_address: HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH
+                        share_idr: 35000
+                        deduction_idr: 0
+                        recovered_idr: 0
+                        amount_idr: 35000
+                        amount_lamports: '14000000'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/orders:
+    post:
+      operationId: createOrder
+      tags: [Orders]
+      summary: Membuat order dan QR
+      description: |
+        Dalam satu transaksi database, endpoint ini menyimpan order, item, pembagian dana, dan reservasi
+        stok, lalu mengunci kurs sampai `expires_at`. Frontend menggambar QR dari
+        `payment.solana_pay_url`. Reservasi dilepas saat order `expired` atau `failed`, dan stok terpotong
+        saat `confirmed`.
+      x-fr: [FR-02, FR-04, FR-05, FR-06, FR-07, FR-08, FR-11, FR-28, FR-29]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      x-error-codes:
+        - IDEMPOTENCY_KEY_REUSED
+        - INSUFFICIENT_STOCK
+        - TOO_MANY_CONSIGNORS
+        - DISCOUNT_TOO_LARGE
+        - RECIPIENT_WALLET_MISSING
+        - STORE_WALLET_NOT_LINKED
+        - BELOW_RENT_MINIMUM
+        - RATE_UNAVAILABLE
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRequest'
+      responses:
+        '201':
+          description: Order dibuat, atau order lama dikembalikan kalau kuncinya sama.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              $ref: '#/components/headers/Location'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    get:
+      operationId: listOrders
+      tags: [Orders]
+      summary: Membaca riwayat order
+      description: |
+        Kasir hanya melihat order yang dibuatnya. Pemilik toko melihat semua order toko, dan memakai
+        daftar ini untuk memilih barang yang di-refund.
+      x-fr: [FR-15, FR-19]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar order, terbaru lebih dulu.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/orders/{order_id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      operationId: getOrder
+      tags: [Orders]
+      summary: Membaca detail order
+      description: |
+        Dipakai untuk rincian transaksi dan untuk memilih barang yang di-refund. Kasir menerima
+        `404 NOT_FOUND` untuk order yang tidak dibuatnya.
+      x-fr: [FR-04, FR-07, FR-15]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      responses:
+        '200':
+          description: Detail order.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/orders/{order_id}/status:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      operationId: getOrderStatus
+      tags: [Orders]
+      summary: Memantau status pembayaran
+      description: |
+        Endpoint ringan untuk polling layar kasir. Worker mencari transaksi lewat `reference`, lalu
+        mencocokkan jumlah dan penerima dengan order sebelum menandainya `confirmed`. Kalau tidak cocok,
+        order menjadi `failed` dengan `failure_code` `VALIDATION_MISMATCH`.
+      x-fr: [FR-10, FR-11, FR-12]
+      x-priority: Wajib
+      x-roles: [cashier, store_owner]
+      responses:
+        '200':
+          description: Status terbaru.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/orders/{order_id}/refunds:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      operationId: createRefund
+      tags: [Refunds]
+      summary: Menyusun transaksi refund satu barang
+      description: |
+        Menyusun transaksi dari wallet toko ke wallet pembayar untuk satu unit barang. Jumlah lamport
+        sama dengan yang dibayar pembeli untuk unit itu, jadi kurs saat refund tidak berpengaruh. Klien
+        meminta wallet toko menandatangani dan mengirim `transaction`, lalu melapor lewat
+        `POST /api/v1/refunds/{refund_id}/signature`. Barang dengan jumlah 2 berarti dua kali refund.
+
+        Potongan penitip baru tercatat setelah refund `completed`. Refund `failed` atau `expired` tidak
+        mengubah saldo dan catatan, dan pemilik toko bisa memanggil endpoint ini lagi dengan
+        `Idempotency-Key` baru.
+      x-fr: [FR-15, FR-16]
+      x-priority: Wajib
+      x-roles: [store_owner]
+      x-error-codes:
+        - IDEMPOTENCY_KEY_REUSED
+        - ORDER_NOT_REFUNDABLE
+        - ALREADY_REFUNDED
+        - REFUND_IN_PROGRESS
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundCreate'
+      responses:
+        '201':
+          description: Transaksi refund siap ditandatangani.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              $ref: '#/components/headers/Location'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundDraft'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/refunds:
+    get:
+      operationId: listRefunds
+      tags: [Refunds]
+      summary: Membaca riwayat refund
+      description: Memuat semua percobaan refund toko, termasuk yang `failed` dan `expired`.
+      x-fr: [FR-15]
+      x-priority: Wajib
+      x-roles: [store_owner]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/RefundStatus'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar refund, terbaru lebih dulu.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/refunds/{refund_id}:
+    parameters:
+      - $ref: '#/components/parameters/RefundId'
+    get:
+      operationId: getRefund
+      tags: [Refunds]
+      summary: Memantau status refund
+      description: Klien memanggil endpoint ini tiap 2 detik selama status masih `confirming`.
+      x-fr: [FR-15]
+      x-priority: Wajib
+      x-roles: [store_owner]
+      responses:
+        '200':
+          description: Data refund.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/refunds/{refund_id}/signature:
+    parameters:
+      - $ref: '#/components/parameters/RefundId'
+    post:
+      operationId: submitRefundSignature
+      tags: [Refunds]
+      summary: Melaporkan signature refund
+      description: |
+        Mempercepat pemeriksaan setelah wallet mengirim transaksi. Worker tetap bisa menemukan refund
+        lewat `reference` kalau laporan ini tidak sampai. Setelah transaksi tervalidasi, refund dan
+        potongan penitip disimpan dalam satu transaksi database.
+      x-fr: [FR-15, FR-16]
+      x-priority: Wajib
+      x-roles: [store_owner]
+      x-error-codes: [REFUND_NOT_AWAITING_SIGNATURE]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundSignature'
+      responses:
+        '202':
+          description: Signature diterima, dan refund berstatus `confirming`.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/public/orders/{order_id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      operationId: getPublicOrder
+      tags: [Payment]
+      summary: Membaca layar bayar dan bukti pembayaran
+      description: |
+        Dipakai pembeli tanpa login. Selama `pending`, ini menjadi layar bayar dengan total Rupiah, nilai
+        SOL, dan label Devnet. Setelah `confirmed`, ini menjadi bukti pembayaran. Endpoint ini tidak
+        memuat nama penitip, wallet penerima, atau wallet pembayar.
+      security: []
+      x-fr: [FR-08, FR-10, FR-14, FR-24]
+      x-priority: Wajib
+      x-roles: [public]
+      responses:
+        '200':
+          description: Data layar bayar.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/solana-pay/orders/{order_id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      operationId: getSolanaPayMetadata
+      tags: [Payment]
+      summary: Memberi label dan ikon ke wallet
+      description: Langkah GET pada Solana Pay Transaction Request. Jawaban sukses harus HTTP 200.
+      security: []
+      x-fr: [FR-07]
+      x-priority: Wajib
+      x-roles: [public]
+      responses:
+        '200':
+          description: Label dan ikon toko.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolanaPayMetadata'
+        '400':
+          $ref: '#/components/responses/SolanaPayBadRequest'
+        '404':
+          $ref: '#/components/responses/SolanaPayNotFound'
+        '429':
+          $ref: '#/components/responses/SolanaPayTooManyRequests'
+        '500':
+          $ref: '#/components/responses/SolanaPayServerError'
+    post:
+      operationId: createSolanaPayTransaction
+      tags: [Payment]
+      summary: Menyusun transaksi pembayaran
+      description: |
+        Langkah POST pada Solana Pay Transaction Request. Tombol wallet adapter di browser memanggil
+        endpoint yang sama, jadi transaksinya sama dengan alur QR.
+
+        Transaksi berisi satu transfer ke tiap penerima dengan nilai di atas 0, sehingga semuanya berhasil
+        atau gagal bersama. `reference` order ikut sebagai akun read-only supaya worker bisa menemukannya.
+        `account` menjadi fee payer dan satu-satunya penanda tangan, dan menjadi wallet tujuan refund
+        setelah transaksinya terkonfirmasi. Transaksi dikirim tanpa tanda tangan, dengan `recentBlockhash`
+        terbaru, dan tidak memuat data pribadi.
+      security: []
+      x-fr: [FR-07, FR-09, FR-13]
+      x-priority: Wajib
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolanaPayTransactionRequest'
+      responses:
+        '200':
+          description: Transaksi siap ditandatangani.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolanaPayTransaction'
+        '400':
+          $ref: '#/components/responses/SolanaPayBadRequest'
+        '404':
+          $ref: '#/components/responses/SolanaPayNotFound'
+        '409':
+          $ref: '#/components/responses/SolanaPayConflict'
+        '410':
+          $ref: '#/components/responses/SolanaPayGone'
+        '429':
+          $ref: '#/components/responses/SolanaPayTooManyRequests'
+        '500':
+          $ref: '#/components/responses/SolanaPayServerError'
+        '503':
+          $ref: '#/components/responses/SolanaPayServerError'
+
+  /api/v1/dashboard/consignor/sales:
+    get:
+      operationId: listConsignorSales
+      tags: [Dashboard]
+      summary: Membaca penjualan penitip
+      description: |
+        Penitip dibaca dari JWT, jadi tidak ada parameter ID dan satu penitip tidak bisa membaca data
+        penitip lain. Hanya order `confirmed` yang tampil. `order_transfer_lamports` sama persis dengan
+        nilai yang terlihat di Solana Explorer untuk wallet penitip.
+      x-fr: [FR-18]
+      x-priority: Wajib
+      x-roles: [consignor]
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar penjualan, terbaru lebih dulu.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsignorSaleList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/consignor/deductions:
+    get:
+      operationId: listConsignorDeductions
+      tags: [Dashboard]
+      summary: Membaca potongan refund penitip
+      description: Potongan dicatat dalam Rupiah dan tidak pernah di-cache.
+      x-fr: [FR-16, FR-17]
+      x-priority: Wajib
+      x-roles: [consignor]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DeductionStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar potongan dan total yang belum lunas.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeductionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/consignor/stock:
+    get:
+      operationId: listConsignorStock
+      tags: [Dashboard]
+      summary: Membaca sisa stok penitip
+      description: Nilainya sama dengan `stock_available` di katalog kasir.
+      x-fr: [FR-20]
+      x-priority: Kalau sempat
+      x-roles: [consignor]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Daftar stok.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsignorStockList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/store/summary:
+    get:
+      operationId: getStoreSummary
+      tags: [Dashboard]
+      summary: Membaca ringkasan toko
+      description: |
+        Hanya menghitung order `confirmed`, dan bisa di-cache sekitar 30 detik. Tautan Explorer tiap
+        transaksi ada di `GET /api/v1/orders`.
+      x-fr: [FR-19]
+      x-priority: Sebaiknya
+      x-roles: [store_owner]
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+      responses:
+        '200':
+          description: Ringkasan penjualan.
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT yang diterbitkan Supabase Auth. Verifikasinya mengikuti RFC8725, yaitu algoritma dibatasi, dan `exp`, `iss`, serta `aud` selalu diperiksa.
+
+  parameters:
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ConsignorId:
+      name: consignor_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      description: UUIDv4 yang tidak bisa ditebak.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    RefundId:
+      name: refund_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: Nilai `next_cursor` dari halaman sebelumnya.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_-]+$'
+        maxLength: 512
+    From:
+      name: from
+      in: query
+      description: Awal periode, inklusif.
+      schema:
+        $ref: '#/components/schemas/Timestamp'
+    To:
+      name: to
+      in: query
+      description: Akhir periode, eksklusif.
+      schema:
+        $ref: '#/components/schemas/Timestamp'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Kunci unik per percobaan, disarankan UUID.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_.:-]+$'
+        minLength: 8
+        maxLength: 128
+
+  headers:
+    IdempotencyReplayed:
+      description: Bernilai `true` kalau jawaban ini hasil permintaan sebelumnya.
+      schema:
+        type: boolean
+    RetryAfter:
+      description: Jumlah detik sebelum boleh mencoba lagi.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 3600
+    RateLimitLimit:
+      description: Batas permintaan dalam satu jendela waktu.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100000
+    RateLimitRemaining:
+      description: Sisa permintaan dalam jendela waktu ini.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 100000
+    RateLimitReset:
+      description: Jumlah detik sampai jendela waktu berikutnya.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 3600
+    WwwAuthenticate:
+      description: Skema autentikasi yang diterima.
+      schema:
+        type: string
+        maxLength: 200
+    Location:
+      description: URL resource yang baru dibuat.
+      schema:
+        type: string
+        format: uri-reference
+        maxLength: 2048
+
+  responses:
+    BadRequest:
+      description: Format permintaan tidak valid. Kodenya `VALIDATION_FAILED`.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: JWT tidak ada, tidak valid, atau kedaluwarsa. Kodenya `UNAUTHENTICATED`.
+      headers:
+        WWW-Authenticate:
+          $ref: '#/components/headers/WwwAuthenticate'
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Kodenya `FORBIDDEN`, `ROLE_NOT_ASSIGNED`, atau `WALLET_NOT_LINKED`.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Data tidak ditemukan atau bukan milik toko ini. Kodenya `NOT_FOUND`.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Permintaan bertabrakan dengan kondisi data. Lihat `x-error-codes` di operasinya.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            insufficientStock:
+              summary: Stok tidak cukup
+              value:
+                type: about:blank
+                title: Stok tidak cukup
+                status: 409
+                detail: Stok beberapa barang tidak cukup.
+                code: INSUFFICIENT_STOCK
+                request_id: 0b6f4f0e-6f5a-4a39-9d42-3f7c1f3a5a11
+                details:
+                  items:
+                    - item_id: 22222222-2222-4222-8222-222222222222
+                      requested: 2
+                      available: 1
+    UnprocessableEntity:
+      description: Format benar, tetapi aturan bisnis menolaknya. Lihat `x-error-codes` di operasinya.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            belowRentMinimum:
+              summary: Transfer ke wallet kosong di bawah minimum rent
+              value:
+                type: about:blank
+                title: Di bawah minimum rent
+                status: 422
+                detail: Bagian penerima terlalu kecil untuk wallet yang masih kosong.
+                code: BELOW_RENT_MINIMUM
+                request_id: 7d1c2a90-52de-4f3e-8a11-0c9e5b7c2e44
+                details:
+                  wallet_address: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU
+                  amount_lamports: '500000'
+                  minimum_lamports: '890880'
+    TooManyRequests:
+      description: Rate limit terlampaui. Kodenya `RATE_LIMITED`.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InternalError:
+      description: Kesalahan server. Kodenya `INTERNAL_ERROR`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dependensi tidak tersedia. Kodenya `SERVICE_UNAVAILABLE` atau `RATE_UNAVAILABLE`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    SolanaPayBadRequest:
+      description: ID order atau alamat `account` tidak valid.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+    SolanaPayNotFound:
+      description: Order tidak ditemukan.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+    SolanaPayConflict:
+      description: Order sudah `confirmed` atau `failed`.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+    SolanaPayGone:
+      description: Order sudah kedaluwarsa.
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+    SolanaPayTooManyRequests:
+      description: Rate limit per IP atau per order terlampaui.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+    SolanaPayServerError:
+      description: Kesalahan server atau RPC Solana tidak tersedia.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolanaPayError'
+
+  schemas:
+    Uuid:
+      type: string
+      maxLength: 36
+      format: uuid
+    Timestamp:
+      type: string
+      maxLength: 35
+      format: date-time
+      description: Waktu RFC 3339 dalam UTC.
+    SolanaAddress:
+      type: string
+      maxLength: 44
+      description: Public key Solana dalam base58.
+      pattern: '^[1-9A-HJ-NP-Za-km-z]{32,44}$'
+    TransactionSignature:
+      type: string
+      maxLength: 88
+      description: Signature Solana dalam base58.
+      pattern: '^[1-9A-HJ-NP-Za-km-z]{64,88}$'
+    AmountIdr:
+      type: integer
+      maximum: 1000000000000000
+      format: int64
+      minimum: 0
+      description: Nilai Rupiah sebagai bilangan bulat.
+    AmountLamports:
+      type: string
+      maxLength: 20
+      description: Nilai lamport sebagai string angka.
+      pattern: '^[0-9]+$'
+    CommissionBps:
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 10000
+      description: Komisi toko dalam basis point. 2000 berarti 20%.
+    ExplorerUrl:
+      type: string
+      maxLength: 2048
+      format: uri
+      description: Tautan Solana Explorer ke cluster Devnet.
+    NextCursor:
+      type:
+        - string
+        - 'null'
+      maxLength: 512
+      description: Bernilai `null` kalau tidak ada halaman berikutnya.
+    Role:
+      type: string
+      enum: [cashier, store_owner, consignor]
+    Network:
+      type: string
+      enum: [devnet]
+      description: Aplikasi hanya berjalan di Devnet.
+
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    Problem:
+      type: object
+      required: [type, title, status, code, request_id]
+      description: Detail masalah menurut RFC 9457, dengan tambahan `code` dan `request_id`.
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+          maxLength: 2048
+        title:
+          type: string
+          maxLength: 200
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          maxLength: 1000
+          description: Pesan untuk manusia. Klien tidak boleh mengambil keputusan dari teks ini.
+        instance:
+          type: string
+          format: uri-reference
+          maxLength: 2048
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        request_id:
+          type: string
+          maxLength: 64
+          description: ID untuk mencari log server.
+        errors:
+          type: array
+          maxItems: 100
+          description: Kesalahan per kolom untuk `VALIDATION_FAILED`.
+          items:
+            $ref: '#/components/schemas/FieldError'
+        details:
+          type: object
+          description: Data tambahan, misalnya barang yang stoknya kurang.
+          additionalProperties: true
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+          maxLength: 500
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_FAILED
+        - UNAUTHENTICATED
+        - FORBIDDEN
+        - ROLE_NOT_ASSIGNED
+        - WALLET_NOT_LINKED
+        - NOT_FOUND
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+        - SERVICE_UNAVAILABLE
+        - NONCE_INVALID
+        - SIGNATURE_INVALID
+        - WALLET_ALREADY_LINKED
+        - STOCK_BELOW_RESERVED
+        - CONSIGNOR_EMAIL_TAKEN
+        - IDEMPOTENCY_KEY_REUSED
+        - INSUFFICIENT_STOCK
+        - TOO_MANY_CONSIGNORS
+        - DISCOUNT_TOO_LARGE
+        - RECIPIENT_WALLET_MISSING
+        - STORE_WALLET_NOT_LINKED
+        - BELOW_RENT_MINIMUM
+        - RATE_UNAVAILABLE
+        - ORDER_NOT_REFUNDABLE
+        - ALREADY_REFUNDED
+        - REFUND_IN_PROGRESS
+        - REFUND_NOT_AWAITING_SIGNATURE
+    SolanaPayError:
+      type: object
+      required: [message]
+      description: Spesifikasi Solana Pay tidak mengatur isi error, dan bentuk ini menjadi ketetapan API.
+      properties:
+        message:
+          type: string
+          maxLength: 500
+
+    Me:
+      type: object
+      required: [id, email, name, role, store, consignor_id, wallet, wallet_required]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        email:
+          type: string
+          maxLength: 254
+          format: email
+        name:
+          type: string
+          maxLength: 200
+        role:
+          $ref: '#/components/schemas/Role'
+        store:
+          $ref: '#/components/schemas/StoreRef'
+        consignor_id:
+          description: Terisi hanya untuk peran `consignor`.
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        wallet:
+          description: Wallet tertaut yang sudah terbukti. Wallet `unverified` tampil sebagai `null`.
+          oneOf:
+            - $ref: '#/components/schemas/WalletLink'
+            - type: 'null'
+        wallet_required:
+          type: boolean
+          description: True untuk `store_owner` dan `consignor`.
+    StoreRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 200
+    WalletNonceRequest:
+      type: object
+      additionalProperties: false
+      required: [address]
+      properties:
+        address:
+          $ref: '#/components/schemas/SolanaAddress'
+    WalletNonce:
+      type: object
+      required: [nonce, message, expires_at]
+      properties:
+        nonce:
+          type: string
+          maxLength: 64
+          pattern: '^[A-Za-z0-9]+$'
+        message:
+          type: string
+          maxLength: 500
+          description: Teks yang harus ditandatangani apa adanya, memuat domain, alamat, dan nonce.
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    WalletLinkRequest:
+      type: object
+      additionalProperties: false
+      required: [address, nonce, signature]
+      properties:
+        address:
+          $ref: '#/components/schemas/SolanaAddress'
+        nonce:
+          type: string
+          maxLength: 64
+          pattern: '^[A-Za-z0-9]+$'
+        signature:
+          type: string
+          maxLength: 88
+          description: Tanda tangan ed25519 atas `message`, dalam base58.
+          pattern: '^[1-9A-HJ-NP-Za-km-z]{64,88}$'
+    WalletLink:
+      type: object
+      required: [address, linked_at]
+      properties:
+        address:
+          $ref: '#/components/schemas/SolanaAddress'
+        linked_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    ConsignorRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 200
+    Item:
+      type: object
+      required:
+        - id
+        - name
+        - price_idr
+        - commission_bps
+        - consignor
+        - stock_on_hand
+        - stock_reserved
+        - stock_available
+        - active
+        - certificate_enabled
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 200
+        price_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        commission_bps:
+          $ref: '#/components/schemas/CommissionBps'
+        consignor:
+          $ref: '#/components/schemas/ConsignorRef'
+        stock_on_hand:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+          description: Stok fisik di toko.
+        stock_reserved:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+          description: Stok yang tertahan order `pending`.
+        stock_available:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+          description: Sama dengan `stock_on_hand` dikurangi `stock_reserved`.
+        active:
+          type: boolean
+        certificate_enabled:
+          type: boolean
+          description: True kalau penjualan barang ini menerbitkan NFT sertifikat keaslian.
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ItemCreate:
+      type: object
+      additionalProperties: false
+      required: [name, price_idr, commission_bps, consignor_id, stock_on_hand]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        price_idr:
+          type: integer
+          maximum: 10000000000
+          format: int64
+          minimum: 1
+        commission_bps:
+          $ref: '#/components/schemas/CommissionBps'
+        consignor_id:
+          $ref: '#/components/schemas/Uuid'
+        stock_on_hand:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+        certificate_enabled:
+          type: boolean
+          default: false
+    ItemUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        price_idr:
+          type: integer
+          maximum: 10000000000
+          format: int64
+          minimum: 1
+        commission_bps:
+          $ref: '#/components/schemas/CommissionBps'
+        stock_on_hand:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+        active:
+          type: boolean
+        certificate_enabled:
+          type: boolean
+    ItemList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Item'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    WalletStatus:
+      type: string
+      enum: [unlinked, unverified, verified]
+      description: |
+        `unlinked` berarti belum ada alamat, dan order yang memuat barangnya ditolak. `unverified` berarti
+        alamat didaftarkan pemilik toko dan sudah bisa menerima pembayaran. `verified` berarti penitip
+        sudah menandatanganinya.
+    Consignor:
+      type: object
+      required: [id, name, email, wallet_address, wallet_status, created_at, updated_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 200
+        email:
+          type: string
+          maxLength: 254
+          format: email
+        wallet_address:
+          oneOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+            - type: 'null'
+        wallet_status:
+          $ref: '#/components/schemas/WalletStatus'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ConsignorCreate:
+      type: object
+      additionalProperties: false
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: string
+          maxLength: 254
+          format: email
+        wallet_address:
+          $ref: '#/components/schemas/SolanaAddress'
+    ConsignorUpdate:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+    ConsignorList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Consignor'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    DiscountBearer:
+      type: string
+      enum: [store, consignor]
+    LineDiscount:
+      type: object
+      additionalProperties: false
+      required: [amount_idr, borne_by]
+      description: Diskon dipasang per baris, supaya tiap diskon punya satu penanggung yang jelas.
+      properties:
+        amount_idr:
+          type: integer
+          maximum: 1000000000000000
+          format: int64
+          minimum: 1
+        borne_by:
+          $ref: '#/components/schemas/DiscountBearer'
+    CartLine:
+      type: object
+      additionalProperties: false
+      required: [item_id, quantity]
+      properties:
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+        discount:
+          $ref: '#/components/schemas/LineDiscount'
+    CartRequest:
+      type: object
+      additionalProperties: false
+      required: [lines]
+      description: Satu `item_id` hanya boleh muncul sekali. Keranjang memuat paling banyak 5 penitip.
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/CartLine'
+    Rate:
+      type: object
+      required: [idr_per_sol, quoted_at]
+      properties:
+        idr_per_sol:
+          type: integer
+          maximum: 1000000000000
+          format: int64
+          minimum: 1
+          description: Harga 1 SOL dalam Rupiah.
+        quoted_at:
+          $ref: '#/components/schemas/Timestamp'
+    PreviewLine:
+      type: object
+      required:
+        - item_id
+        - item_name
+        - consignor
+        - quantity
+        - unit_price_idr
+        - commission_bps
+        - discount
+        - line_total_idr
+        - commission_idr
+        - consignor_share_idr
+      properties:
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        item_name:
+          type: string
+          maxLength: 200
+        consignor:
+          $ref: '#/components/schemas/ConsignorRef'
+        quantity:
+          type: integer
+          format: int32
+          maximum: 1000
+          minimum: 1
+        unit_price_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        commission_bps:
+          $ref: '#/components/schemas/CommissionBps'
+        discount:
+          oneOf:
+            - $ref: '#/components/schemas/LineDiscount'
+            - type: 'null'
+        line_total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        commission_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        consignor_share_idr:
+          $ref: '#/components/schemas/AmountIdr'
+    SplitRecipient:
+      type: object
+      required:
+        - recipient_type
+        - consignor_id
+        - name
+        - wallet_address
+        - share_idr
+        - deduction_idr
+        - recovered_idr
+        - amount_idr
+        - amount_lamports
+      description: |
+        Satu baris per penerima. `amount_idr` = `share_idr` - `deduction_idr` + `recovered_idr`. Penerima
+        dengan `amount_lamports` 0 tetap tampil, tetapi tidak mendapat transfer.
+      properties:
+        recipient_type:
+          type: string
+          enum: [store, consignor]
+        consignor_id:
+          description: Bernilai `null` untuk toko.
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        name:
+          type: string
+          maxLength: 200
+        wallet_address:
+          $ref: '#/components/schemas/SolanaAddress'
+        share_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        deduction_idr:
+          allOf:
+            - $ref: '#/components/schemas/AmountIdr'
+          description: Potongan refund yang diambil dari penitip di order ini. Selalu 0 untuk toko.
+        recovered_idr:
+          allOf:
+            - $ref: '#/components/schemas/AmountIdr'
+          description: Dana talangan yang kembali ke toko di order ini. Selalu 0 untuk penitip.
+        amount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        amount_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+    OrderPreview:
+      type: object
+      required:
+        - subtotal_idr
+        - discount_idr
+        - total_idr
+        - total_lamports
+        - rate
+        - lines
+        - recipients
+      description: Jumlah `recipients.amount_idr` sama dengan `total_idr`, dan jumlah lamport sama dengan `total_lamports`.
+      properties:
+        subtotal_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        discount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+        rate:
+          $ref: '#/components/schemas/Rate'
+        lines:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PreviewLine'
+        recipients:
+          type: array
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/SplitRecipient'
+
+    OrderStatus:
+      type: string
+      enum: [pending, confirmed, expired, failed]
+      description: |
+        `pending` berarti menunggu pembayaran. `confirmed` berarti transaksi tervalidasi dan stok terpotong.
+        `expired` berarti batas waktu lewat. `failed` berarti transaksi gagal atau tidak cocok dengan order.
+    FailureCode:
+      type: string
+      enum: [TRANSACTION_FAILED, VALIDATION_MISMATCH]
+    CertificateStatus:
+      type: string
+      enum: [pending, sent, failed]
+    Certificate:
+      type: object
+      required: [status, mint_address, explorer_url]
+      properties:
+        status:
+          $ref: '#/components/schemas/CertificateStatus'
+        mint_address:
+          oneOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+    OrderLine:
+      allOf:
+        - $ref: '#/components/schemas/PreviewLine'
+        - type: object
+          required: [id, refunded_quantity, certificate]
+          properties:
+            id:
+              $ref: '#/components/schemas/Uuid'
+            refunded_quantity:
+              type: integer
+              format: int32
+              maximum: 1000
+              minimum: 0
+            certificate:
+              description: Bernilai `null` kalau barang tidak menerbitkan sertifikat.
+              oneOf:
+                - $ref: '#/components/schemas/Certificate'
+                - type: 'null'
+    Payment:
+      type: object
+      required:
+        - network
+        - reference
+        - solana_pay_url
+        - payer_wallet
+        - signature
+        - explorer_url
+        - failure_code
+      properties:
+        network:
+          $ref: '#/components/schemas/Network'
+        reference:
+          allOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+          description: Kunci unik untuk menemukan transaksi order ini.
+        solana_pay_url:
+          type: string
+          maxLength: 2048
+          description: Isi QR, dengan bentuk `solana:https://<host>/api/v1/solana-pay/orders/<order_id>`.
+          pattern: '^solana:https://'
+        payer_wallet:
+          description: Terisi setelah transaksi ditemukan, dan menjadi tujuan refund.
+          oneOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+            - type: 'null'
+        signature:
+          oneOf:
+            - $ref: '#/components/schemas/TransactionSignature'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+        failure_code:
+          oneOf:
+            - $ref: '#/components/schemas/FailureCode'
+            - type: 'null'
+    Order:
+      type: object
+      required:
+        - id
+        - status
+        - subtotal_idr
+        - discount_idr
+        - total_idr
+        - total_lamports
+        - rate
+        - lines
+        - recipients
+        - payment
+        - refunds
+        - created_at
+        - expires_at
+        - confirmed_at
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        subtotal_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        discount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+        rate:
+          allOf:
+            - $ref: '#/components/schemas/Rate'
+          description: Kurs yang dikunci sampai `expires_at`.
+        lines:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/OrderLine'
+        recipients:
+          type: array
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/SplitRecipient'
+        payment:
+          $ref: '#/components/schemas/Payment'
+        refunds:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/Refund'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        expires_at:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: Batas waktu server menyusun transaksi. Order tetap `pending` selama masa tenggang.
+        confirmed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    OrderSummary:
+      type: object
+      required:
+        - id
+        - status
+        - total_idr
+        - total_lamports
+        - commission_idr
+        - item_count
+        - signature
+        - explorer_url
+        - created_at
+        - confirmed_at
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+        commission_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        item_count:
+          type: integer
+          format: int32
+          maximum: 50000
+          minimum: 1
+        signature:
+          oneOf:
+            - $ref: '#/components/schemas/TransactionSignature'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        confirmed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    OrderList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OrderSummary'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+    OrderStatusView:
+      type: object
+      required: [id, status, expires_at, signature, explorer_url, failure_code, updated_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        signature:
+          oneOf:
+            - $ref: '#/components/schemas/TransactionSignature'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+        failure_code:
+          oneOf:
+            - $ref: '#/components/schemas/FailureCode'
+            - type: 'null'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    PublicOrderLine:
+      type: object
+      required: [item_name, quantity, line_total_idr, certificate]
+      properties:
+        item_name:
+          type: string
+          maxLength: 200
+        quantity:
+          type: integer
+          format: int32
+          maximum: 1000
+          minimum: 1
+        line_total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        certificate:
+          oneOf:
+            - $ref: '#/components/schemas/Certificate'
+            - type: 'null'
+    PublicOrder:
+      type: object
+      required:
+        - id
+        - status
+        - store_name
+        - network
+        - lines
+        - total_idr
+        - total_lamports
+        - rate
+        - solana_pay_url
+        - expires_at
+        - confirmed_at
+        - signature
+        - explorer_url
+        - failure_code
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        store_name:
+          type: string
+          maxLength: 200
+        network:
+          $ref: '#/components/schemas/Network'
+        lines:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PublicOrderLine'
+        total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+        rate:
+          $ref: '#/components/schemas/Rate'
+        solana_pay_url:
+          type: string
+          maxLength: 2048
+          pattern: '^solana:https://'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        confirmed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        signature:
+          oneOf:
+            - $ref: '#/components/schemas/TransactionSignature'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+        failure_code:
+          oneOf:
+            - $ref: '#/components/schemas/FailureCode'
+            - type: 'null'
+    SolanaPayMetadata:
+      type: object
+      required: [label, icon]
+      properties:
+        label:
+          type: string
+          maxLength: 200
+          description: Nama toko yang tampil di wallet.
+        icon:
+          type: string
+          maxLength: 2048
+          format: uri
+          description: URL absolut gambar SVG, PNG, atau WebP.
+    SolanaPayTransactionRequest:
+      type: object
+      required: [account]
+      description: Spesifikasi Solana Pay mengizinkan kolom tambahan, dan API mengabaikannya.
+      additionalProperties: true
+      properties:
+        account:
+          $ref: '#/components/schemas/SolanaAddress'
+    SolanaPayTransaction:
+      type: object
+      required: [transaction]
+      properties:
+        transaction:
+          type: string
+          maxLength: 2048
+          contentEncoding: base64
+          description: Transaksi Solana yang diserialisasi dalam base64.
+        message:
+          type: string
+          maxLength: 500
+          description: Teks untuk wallet, tanpa data pribadi.
+
+    RefundStatus:
+      type: string
+      enum: [awaiting_signature, confirming, completed, failed, expired]
+      description: |
+        `awaiting_signature` berarti menunggu persetujuan di wallet toko. `confirming` berarti signature
+        sudah diterima dan sedang divalidasi. `completed` berarti pembeli sudah menerima dana dan potongan
+        tercatat. `failed` dan `expired` tidak mengubah saldo maupun catatan.
+    RefundCreate:
+      type: object
+      additionalProperties: false
+      required: [order_line_id]
+      properties:
+        order_line_id:
+          $ref: '#/components/schemas/Uuid'
+        reason:
+          type: string
+          maxLength: 500
+    RefundDeduction:
+      type: object
+      required: [consignor, amount_idr]
+      description: Bagian penitip yang akan dipotong setelah refund selesai.
+      properties:
+        consignor:
+          $ref: '#/components/schemas/ConsignorRef'
+        amount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+    Refund:
+      type: object
+      required:
+        - id
+        - order_id
+        - order_line_id
+        - item_name
+        - status
+        - amount_idr
+        - amount_lamports
+        - source_wallet
+        - destination_wallet
+        - reference
+        - deduction
+        - reason
+        - signature
+        - explorer_url
+        - expires_at
+        - created_at
+        - completed_at
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        order_id:
+          $ref: '#/components/schemas/Uuid'
+        order_line_id:
+          $ref: '#/components/schemas/Uuid'
+        item_name:
+          type: string
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/RefundStatus'
+        amount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        amount_lamports:
+          $ref: '#/components/schemas/AmountLamports'
+        source_wallet:
+          allOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+          description: Wallet toko.
+        destination_wallet:
+          allOf:
+            - $ref: '#/components/schemas/SolanaAddress'
+          description: Wallet pembayar di order asal.
+        reference:
+          $ref: '#/components/schemas/SolanaAddress'
+        deduction:
+          $ref: '#/components/schemas/RefundDeduction'
+        reason:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+        signature:
+          oneOf:
+            - $ref: '#/components/schemas/TransactionSignature'
+            - type: 'null'
+        explorer_url:
+          oneOf:
+            - $ref: '#/components/schemas/ExplorerUrl'
+            - type: 'null'
+        expires_at:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: Batas waktu menandatangani `transaction`.
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        completed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    RefundDraft:
+      allOf:
+        - $ref: '#/components/schemas/Refund'
+        - type: object
+          required: [transaction]
+          properties:
+            transaction:
+              type: string
+              maxLength: 2048
+              contentEncoding: base64
+              description: Transaksi yang harus ditandatangani wallet toko, dalam base64.
+    RefundSignature:
+      type: object
+      additionalProperties: false
+      required: [signature]
+      properties:
+        signature:
+          $ref: '#/components/schemas/TransactionSignature'
+    RefundList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Refund'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    ConsignorSale:
+      type: object
+      required:
+        - order_id
+        - order_line_id
+        - item_name
+        - quantity
+        - unit_price_idr
+        - line_total_idr
+        - commission_idr
+        - consignor_share_idr
+        - refunded_quantity
+        - order_deduction_idr
+        - order_transfer_lamports
+        - sold_at
+        - signature
+        - explorer_url
+      properties:
+        order_id:
+          $ref: '#/components/schemas/Uuid'
+        order_line_id:
+          $ref: '#/components/schemas/Uuid'
+        item_name:
+          type: string
+          maxLength: 200
+        quantity:
+          type: integer
+          format: int32
+          maximum: 1000
+          minimum: 1
+        unit_price_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        line_total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        commission_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        consignor_share_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        refunded_quantity:
+          type: integer
+          format: int32
+          maximum: 1000
+          minimum: 0
+        order_deduction_idr:
+          allOf:
+            - $ref: '#/components/schemas/AmountIdr'
+          description: Potongan refund yang diambil dari penitip ini di seluruh order.
+        order_transfer_lamports:
+          allOf:
+            - $ref: '#/components/schemas/AmountLamports'
+          description: Total yang masuk ke wallet penitip di transaksi ini, untuk semua barangnya.
+        sold_at:
+          $ref: '#/components/schemas/Timestamp'
+        signature:
+          $ref: '#/components/schemas/TransactionSignature'
+        explorer_url:
+          $ref: '#/components/schemas/ExplorerUrl'
+    ConsignorSaleList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ConsignorSale'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+    DeductionStatus:
+      type: string
+      enum: [outstanding, settled]
+    Deduction:
+      type: object
+      required:
+        - id
+        - refund_id
+        - order_id
+        - item_name
+        - status
+        - amount_idr
+        - remaining_idr
+        - created_at
+        - settled_at
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        refund_id:
+          $ref: '#/components/schemas/Uuid'
+        order_id:
+          $ref: '#/components/schemas/Uuid'
+        item_name:
+          type: string
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/DeductionStatus'
+        amount_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        remaining_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        settled_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    DeductionList:
+      type: object
+      required: [data, next_cursor, outstanding_total_idr]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Deduction'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+        outstanding_total_idr:
+          $ref: '#/components/schemas/AmountIdr'
+    ConsignorStock:
+      type: object
+      required: [item_id, item_name, price_idr, stock_available, active]
+      properties:
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        item_name:
+          type: string
+          maxLength: 200
+        price_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        stock_available:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+        active:
+          type: boolean
+    ConsignorStockList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ConsignorStock'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+    StoreSummary:
+      type: object
+      required: [from, to, total_sales_idr, total_commission_idr, transaction_count, generated_at]
+      properties:
+        from:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        to:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        total_sales_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        total_commission_idr:
+          $ref: '#/components/schemas/AmountIdr'
+        transaction_count:
+          type: integer
+          format: int32
+          maximum: 2147483647
+          minimum: 0
+        generated_at:
+          $ref: '#/components/schemas/Timestamp'

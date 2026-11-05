@@ -1,0 +1,16 @@
+# Dependensi dan hasil build
+node_modules/
+backend/bin/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Secret dan environment
+.env
+.env.*
+!.env.example
+
+# Catatan lokal
+Panduan_Hackathon_MLH_Solana_2026.md
+.claude/

@@ -1,0 +1,42 @@
+extends:
+  - spectral:oas
+  - "@stoplight/spectral-owasp-ruleset"
+
+rules:
+  # Nama barang, pesan, dan alasan adalah teks bebas, jadi panjangnya dibatasi maxLength.
+  owasp:api4:2023-string-restricted: off
+  # CORS ditangani middleware. Aturannya ditulis di bagian CORS pada info.description.
+  owasp:api8:2023-define-cors-origin: off
+
+overrides:
+  # Server lokal memang memakai http. URL produksi memakai https setelah deploy.
+  - files:
+      - "openapi.yaml#/servers/0/url"
+    rules:
+      owasp:api8:2023-no-server-http: off
+
+  # Health check dipanggil cron eksternal, tanpa login, input, dan rate limit.
+  - files:
+      - "openapi.yaml#/paths/~1healthz"
+    rules:
+      owasp:api2:2023-read-restricted: off
+      owasp:api4:2023-rate-limit: off
+      owasp:api4:2023-rate-limit-responses-429: off
+      owasp:api8:2023-define-error-responses-401: off
+      owasp:api8:2023-define-error-responses-500: off
+      owasp:api8:2023-define-error-validation: off
+
+  # Endpoint ini tidak punya input apa pun selain JWT.
+  - files:
+      - "openapi.yaml#/paths/~1api~1v1~1me"
+    rules:
+      owasp:api8:2023-define-error-validation: off
+
+  # Pembeli dan wallet tidak login. Keamanannya bergantung pada UUIDv4 dan rate limit.
+  - files:
+      - "openapi.yaml#/paths/~1api~1v1~1public~1orders~1%7Border_id%7D"
+      - "openapi.yaml#/paths/~1api~1v1~1solana-pay~1orders~1%7Border_id%7D"
+    rules:
+      owasp:api2:2023-read-restricted: off
+      owasp:api2:2023-write-restricted: off
+      owasp:api8:2023-define-error-responses-401: off
