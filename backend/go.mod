@@ -3,7 +3,9 @@ module github.com/AldiRachmatdiantoo/FastConsignee/backend
 go 1.27.3
 
 require (
+	github.com/MicahParks/keyfunc/v3 v3.9.1
 	github.com/gagliardetto/solana-go v1.26.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/mr-tron/base58 v1.3.0
@@ -14,6 +16,7 @@ require (
 )
 
 require (
+	github.com/MicahParks/jwkset v0.11.4 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

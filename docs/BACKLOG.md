@@ -15,11 +15,11 @@ Pekerjaan dicicil per fitur, dan backend dikerjakan lebih dulu. Satu item baru s
 
 Kebutuhan: NFR-08, NFR-16 sampai NFR-20, NFR-23, NFR-25.
 
-- [ ] Module Go, konfigurasi environment, dan `.env.example`
-- [ ] Koneksi Postgres, helper transaksi, dan migrasi semua tabel serta indeks
-- [ ] Error RFC 9457, request ID, log, recover, dan CORS
-- [ ] `GET /healthz` dan graceful shutdown
-- [ ] Test harness: database per test, klien API, dan validator kontrak
+- [x] Module Go, konfigurasi environment, dan `.env.example`
+- [x] Koneksi Postgres, helper transaksi, dan migrasi semua tabel serta indeks
+- [x] Error RFC 9457, request ID, log, recover, dan CORS
+- [x] `GET /healthz` dan graceful shutdown
+- [x] Test harness: database per test, klien API, dan validator kontrak
 - [ ] CI GitHub Actions
 
 Testing: unit, repository untuk constraint dan indeks, handler, kontrak.
@@ -28,11 +28,11 @@ Testing: unit, repository untuk constraint dan indeks, handler, kontrak.
 
 Kebutuhan: FR-25, FR-26, FR-27, NFR-24.
 
-- [ ] Verifikasi JWT Supabase, lewat HS256 atau JWKS
-- [ ] Pencocokan akun dan `GET /api/v1/me`
-- [ ] Penjaga peran dan penjaga wallet
-- [ ] Nonce dan penautan wallet dengan tanda tangan ed25519
-- [ ] Rate limit per akun, IP, dan order
+- [x] Verifikasi JWT Supabase, lewat HS256 atau JWKS
+- [x] Pencocokan akun dan `GET /api/v1/me`
+- [x] Penjaga peran dan penjaga wallet
+- [x] Nonce dan penautan wallet dengan tanda tangan ed25519
+- [x] Rate limit per akun, IP, dan order
 
 Testing: unit, handler, keamanan untuk JWT palsu dan akses antarperan, kontrak.
 

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/app"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/cache"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/config"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/database"
@@ -24,6 +25,13 @@ func main() {
 		slog.Error("API berhenti", "error", err)
 		os.Exit(1)
 	}
+}
+
+func newVerifier(ctx context.Context, cfg config.Config) (auth.Verifier, error) {
+	if cfg.JWKSURL != "" {
+		return auth.NewJWKSVerifier(ctx, cfg.JWKSURL, cfg.JWTIssuer, cfg.JWTAudience)
+	}
+	return auth.NewHMACVerifier(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAudience, nil), nil
 }
 
 func run() error {
@@ -45,11 +53,16 @@ func run() error {
 		}
 	}
 
+	verifier, err := newVerifier(ctx, cfg)
+	if err != nil {
+		return err
+	}
 	a := app.New(app.Deps{
-		Config: cfg,
-		DB:     db,
-		Solana: solana.NewRPC(cfg.SolanaRPCURL),
-		Cache:  cache.NewMemory(nil),
+		Config:   cfg,
+		DB:       db,
+		Solana:   solana.NewRPC(cfg.SolanaRPCURL),
+		Cache:    cache.NewMemory(nil),
+		Verifier: verifier,
 	})
 
 	server := &http.Server{
