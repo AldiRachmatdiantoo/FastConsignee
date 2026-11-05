@@ -20,7 +20,7 @@ Kebutuhan: NFR-08, NFR-16 sampai NFR-20, NFR-23, NFR-25.
 - [x] Error RFC 9457, request ID, log, recover, dan CORS
 - [x] `GET /healthz` dan graceful shutdown
 - [x] Test harness: database per test, klien API, dan validator kontrak
-- [ ] CI GitHub Actions
+- [x] CI GitHub Actions
 
 Testing: unit, repository untuk constraint dan indeks, handler, kontrak.
 
