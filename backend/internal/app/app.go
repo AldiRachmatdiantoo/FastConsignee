@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/consignor"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/item"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/api"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/apperr"
@@ -86,6 +87,12 @@ func New(d Deps) *App {
 	r.member("POST /api/v1/items", itemHandler.Create, auth.RoleOwner)
 	r.member("GET /api/v1/items/{item_id}", itemHandler.Get, auth.RoleCashier, auth.RoleOwner)
 	r.member("PATCH /api/v1/items/{item_id}", itemHandler.Update, auth.RoleOwner)
+
+	consignorHandler := consignor.NewHandler(consignor.NewService(consignor.NewRepository(d.DB), d.DB))
+	r.member("GET /api/v1/consignors", consignorHandler.List, auth.RoleOwner)
+	r.member("POST /api/v1/consignors", consignorHandler.Create, auth.RoleOwner)
+	r.member("GET /api/v1/consignors/{consignor_id}", consignorHandler.Get, auth.RoleOwner)
+	r.member("PATCH /api/v1/consignors/{consignor_id}", consignorHandler.Update, auth.RoleOwner)
 
 	return &App{
 		Mux: mux,

@@ -51,8 +51,8 @@ Testing: repository, service, handler, kontrak.
 
 Kebutuhan: FR-23.
 
-- [ ] Daftar, detail, tambah, dan ubah penitip
-- [ ] Validasi alamat wallet dan status wallet
+- [x] Daftar, detail, tambah, dan ubah penitip
+- [x] Validasi alamat wallet dan status wallet
 
 Testing: repository, handler, keamanan antartoko, kontrak.
 
