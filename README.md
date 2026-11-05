@@ -243,15 +243,20 @@ Tiap fitur punya folder sendiri, dan di dalamnya kode dipisah menjadi handler, s
 ```text
 backend/
   cmd/api/
+  cmd/seed/
+  migrations/
   internal/
+    app/         rute dan worker
     order/       handler.go  service.go  repository.go  model.go
-    payment/     handler.go  service.go  repository.go  model.go
-    refund/      ...
+    payment/     handler.go  service.go  repository.go  worker.go
+    refund/      handler.go  service.go  repository.go  worker.go
     item/        ...
     consignor/   ...
     dashboard/   ...
     auth/        ...
-    platform/    database, cache, solana, config, middleware
+    seed/        data demo
+    testkit/     alat test dan validasi kontrak
+    platform/    api, apperr, cache, config, database, middleware, solana
 ```
 
 - **Handler:** hanya mengurus HTTP, validasi input, dan response.
@@ -511,9 +516,11 @@ Stok tertahan sengaja tidak disimpan. Jadi perubahan status order sudah cukup un
 | users(store\_id, id) | Unik | Target foreign key komposit, dan mencari akun per toko |
 | stores(wallet\_address), consignors(wallet\_address) | Unik | Satu wallet hanya tertaut ke satu pemilik |
 | consignors(user\_id) | Unik | Satu akun hanya menjadi satu penitip |
-| consignors(store\_id) | Biasa | Daftar penitip dan pembatasan data per toko |
+| consignors(store\_id, created\_at, id) | Biasa | Daftar penitip dan pembatasan data per toko |
+| consignors(store\_id, user\_id) | Biasa | Foreign key komposit ke akun |
 | items(consignor\_id, active) | Biasa | Katalog dan stok penitip |
 | items(name) | GIN trigram | Pencarian nama barang |
+| items(created\_at, id) | Biasa | Pagination katalog |
 | orders(reference), orders(signature) | Unik | Menemukan order dari transaksi, dan mencegah order tercatat dua kali |
 | orders(created\_by, idempotency\_key) | Unik | Mencegah order ganda |
 | orders(expires\_at) saat status `pending` | Parsial | Dipakai worker pembayaran |
@@ -527,6 +534,7 @@ Stok tertahan sengaja tidak disimpan. Jadi perubahan status order sudah cukup un
 | refunds(created\_by, idempotency\_key) | Unik | Mencegah refund ganda |
 | refunds(order\_line\_id) saat status berjalan | Unik parsial | Hanya satu refund berjalan per baris order |
 | refunds(order\_line\_id) | Biasa | Foreign key dan jumlah barang yang di-refund |
+| refunds(created\_at, id) | Biasa | Daftar refund dan pagination |
 | refunds(expires\_at) saat status berjalan | Parsial | Dipakai worker refund |
 | deductions(refund\_id) | Unik | Satu potongan per refund |
 | deduction\_settlements(deduction\_id, order\_split\_id) | Unik | Satu pelunasan per potongan per penerima |
@@ -626,6 +634,25 @@ Pekerjaan dicicil per fitur, dan backend dikerjakan lebih dulu. Satu item baru s
 | B-08 | Penutup backend | Seed, dokumentasi, beban, keamanan, Devnet, NFT | Beban, keamanan, Devnet |
 | F-01 sampai F-05 | Frontend | Login, kasir, pembeli, dasbor, uji akhir | Vitest, Playwright, manual |
 
+## Keputusan backend
+
+Keputusan ini dibuat saat backend dikerjakan.
+
+| Keadaan | Keputusan |
+| --- | --- |
+| Transaksi pembayaran memuat instruksi lain | Diterima, karena wallet boleh menambah Compute Budget atau guard. Kumpulan transfer SOL tetap harus persis sama. |
+| Transaksi dengan reference order tidak bisa dibaca | Dianggap `VALIDATION_MISMATCH`, supaya stok tidak tertahan selamanya. Ini termasuk versi transaksi yang belum didukung RPC. |
+| Signature terlihat, tetapi transaksinya tidak pernah terbaca | Order kedaluwarsa setelah masa tenggang. |
+| Order gagal | `signature` dan `payer_wallet` tetap disimpan untuk penelusuran. |
+| Satu transaksi dipakai untuk dua order | Order kedua gagal, karena signature unik. |
+| Barang nonaktif saat checkout | Ditolak dengan `INSUFFICIENT_STOCK` dan stok tersedia 0. |
+| Total order 0 | Ditolak dengan `DISCOUNT_TOO_LARGE`. |
+| Nilai satu unit refund 0 lamport | Ditolak dengan `ORDER_NOT_REFUNDABLE`. |
+| Masa tenggang refund | Sama dengan masa tenggang order. |
+| Urutan barang di keranjang | `order_lines.id` memakai UUIDv7, jadi urutan tersimpan tanpa kolom tambahan. |
+| Wallet penitip belum terbukti | Tetap bisa menerima dana, sesuai kontrak. Penitip tanpa wallet ditolak. |
+| Akun pemilik toko pertama | Dibuat lewat seed, karena belum ada pendaftaran toko mandiri. |
+
 ## Di luar ruang lingkup
 
 Fitur berikut sengaja dilewati supaya inti pembayaran selesai dalam 48 jam:
@@ -654,6 +681,8 @@ Risiko terbesar adalah alur Transaction Request, jadi bagian itu diuji paling aw
 | Batas paket gratis bisa habis atau berubah, termasuk Render, Supabase, dan RPC Devnet publik. | Cek batasnya di dokumentasi resmi sebelum deploy. |
 | Paket gratis Vercel diperkirakan hanya untuk penggunaan non-komersial. | Cek ulang sebelum FastConsignee dipakai secara komersial. |
 | Wallet bisa mengirim transaksi setelah masa tenggang, karena wallet mengganti blockhash sendiri. | Masa tenggang 2 menit menutup kasus umum. Kalau dana tetap masuk setelah order kedaluwarsa, pemilik toko mengembalikannya manual. |
+| Siapa pun yang tahu reference bisa menerbitkan transaksi sampah, dan order gagal kalau transaksi itu terlihat lebih dulu. | Transaksi sah menang kalau keduanya terlihat pada putaran worker yang sama. Kalau tidak, pemilik toko menanganinya manual. |
+| Faucet lewat RPC publik Devnet sudah ditutup. | Ambil SOL Devnet dari faucet web, lalu jalankan uji pembayaran Devnet sebelum demo. |
 
 ## Pertanyaan terbuka
 
