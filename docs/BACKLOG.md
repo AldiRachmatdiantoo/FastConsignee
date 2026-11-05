@@ -93,8 +93,8 @@ Testing: unit, property, service dengan RPC tiruan, concurrency untuk refund gan
 
 Kebutuhan: FR-16 sampai FR-20, NFR-22.
 
-- [ ] Penjualan, potongan, dan stok penitip
-- [ ] Ringkasan toko dengan cache
+- [x] Penjualan, potongan, dan stok penitip
+- [x] Ringkasan toko dengan cache
 
 Testing: repository, handler, keamanan antarpenitip, kontrak.
 

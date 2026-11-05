@@ -10,6 +10,7 @@ import (
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/consignor"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/dashboard"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/item"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/order"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/payment"
@@ -87,7 +88,8 @@ func New(d Deps) *App {
 	r.login("POST /api/v1/wallet/nonce", authHandler.CreateNonce, auth.RequireRole(auth.RoleOwner, auth.RoleConsignor))
 	r.login("POST /api/v1/wallet/link", authHandler.LinkWallet, auth.RequireRole(auth.RoleOwner, auth.RoleConsignor))
 
-	itemService := item.NewService(item.NewRepository(d.DB), d.DB, d.Cache, cfg.CatalogCacheTTL)
+	itemRepo := item.NewRepository(d.DB)
+	itemService := item.NewService(itemRepo, d.DB, d.Cache, cfg.CatalogCacheTTL)
 	itemHandler := item.NewHandler(itemService)
 	r.member("GET /api/v1/items", itemHandler.List, auth.RoleCashier, auth.RoleOwner)
 	r.member("POST /api/v1/items", itemHandler.Create, auth.RoleOwner)
@@ -122,6 +124,12 @@ func New(d Deps) *App {
 	r.member("GET /api/v1/refunds", refundHandler.List, auth.RoleOwner)
 	r.member("GET /api/v1/refunds/{refund_id}", refundHandler.Get, auth.RoleOwner)
 	r.member("POST /api/v1/refunds/{refund_id}/signature", refundHandler.Signature, auth.RoleOwner)
+
+	dashboardHandler := dashboard.NewHandler(dashboard.NewService(dashboard.NewRepository(d.DB), itemRepo, d.Cache, cfg.DashboardCacheTTL, d.Now))
+	r.member("GET /api/v1/dashboard/consignor/sales", dashboardHandler.Sales, auth.RoleConsignor)
+	r.member("GET /api/v1/dashboard/consignor/deductions", dashboardHandler.Deductions, auth.RoleConsignor)
+	r.member("GET /api/v1/dashboard/consignor/stock", dashboardHandler.Stock, auth.RoleConsignor)
+	r.member("GET /api/v1/dashboard/store/summary", dashboardHandler.Summary, auth.RoleOwner)
 
 	return &App{
 		Mux:      mux,
