@@ -40,10 +40,10 @@ Testing: unit, handler, keamanan untuk JWT palsu dan akses antarperan, kontrak.
 
 Kebutuhan: FR-01, FR-02, FR-22, NFR-22.
 
-- [ ] Daftar barang dengan pencarian, filter, dan cursor
-- [ ] Detail, tambah, dan ubah barang
-- [ ] Stok tertahan dan stok tersedia
-- [ ] Cache katalog
+- [x] Daftar barang dengan pencarian, filter, dan cursor
+- [x] Detail, tambah, dan ubah barang
+- [x] Stok tertahan dan stok tersedia
+- [x] Cache katalog
 
 Testing: repository, service, handler, kontrak.
 

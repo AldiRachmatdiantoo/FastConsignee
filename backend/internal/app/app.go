@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/item"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/api"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/apperr"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/cache"
@@ -78,6 +79,13 @@ func New(d Deps) *App {
 	r.login("GET /api/v1/me", authHandler.Me)
 	r.login("POST /api/v1/wallet/nonce", authHandler.CreateNonce, auth.RequireRole(auth.RoleOwner, auth.RoleConsignor))
 	r.login("POST /api/v1/wallet/link", authHandler.LinkWallet, auth.RequireRole(auth.RoleOwner, auth.RoleConsignor))
+
+	itemService := item.NewService(item.NewRepository(d.DB), d.DB, d.Cache, cfg.CatalogCacheTTL)
+	itemHandler := item.NewHandler(itemService)
+	r.member("GET /api/v1/items", itemHandler.List, auth.RoleCashier, auth.RoleOwner)
+	r.member("POST /api/v1/items", itemHandler.Create, auth.RoleOwner)
+	r.member("GET /api/v1/items/{item_id}", itemHandler.Get, auth.RoleCashier, auth.RoleOwner)
+	r.member("PATCH /api/v1/items/{item_id}", itemHandler.Update, auth.RoleOwner)
 
 	return &App{
 		Mux: mux,
