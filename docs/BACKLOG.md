@@ -102,9 +102,9 @@ Testing: repository, handler, keamanan antarpenitip, kontrak.
 
 Kebutuhan: FR-21, FR-24, NFR-02, NFR-15, NFR-25.
 
-- [ ] Seed data 3 penitip
-- [ ] Cara menjalankan backend di dokumentasi
-- [ ] Uji beban, `gosec`, dan `govulncheck`
+- [x] Seed data 3 penitip
+- [x] Cara menjalankan backend di dokumentasi
+- [x] Uji beban, `gosec`, dan `govulncheck`
 - [ ] Pembayaran nyata di Devnet
 - [ ] Pengiriman NFT sertifikat
 
