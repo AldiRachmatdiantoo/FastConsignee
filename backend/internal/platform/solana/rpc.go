@@ -8,12 +8,18 @@ import (
 
 	sol "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 )
 
 const (
 	signatureLimit = 100
 	rpcTimeout     = 8 * time.Second
 	rentFreeBytes  = 0
+
+	// Transaksi buatan server selalu legacy, tetapi siapa pun bisa menerbitkan versi lain yang
+	// memuat reference. Tanpa batas ini RPC menolak membacanya.
+	maxTransactionVersion      = 1
+	unsupportedVersionRPCError = -32015
 )
 
 // RPC adalah Client yang memanggil node Solana sungguhan.
@@ -94,7 +100,7 @@ func (c *RPC) GetTransaction(ctx context.Context, signature string) (*Transactio
 	}
 	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
 	defer cancel()
-	version := uint64(0)
+	version := uint64(maxTransactionVersion)
 	out, err := c.client.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
 		Encoding:                       sol.EncodingBase64,
 		Commitment:                     rpc.CommitmentConfirmed,
@@ -102,6 +108,10 @@ func (c *RPC) GetTransaction(ctx context.Context, signature string) (*Transactio
 	})
 	if errors.Is(err, rpc.ErrNotFound) {
 		return nil, ErrNotFound
+	}
+	var rpcErr *jsonrpc.RPCError
+	if errors.As(err, &rpcErr) && rpcErr.Code == unsupportedVersionRPCError {
+		return nil, fmt.Errorf("%w: %w", ErrMalformed, err)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("getTransaction: %w", err)
