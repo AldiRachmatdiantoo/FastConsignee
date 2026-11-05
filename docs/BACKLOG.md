@@ -72,10 +72,10 @@ Testing: unit, property dan fuzz, repository, concurrency untuk stok terakhir, h
 
 Kebutuhan: FR-07 sampai FR-14, NFR-01, NFR-04, NFR-12 sampai NFR-14, NFR-21.
 
-- [ ] Layar bayar publik
-- [ ] Solana Pay GET, POST, preflight, dan CORS
-- [ ] Penyusun transaksi split dengan `reference`
-- [ ] Worker konfirmasi, validasi, dan kedaluwarsa
+- [x] Layar bayar publik
+- [x] Solana Pay GET, POST, preflight, dan CORS
+- [x] Penyusun transaksi split dengan `reference`
+- [x] Worker konfirmasi, validasi, dan kedaluwarsa
 
 Testing: unit isi transaksi, service dengan RPC tiruan, concurrency untuk konfirmasi ganda, kontrak, Devnet kalau airdrop tersedia.
 

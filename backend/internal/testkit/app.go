@@ -356,6 +356,20 @@ func (a *App) PostKey(u User, path, key string, body any) *Response {
 	})
 }
 
+// Tick menjalankan satu putaran worker.
+func (a *App) Tick() {
+	a.T.Helper()
+	if err := a.API.Payments.Tick(context.Background()); err != nil {
+		a.T.Fatalf("worker pembayaran: %v", err)
+	}
+}
+
+// Public mengirim permintaan tanpa login.
+func (a *App) Public(method, path string, body any) *Response {
+	a.T.Helper()
+	return a.Do(Request{Method: method, Path: path, Body: body})
+}
+
 // Patch mengirim PATCH sebagai pengguna.
 func (a *App) Patch(u User, path string, body any) *Response {
 	a.T.Helper()

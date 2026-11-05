@@ -73,6 +73,7 @@ func run() error {
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
+	go a.RunWorkers(ctx, cfg.WorkerInterval)
 	errs := make(chan error, 1)
 	go func() {
 		slog.Info("API berjalan", "port", cfg.Port)

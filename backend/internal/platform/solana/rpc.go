@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	signatureLimit = 10
+	signatureLimit = 100
 	rpcTimeout     = 8 * time.Second
 	rentFreeBytes  = 0
 )
@@ -111,7 +111,7 @@ func (c *RPC) GetTransaction(ctx context.Context, signature string) (*Transactio
 	}
 	tx, err := out.Transaction.GetTransaction()
 	if err != nil {
-		return nil, fmt.Errorf("baca transaksi: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrMalformed, err)
 	}
 	return Decode(tx, signature, out.Meta.Err != nil)
 }

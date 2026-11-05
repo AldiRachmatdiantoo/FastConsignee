@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 
 	sol "github.com/gagliardetto/solana-go"
@@ -47,8 +48,6 @@ type Transaction struct {
 	FeePayer    string
 	Transfers   []Transfer
 	AccountKeys []string
-	// OtherInstructions menghitung instruksi selain transfer SOL, selain Compute Budget.
-	OtherInstructions int
 }
 
 // Client adalah semua kebutuhan RPC aplikasi. Test memakai implementasi tiruan.
@@ -60,8 +59,12 @@ type Client interface {
 	GetTransaction(ctx context.Context, signature string) (*Transaction, error)
 }
 
-// ErrNotFound berarti transaksi belum terlihat di RPC.
-var ErrNotFound = errors.New("transaksi tidak ditemukan")
+var (
+	// ErrNotFound berarti transaksi belum terlihat di RPC.
+	ErrNotFound = errors.New("transaksi tidak ditemukan")
+	// ErrMalformed berarti transaksinya ada, tetapi isinya tidak bisa dibaca.
+	ErrMalformed = errors.New("transaksi tidak bisa dibaca")
+)
 
 // NewReference membuat public key acak untuk menandai satu transaksi.
 func NewReference() (string, error) {
@@ -147,14 +150,13 @@ func BuildTransfers(payer, blockhash, reference string, transfers []Transfer) (s
 
 const systemTransferIndex = 2
 
-var computeBudgetProgram = sol.MustPublicKeyFromBase58("ComputeBudget111111111111111111111111111111")
-
-// Decode mengubah transaksi mentah menjadi Transaction. Wallet boleh menambah instruksi
-// Compute Budget, jadi instruksi itu tidak dihitung.
+// Decode mengubah transaksi mentah menjadi Transaction. Instruksi selain transfer SOL diabaikan,
+// karena wallet boleh menambah Compute Budget atau instruksi pengaman, dan instruksi seperti itu
+// tidak bisa mengambil dana dari penerima.
 func Decode(tx *sol.Transaction, signature string, failed bool) (*Transaction, error) {
 	msg := tx.Message
 	if len(msg.AccountKeys) == 0 {
-		return nil, errors.New("transaksi tanpa akun")
+		return nil, fmt.Errorf("%w: tanpa akun", ErrMalformed)
 	}
 	out := &Transaction{Signature: signature, Failed: failed, FeePayer: msg.AccountKeys[0].String()}
 	for _, k := range msg.AccountKeys {
@@ -162,28 +164,46 @@ func Decode(tx *sol.Transaction, signature string, failed bool) (*Transaction, e
 	}
 	for _, ix := range msg.Instructions {
 		if int(ix.ProgramIDIndex) >= len(msg.AccountKeys) {
-			return nil, errors.New("indeks program di luar batas")
+			return nil, fmt.Errorf("%w: indeks program di luar batas", ErrMalformed)
 		}
 		program := msg.AccountKeys[ix.ProgramIDIndex]
-		if program.Equals(computeBudgetProgram) {
+		if !program.Equals(sol.SystemProgramID) || len(ix.Data) != 12 || len(ix.Accounts) < 2 ||
+			binary.LittleEndian.Uint32(ix.Data[:4]) != systemTransferIndex {
 			continue
 		}
-		if program.Equals(sol.SystemProgramID) && len(ix.Data) == 12 && len(ix.Accounts) >= 2 &&
-			binary.LittleEndian.Uint32(ix.Data[:4]) == systemTransferIndex {
-			from, to := int(ix.Accounts[0]), int(ix.Accounts[1])
-			if from >= len(msg.AccountKeys) || to >= len(msg.AccountKeys) {
-				return nil, errors.New("indeks akun di luar batas")
-			}
-			out.Transfers = append(out.Transfers, Transfer{
-				From:     msg.AccountKeys[from].String(),
-				To:       msg.AccountKeys[to].String(),
-				Lamports: binary.LittleEndian.Uint64(ix.Data[4:12]),
-			})
-			continue
+		from, to := int(ix.Accounts[0]), int(ix.Accounts[1])
+		if from >= len(msg.AccountKeys) || to >= len(msg.AccountKeys) {
+			return nil, fmt.Errorf("%w: indeks akun di luar batas", ErrMalformed)
 		}
-		out.OtherInstructions++
+		out.Transfers = append(out.Transfers, Transfer{
+			From:     msg.AccountKeys[from].String(),
+			To:       msg.AccountKeys[to].String(),
+			Lamports: binary.LittleEndian.Uint64(ix.Data[4:12]),
+		})
 	}
 	return out, nil
+}
+
+// Matches memeriksa bahwa transaksi memuat reference dan berisi persis transfer yang diharapkan, dan
+// semuanya dikirim fee payer. payer kosong berarti siapa pun boleh membayar.
+func Matches(tx *Transaction, reference, payer string, want []Transfer) bool {
+	if payer != "" && tx.FeePayer != payer {
+		return false
+	}
+	if !slices.Contains(tx.AccountKeys, reference) || len(tx.Transfers) != len(want) {
+		return false
+	}
+	left := make(map[Transfer]int, len(want))
+	for _, w := range want {
+		left[Transfer{From: tx.FeePayer, To: w.To, Lamports: w.Lamports}]++
+	}
+	for _, t := range tx.Transfers {
+		if left[t] == 0 {
+			return false
+		}
+		left[t]--
+	}
+	return true
 }
 
 // DecodeBase64 membaca transaksi base64 yang disusun BuildTransfers.

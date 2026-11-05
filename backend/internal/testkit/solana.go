@@ -21,6 +21,7 @@ type FakeSolana struct {
 	balances   map[string]uint64
 	signatures map[string][]solana.SignatureInfo
 	txs        map[string]*solana.Transaction
+	malformed  map[string]bool
 	Rent       uint64
 	Err        error
 	Calls      int
@@ -32,6 +33,7 @@ func NewFakeSolana() *FakeSolana {
 		balances:   map[string]uint64{},
 		signatures: map[string][]solana.SignatureInfo{},
 		txs:        map[string]*solana.Transaction{},
+		malformed:  map[string]bool{},
 		Rent:       890880,
 	}
 }
@@ -63,6 +65,21 @@ func (f *FakeSolana) Publish(reference string, tx *solana.Transaction) {
 	defer f.mu.Unlock()
 	f.signatures[reference] = append(f.signatures[reference], solana.SignatureInfo{Signature: tx.Signature, Failed: tx.Failed})
 	f.txs[tx.Signature] = tx
+}
+
+// PublishSignature membuat signature terlihat, tetapi transaksinya belum bisa dibaca.
+func (f *FakeSolana) PublishSignature(reference, signature string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.signatures[reference] = append(f.signatures[reference], solana.SignatureInfo{Signature: signature})
+}
+
+// PublishMalformed membuat transaksi yang isinya tidak bisa dibaca.
+func (f *FakeSolana) PublishMalformed(reference, signature string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.signatures[reference] = append(f.signatures[reference], solana.SignatureInfo{Signature: signature})
+	f.malformed[signature] = true
 }
 
 // LatestBlockhash mengembalikan blockhash tetap.
@@ -105,6 +122,9 @@ func (f *FakeSolana) GetTransaction(_ context.Context, signature string) (*solan
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.malformed[signature] {
+		return nil, solana.ErrMalformed
+	}
 	if tx, ok := f.txs[signature]; ok {
 		return tx, nil
 	}
