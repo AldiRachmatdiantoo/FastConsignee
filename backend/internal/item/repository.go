@@ -100,8 +100,9 @@ func (r *PgRepository) List(ctx context.Context, storeID uuid.UUID, f Filter, p 
 	return out, rows.Err()
 }
 
-func (r *PgRepository) one(ctx context.Context, suffix string, storeID, id uuid.UUID) (*Item, error) {
-	i, err := scan(r.db.Q(ctx).QueryRow(ctx, selectItem+` WHERE c.store_id = $1 AND i.id = $2`+suffix, storeID, id))
+// Get membaca satu barang.
+func (r *PgRepository) Get(ctx context.Context, storeID, id uuid.UUID) (*Item, error) {
+	i, err := scan(r.db.Q(ctx).QueryRow(ctx, selectItem+` WHERE c.store_id = $1 AND i.id = $2`, storeID, id))
 	if database.IsNoRows(err) {
 		return nil, nil
 	}
@@ -111,14 +112,22 @@ func (r *PgRepository) one(ctx context.Context, suffix string, storeID, id uuid.
 	return &i, nil
 }
 
-// Get membaca satu barang.
-func (r *PgRepository) Get(ctx context.Context, storeID, id uuid.UUID) (*Item, error) {
-	return r.one(ctx, "", storeID, id)
-}
-
-// Lock membaca satu barang dan mengunci barisnya sampai transaksi selesai.
+// Lock mengunci barang sampai transaksi selesai, lalu membacanya. Keduanya harus statement terpisah:
+// snapshot statement yang menunggu kunci tidak melihat reservasi yang baru di-commit.
 func (r *PgRepository) Lock(ctx context.Context, storeID, id uuid.UUID) (*Item, error) {
-	return r.one(ctx, ` FOR UPDATE OF i`, storeID, id)
+	var locked uuid.UUID
+	err := r.db.Q(ctx).QueryRow(ctx, `
+		SELECT i.id FROM items i
+		JOIN consignors c ON c.id = i.consignor_id
+		WHERE c.store_id = $1 AND i.id = $2
+		FOR UPDATE OF i`, storeID, id).Scan(&locked)
+	if database.IsNoRows(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("kunci barang: %w", err)
+	}
+	return r.Get(ctx, storeID, id)
 }
 
 // ConsignorInStore memeriksa penitip berada di toko ini.

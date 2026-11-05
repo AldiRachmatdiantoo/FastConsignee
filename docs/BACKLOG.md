@@ -60,11 +60,11 @@ Testing: repository, handler, keamanan antartoko, kontrak.
 
 Kebutuhan: FR-02 sampai FR-08, FR-11, FR-17, FR-28, FR-29, NFR-03, NFR-07.
 
-- [ ] Fungsi murni pembagian, diskon, potongan, dan konversi lamport
-- [ ] Penyedia kurs dengan cache dan nilai cadangan
-- [ ] Rincian pembagian
-- [ ] Buat order dengan reservasi stok, idempotency, dan pelunasan potongan
-- [ ] Daftar order, detail, dan status
+- [x] Fungsi murni pembagian, diskon, potongan, dan konversi lamport
+- [x] Penyedia kurs dengan cache dan nilai cadangan
+- [x] Rincian pembagian
+- [x] Buat order dengan reservasi stok, idempotency, dan pelunasan potongan
+- [x] Daftar order, detail, dan status
 
 Testing: unit, property dan fuzz, repository, concurrency untuk stok terakhir, handler, kontrak.
 

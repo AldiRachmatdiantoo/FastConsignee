@@ -347,6 +347,15 @@ func (a *App) Post(u User, path string, body any) *Response {
 	return a.Do(Request{Method: http.MethodPost, Path: path, Token: a.Token(u), Body: body})
 }
 
+// PostKey mengirim POST dengan Idempotency-Key.
+func (a *App) PostKey(u User, path, key string, body any) *Response {
+	a.T.Helper()
+	return a.Do(Request{
+		Method: http.MethodPost, Path: path, Token: a.Token(u), Body: body,
+		Headers: map[string]string{"Idempotency-Key": key},
+	})
+}
+
 // Patch mengirim PATCH sebagai pengguna.
 func (a *App) Patch(u User, path string, body any) *Response {
 	a.T.Helper()

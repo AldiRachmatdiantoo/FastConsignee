@@ -10,6 +10,7 @@ import (
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/consignor"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/item"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/order"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/api"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/apperr"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/cache"
@@ -93,6 +94,16 @@ func New(d Deps) *App {
 	r.member("POST /api/v1/consignors", consignorHandler.Create, auth.RoleOwner)
 	r.member("GET /api/v1/consignors/{consignor_id}", consignorHandler.Get, auth.RoleOwner)
 	r.member("PATCH /api/v1/consignors/{consignor_id}", consignorHandler.Update, auth.RoleOwner)
+
+	orderRepo := order.NewRepository(d.DB)
+	rates := order.NewMarketRate(cfg.CoinGeckoURL, cfg.FixedIDRPerSOL, cfg.RateTTL, d.Cache, d.Now)
+	orderService := order.NewService(orderRepo, d.DB, rates, d.Solana, d.Cache, cfg.OrderTTL, d.Now)
+	orderHandler := order.NewHandler(orderService, cfg.PublicAPIURL)
+	r.member("POST /api/v1/orders/preview", orderHandler.Preview, auth.RoleCashier, auth.RoleOwner)
+	r.member("POST /api/v1/orders", orderHandler.Create, auth.RoleCashier, auth.RoleOwner)
+	r.member("GET /api/v1/orders", orderHandler.List, auth.RoleCashier, auth.RoleOwner)
+	r.member("GET /api/v1/orders/{order_id}", orderHandler.Get, auth.RoleCashier, auth.RoleOwner)
+	r.member("GET /api/v1/orders/{order_id}/status", orderHandler.Status, auth.RoleCashier, auth.RoleOwner)
 
 	return &App{
 		Mux: mux,

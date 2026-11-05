@@ -22,6 +22,11 @@ func ExplorerURL(signature string) string {
 	return "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
 }
 
+// ExplorerAddressURL mengembalikan tautan Explorer untuk sebuah akun di Devnet.
+func ExplorerAddressURL(address string) string {
+	return "https://explorer.solana.com/address/" + address + "?cluster=devnet"
+}
+
 // Transfer adalah satu perpindahan SOL.
 type Transfer struct {
 	From     string
