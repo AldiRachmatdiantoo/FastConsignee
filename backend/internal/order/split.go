@@ -141,6 +141,11 @@ func (s Split) Same(other Split) bool {
 	return true
 }
 
+// FloorLamports mengubah Rupiah menjadi lamport dengan pembulatan ke bawah.
+func FloorLamports(idr, idrPerSOL int64) (int64, error) {
+	return toLamports(idr, idrPerSOL, false)
+}
+
 // toLamports memakai big.Int karena Rupiah dikali 1e9 bisa melampaui int64.
 func toLamports(idr, idrPerSOL int64, roundUp bool) (int64, error) {
 	n := new(big.Int).Mul(big.NewInt(idr), big.NewInt(lamportsPerSOL))

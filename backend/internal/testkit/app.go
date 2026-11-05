@@ -362,6 +362,9 @@ func (a *App) Tick() {
 	if err := a.API.Payments.Tick(context.Background()); err != nil {
 		a.T.Fatalf("worker pembayaran: %v", err)
 	}
+	if err := a.API.Refunds.Tick(context.Background()); err != nil {
+		a.T.Fatalf("worker refund: %v", err)
+	}
 }
 
 // Public mengirim permintaan tanpa login.

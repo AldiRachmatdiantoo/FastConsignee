@@ -67,6 +67,13 @@ func (f *FakeSolana) Publish(reference string, tx *solana.Transaction) {
 	f.txs[tx.Signature] = tx
 }
 
+// AddTransaction membuat transaksi bisa dibaca lewat signature saja.
+func (f *FakeSolana) AddTransaction(tx *solana.Transaction) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.txs[tx.Signature] = tx
+}
+
 // PublishSignature membuat signature terlihat, tetapi transaksinya belum bisa dibaca.
 func (f *FakeSolana) PublishSignature(reference, signature string) {
 	f.mu.Lock()

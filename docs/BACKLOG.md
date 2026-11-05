@@ -83,9 +83,9 @@ Testing: unit isi transaksi, service dengan RPC tiruan, concurrency untuk konfir
 
 Kebutuhan: FR-15, FR-16, FR-17.
 
-- [ ] Nilai refund per unit
-- [ ] Buat refund, signature, daftar, dan detail
-- [ ] Worker refund dan pencatatan potongan
+- [x] Nilai refund per unit
+- [x] Buat refund, signature, daftar, dan detail
+- [x] Worker refund dan pencatatan potongan
 
 Testing: unit, property, service dengan RPC tiruan, concurrency untuk refund ganda, kontrak.
 

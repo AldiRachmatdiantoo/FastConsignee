@@ -20,6 +20,7 @@ import (
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/database"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/middleware"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/solana"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/refund"
 )
 
 // Deps adalah semua dependensi luar.
@@ -37,6 +38,7 @@ type App struct {
 	Handler  http.Handler
 	Mux      *http.ServeMux
 	Payments *payment.Worker
+	Refunds  *refund.Worker
 }
 
 type routes struct {
@@ -114,9 +116,17 @@ func New(d Deps) *App {
 	mux.HandleFunc("GET /api/v1/solana-pay/orders/{order_id}", r.public.solanaPay(paymentHandler.Metadata))
 	mux.HandleFunc("POST /api/v1/solana-pay/orders/{order_id}", r.public.solanaPay(paymentHandler.Transaction))
 
+	refundRepo := refund.NewRepository(d.DB)
+	refundHandler := refund.NewHandler(refund.NewService(refundRepo, orderRepo, d.DB, d.Solana, cfg.RefundTTL, d.Now))
+	r.member("POST /api/v1/orders/{order_id}/refunds", refundHandler.Create, auth.RoleOwner)
+	r.member("GET /api/v1/refunds", refundHandler.List, auth.RoleOwner)
+	r.member("GET /api/v1/refunds/{refund_id}", refundHandler.Get, auth.RoleOwner)
+	r.member("POST /api/v1/refunds/{refund_id}/signature", refundHandler.Signature, auth.RoleOwner)
+
 	return &App{
 		Mux:      mux,
 		Payments: payment.NewWorker(paymentRepo, d.DB, d.Solana, d.Cache, cfg.WorkerBatch, cfg.OrderGrace, d.Now),
+		Refunds:  refund.NewWorker(refundRepo, d.DB, d.Solana, cfg.WorkerBatch, cfg.OrderGrace, d.Now),
 		Handler: middleware.Chain(mux,
 			middleware.RequestID,
 			middleware.Logger,
@@ -203,5 +213,8 @@ func (a *App) tick(ctx context.Context) {
 	}()
 	if err := a.Payments.Tick(ctx); err != nil {
 		slog.Error("worker pembayaran gagal", "error", err)
+	}
+	if err := a.Refunds.Tick(ctx); err != nil {
+		slog.Error("worker refund gagal", "error", err)
 	}
 }
