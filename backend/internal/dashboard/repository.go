@@ -203,7 +203,7 @@ type Summary struct {
 	To               *time.Time
 	TotalSalesIDR    int64
 	TotalCommission  int64
-	TransactionCount int32
+	TransactionCount int
 	GeneratedAt      time.Time
 }
 
@@ -249,6 +249,6 @@ func (r *Repository) summary(ctx context.Context, storeID uuid.UUID, period Peri
 		s.TotalCommission += a.Commission
 		orders[id] = struct{}{}
 	}
-	s.TransactionCount = int32(len(orders))
+	s.TransactionCount = len(orders)
 	return s, rows.Err()
 }

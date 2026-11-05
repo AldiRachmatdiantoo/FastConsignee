@@ -180,7 +180,7 @@ type summaryResponse struct {
 	To                 *time.Time `json:"to"`
 	TotalSalesIDR      int64      `json:"total_sales_idr"`
 	TotalCommissionIDR int64      `json:"total_commission_idr"`
-	TransactionCount   int32      `json:"transaction_count"`
+	TransactionCount   int        `json:"transaction_count"`
 	GeneratedAt        time.Time  `json:"generated_at"`
 }
 

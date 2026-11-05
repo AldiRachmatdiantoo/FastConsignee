@@ -103,7 +103,7 @@ func (s *Service) transaction(ctx context.Context, f order.Refund) (string, erro
 		return "", fmt.Errorf("%w: %w", apperr.New(apperr.ServiceUnavailable, "Jaringan Solana tidak bisa dihubungi."), err)
 	}
 	return solana.BuildTransfers(f.SourceWallet, blockhash, f.Reference, []solana.Transfer{{
-		From: f.SourceWallet, To: f.DestinationWallet, Lamports: uint64(f.AmountLamports),
+		From: f.SourceWallet, To: f.DestinationWallet, Lamports: uint64(f.AmountLamports), // #nosec G115 -- amount_lamports dijaga CHECK > 0
 	}})
 }
 

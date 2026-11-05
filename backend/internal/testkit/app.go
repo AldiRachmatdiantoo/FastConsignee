@@ -19,6 +19,7 @@ import (
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/cache"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/config"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/database"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/solana"
 )
 
 const (
@@ -81,6 +82,12 @@ type Option func(*config.Config)
 // NewApp membuat API untuk satu test.
 func NewApp(t testing.TB, opts ...Option) *App {
 	t.Helper()
+	return NewAppWith(t, nil, opts...)
+}
+
+// NewAppWith memakai klien Solana lain, misalnya RPC Devnet. Nil berarti FakeSolana.
+func NewAppWith(t testing.TB, client solana.Client, opts ...Option) *App {
+	t.Helper()
 	db := NewDB(t)
 	clock := &Clock{now: time.Date(2026, 11, 7, 3, 0, 0, 0, time.UTC)}
 	cfg := config.Config{
@@ -106,11 +113,14 @@ func NewApp(t testing.TB, opts ...Option) *App {
 		o(&cfg)
 	}
 	fake := NewFakeSolana()
+	if client == nil {
+		client = fake
+	}
 	memory := cache.NewMemory(clock.Now)
 	a := app.New(app.Deps{
 		Config:   cfg,
 		DB:       db,
-		Solana:   fake,
+		Solana:   client,
 		Cache:    memory,
 		Verifier: auth.NewHMACVerifier(jwtSecret, jwtIssuer, jwtAud, clock.Now),
 		Now:      clock.Now,

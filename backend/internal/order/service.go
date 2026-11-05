@@ -212,7 +212,7 @@ func (s *Service) checkRent(ctx context.Context, split Split) error {
 		return err
 	}
 	for _, r := range split.Recipients {
-		if r.AmountLamports == 0 || uint64(r.AmountLamports) >= minimum {
+		if r.AmountLamports == 0 || uint64(r.AmountLamports) >= minimum { // #nosec G115 -- BuildSplit tidak menghasilkan nilai negatif
 			continue
 		}
 		balance, err := s.solana.Balance(ctx, r.Wallet)

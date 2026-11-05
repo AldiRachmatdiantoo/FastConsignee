@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/mr-tron/base58"
@@ -151,6 +152,19 @@ func NewWallet() Wallet {
 		panic(errors.Join(errors.New("buat wallet"), err))
 	}
 	return Wallet{Address: base58.Encode(pub), private: priv}
+}
+
+// WalletFromSecret membaca kunci privat base58, bentuk yang diekspor Phantom.
+func WalletFromSecret(secret string) (Wallet, error) {
+	raw, err := base58.Decode(secret)
+	if err != nil {
+		return Wallet{}, fmt.Errorf("kunci wallet: %w", err)
+	}
+	if len(raw) != ed25519.PrivateKeySize {
+		return Wallet{}, fmt.Errorf("kunci wallet %d byte, seharusnya %d", len(raw), ed25519.PrivateKeySize)
+	}
+	key := ed25519.PrivateKey(raw)
+	return Wallet{Address: base58.Encode(key[ed25519.SeedSize:]), private: key}, nil
 }
 
 // Sign menandatangani pesan seperti wallet sungguhan.

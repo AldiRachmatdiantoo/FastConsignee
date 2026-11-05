@@ -65,11 +65,11 @@ func (m *MarketRate) fetch(ctx context.Context) (int64, error) {
 	if m.url == "" {
 		return 0, errors.New("URL kurs kosong")
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, m.url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, m.url, nil) // #nosec G704 -- URL datang dari konfigurasi server
 	if err != nil {
 		return 0, fmt.Errorf("susun permintaan: %w", err)
 	}
-	res, err := m.client.Do(req)
+	res, err := m.client.Do(req) // #nosec G704 -- URL datang dari konfigurasi server
 	if err != nil {
 		return 0, fmt.Errorf("baca kurs: %w", err)
 	}
