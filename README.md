@@ -163,7 +163,7 @@ Sistem punya 29 kebutuhan fungsional, dan 20 di antaranya wajib jalan di video d
 | FR-20 | Dasbor | Dasbor penitip menampilkan sisa stok yang sama dengan katalog kasir. | P-5 | Kalau sempat |
 | FR-21 | Data | Sistem memuat seed data 3 penitip, wallet, barang, harga, dan komisi untuk demo. | T-5, T-6 | Wajib |
 | FR-22 | Data | Pemilik toko bisa mengatur barang, harga, dan komisi per barang di aplikasi. | T-5 | Kalau sempat |
-| FR-23 | Data | Pemilik toko bisa mendaftarkan penitip, dan sistem memvalidasi alamat wallet-nya. Kalau memakai USDC, sistem membuat token account. | T-6 | Kalau sempat |
+| FR-23 | Data | Pemilik toko bisa mendaftarkan penitip, dan sistem memvalidasi alamat wallet-nya. Pembayaran memakai SOL, jadi tidak ada token account. | T-6 | Kalau sempat |
 | FR-24 | Sertifikat | Sistem mengirim NFT sertifikat keaslian ke wallet pembeli setelah pembayaran terkonfirmasi. | B-6 | Kalau sempat |
 | FR-25 | Auth | Sistem menyediakan login OAuth untuk kasir, pemilik toko, dan penitip. | K-7, P-6, T-7 | Wajib |
 | FR-26 | Auth | API memverifikasi JWT dan membatasi akses per peran. Endpoint Solana Pay tetap publik dengan ID order yang tidak bisa ditebak. | K-7, T-7 | Wajib |
@@ -608,6 +608,23 @@ Jadwal ini hanya checkpoint, jadi pekerjaan boleh selesai lebih cepat. Batas ama
 
 - **Kalau uji Transaction Request belum lolos sampai Sabtu pagi:** pindah ke tombol wallet adapter.
 - **Kalau waktunya mepet:** potong load test, cache, dan diskon lebih dulu.
+
+## Backlog
+
+Pekerjaan dicicil per fitur, dan backend dikerjakan lebih dulu. Satu item baru selesai kalau testing-nya lolos, lalu item berikutnya dimulai. Rincian tugasnya ada di [docs/BACKLOG.md](https://github.com/AldiRachmatdiantoo/FastConsignee/blob/main/docs/BACKLOG.md).
+
+| ID | Fitur | Isi | Testing |
+| --- | --- | --- | --- |
+| B-00 | Fondasi | Konfigurasi, migrasi, error, middleware, /healthz, test harness, CI | Unit, repository, handler, kontrak |
+| B-01 | Auth | JWT, akun, peran, penautan wallet, rate limit | Unit, handler, keamanan, kontrak |
+| B-02 | Barang | Katalog, ubah barang, stok, cache | Repository, service, handler, kontrak |
+| B-03 | Penitip | Daftar, ubah, status wallet | Repository, handler, keamanan, kontrak |
+| B-04 | Order | Pembagian, kurs, rincian, buat order, riwayat | Unit, fuzz, repository, concurrency, kontrak |
+| B-05 | Pembayaran | Layar bayar, Solana Pay, worker | Unit, service, concurrency, kontrak, Devnet |
+| B-06 | Refund | Nilai refund, transaksi, worker, potongan | Unit, property, service, concurrency, kontrak |
+| B-07 | Dasbor | Penitip dan pemilik toko | Repository, handler, keamanan, kontrak |
+| B-08 | Penutup backend | Seed, dokumentasi, beban, keamanan, Devnet, NFT | Beban, keamanan, Devnet |
+| F-01 sampai F-05 | Frontend | Login, kasir, pembeli, dasbor, uji akhir | Vitest, Playwright, manual |
 
 ## Di luar ruang lingkup
 
