@@ -105,9 +105,13 @@ func SecurityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-const solanaPayPrefix = "/api/v1/solana-pay/"
+const (
+	solanaPayPrefix   = "/api/v1/solana-pay/"
+	certificatePrefix = "/api/v1/public/certificates/"
+)
 
-// CORS membuka endpoint Solana Pay untuk semua origin, dan endpoint lain hanya untuk frontend.
+// CORS membuka endpoint Solana Pay dan metadata sertifikat untuk semua origin, dan endpoint lain
+// hanya untuk frontend.
 func CORS(frontendOrigin string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +119,9 @@ func CORS(frontendOrigin string) Middleware {
 			origin := r.Header.Get("Origin")
 			preflight := r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != ""
 			switch {
+			case strings.HasPrefix(r.URL.Path, certificatePrefix):
+				// Explorer membaca metadata NFT langsung dari browser.
+				h.Set("Access-Control-Allow-Origin", "*")
 			case strings.HasPrefix(r.URL.Path, solanaPayPrefix):
 				h.Set("Access-Control-Allow-Origin", "*")
 				h.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")

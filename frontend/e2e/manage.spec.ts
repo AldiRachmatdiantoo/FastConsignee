@@ -15,6 +15,7 @@ test("pemilik mengelola barang, dan kasir melihat perubahannya", async ({ browse
   await owner.page.getByLabel("Harga (Rp)").fill("50000");
   await owner.page.getByLabel("Komisi toko (%)").fill("12.5");
   await owner.page.getByLabel("Stok").fill("7");
+  await owner.page.getByLabel("Kirim sertifikat NFT ke pembeli").check();
   await owner.page.getByRole("button", { name: "Simpan" }).click();
   await owner.page.getByLabel("Cari barang").fill(name);
   await expect(owner.page.getByText(name)).toBeVisible();
@@ -26,6 +27,7 @@ test("pemilik mengelola barang, dan kasir melihat perubahannya", async ({ browse
   await expect(cashier.page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
 
   await owner.page.getByRole("button", { name: `Ubah ${name}` }).click();
+  await expect(owner.page.getByLabel("Kirim sertifikat NFT ke pembeli")).toBeChecked();
   await owner.page.getByLabel("Aktif di katalog").uncheck();
   await owner.page.getByRole("button", { name: "Simpan" }).click();
   await expect(owner.page.getByText("Barang tidak ditemukan.")).toBeVisible();

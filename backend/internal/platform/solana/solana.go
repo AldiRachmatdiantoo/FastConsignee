@@ -57,6 +57,9 @@ type Client interface {
 	RentExemptMinimum(ctx context.Context) (uint64, error)
 	FindSignatures(ctx context.Context, reference string) ([]SignatureInfo, error)
 	GetTransaction(ctx context.Context, signature string) (*Transaction, error)
+	AccountExists(ctx context.Context, address string) (bool, error)
+	RentExemptFor(ctx context.Context, size uint64) (uint64, error)
+	SendTransaction(ctx context.Context, raw []byte) (string, error)
 }
 
 var (

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/certificate"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/consignor"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/dashboard"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/item"
@@ -37,10 +38,11 @@ type Deps struct {
 
 // App adalah API yang sudah tersusun.
 type App struct {
-	Handler  http.Handler
-	Mux      *http.ServeMux
-	Payments *payment.Worker
-	Refunds  *refund.Worker
+	Handler      http.Handler
+	Mux          *http.ServeMux
+	Payments     *payment.Worker
+	Refunds      *refund.Worker
+	Certificates *certificate.Worker
 }
 
 type routes struct {
@@ -124,6 +126,12 @@ func New(d Deps) *App {
 	mux.HandleFunc("GET /api/v1/solana-pay/orders/{order_id}", r.public.solanaPay(paymentHandler.Metadata))
 	mux.HandleFunc("POST /api/v1/solana-pay/orders/{order_id}", r.public.solanaPay(paymentHandler.Transaction))
 
+	certificateRepo := certificate.NewRepository(d.DB)
+	certificateHandler := certificate.NewHandler(certificateRepo, cfg.IconURL)
+	mux.HandleFunc("GET /api/v1/public/certificates/{certificate_id}/metadata", r.public.limited(certificateHandler.Metadata))
+	// Config sudah memeriksa kunci ini.
+	signer, _ := solana.ParseSigner(cfg.CertificateSigner)
+
 	refundRepo := refund.NewRepository(d.DB)
 	refundHandler := refund.NewHandler(refund.NewService(refundRepo, orderRepo, d.DB, d.Solana, cfg.RefundTTL, d.Now))
 	r.member("POST /api/v1/orders/{order_id}/refunds", refundHandler.Create, auth.RoleOwner)
@@ -141,6 +149,8 @@ func New(d Deps) *App {
 		Mux:      mux,
 		Payments: payment.NewWorker(paymentRepo, d.DB, d.Solana, d.Cache, cfg.WorkerBatch, cfg.OrderGrace, d.Now),
 		Refunds:  refund.NewWorker(refundRepo, d.DB, d.Solana, cfg.WorkerBatch, cfg.OrderGrace, d.Now),
+		Certificates: certificate.NewWorker(certificateRepo, d.Solana, signer, cfg.PublicAPIURL, cfg.WorkerBatch,
+			cfg.CertificateDeadline, d.Now),
 		Handler: middleware.Chain(mux,
 			middleware.RequestID,
 			middleware.Logger,
@@ -174,7 +184,8 @@ type publicLimiter struct {
 // check menulis header RateLimit-* dari batas yang paling ketat.
 func (p *publicLimiter) check(w http.ResponseWriter, r *http.Request) middleware.Decision {
 	d := p.ips.Allow(middleware.ClientIP(r, p.proxyHops))
-	o := p.orders.Allow(r.PathValue("order_id"))
+	// Endpoint publik memakai salah satu dari dua parameter ini.
+	o := p.orders.Allow(r.PathValue("order_id") + r.PathValue("certificate_id"))
 	if !o.Allowed || (d.Allowed && o.Remaining < d.Remaining) {
 		d = o
 	}
@@ -244,5 +255,8 @@ func (a *App) tick(ctx context.Context) {
 	}
 	if err := a.Refunds.Tick(ctx); err != nil {
 		slog.Error("worker refund gagal", "error", err)
+	}
+	if err := a.Certificates.Tick(ctx); err != nil {
+		slog.Error("worker sertifikat gagal", "error", err)
 	}
 }

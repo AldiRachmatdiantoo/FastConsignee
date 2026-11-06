@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/solana"
 )
 
 // Config berisi semua pengaturan API. Secret hanya datang dari environment.
@@ -37,12 +39,14 @@ type Config struct {
 	WorkerInterval time.Duration
 	WorkerBatch    int
 
-	RateLimitAccount  int
-	RateLimitIP       int
-	RateLimitOrder    int
-	TrustedProxyHops  int
-	CatalogCacheTTL   time.Duration
-	DashboardCacheTTL time.Duration
+	RateLimitAccount    int
+	RateLimitIP         int
+	RateLimitOrder      int
+	TrustedProxyHops    int
+	CertificateSigner   string
+	CertificateDeadline time.Duration
+	CatalogCacheTTL     time.Duration
+	DashboardCacheTTL   time.Duration
 }
 
 // Load membaca Config lewat getenv, supaya mudah diuji.
@@ -61,6 +65,9 @@ func Load(getenv func(string) string) (Config, error) {
 		JWTAudience: r.str("SUPABASE_JWT_AUDIENCE", "authenticated"),
 
 		SolanaRPCURL: r.str("SOLANA_RPC_URL", "https://api.devnet.solana.com"),
+
+		CertificateSigner:   r.str("CERTIFICATE_SIGNER_SECRET", ""),
+		CertificateDeadline: r.duration("CERTIFICATE_DEADLINE", time.Hour),
 
 		CoinGeckoURL:   r.str("COINGECKO_URL", "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=idr"),
 		FixedIDRPerSOL: r.integer("FIXED_IDR_PER_SOL", 0),
@@ -97,6 +104,9 @@ func (c Config) validate() error {
 	}
 	if c.JWTIssuer == "" {
 		errs = append(errs, errors.New("SUPABASE_JWT_ISSUER wajib diisi"))
+	}
+	if _, err := solana.ParseSigner(c.CertificateSigner); err != nil {
+		errs = append(errs, err)
 	}
 	if u, err := url.Parse(c.PublicAPIURL); err != nil || u.Host == "" {
 		errs = append(errs, errors.New("PUBLIC_API_URL tidak valid"))

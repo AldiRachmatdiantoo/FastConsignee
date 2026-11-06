@@ -411,6 +411,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/certificates/{certificate_id}/metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUIDv4 sertifikat. */
+                certificate_id: components["parameters"]["CertificateId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Membaca metadata NFT sertifikat
+         * @description Dibaca wallet dan Explorer tanpa login, memakai format JSON standar Token Metadata.
+         *     Endpoint ini tidak memuat nama penitip atau wallet pembeli.
+         */
+        get: operations["getCertificateMetadata"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/solana-pay/orders/{order_id}": {
         parameters: {
             query?: never;
@@ -806,6 +830,17 @@ export interface components {
         OrderStatus: "pending" | "confirmed" | "expired" | "failed";
         /** @enum {string} */
         FailureCode: "TRANSACTION_FAILED" | "VALIDATION_MISMATCH";
+        CertificateMetadata: {
+            name: string;
+            symbol: string;
+            description: string;
+            /** Format: uri */
+            image: string;
+            attributes: {
+                trait_type: string;
+                value: string;
+            }[];
+        };
         /** @enum {string} */
         CertificateStatus: "pending" | "sent" | "failed";
         Certificate: {
@@ -1214,6 +1249,8 @@ export interface components {
         ConsignorId: components["schemas"]["Uuid"];
         /** @description UUIDv4 yang tidak bisa ditebak. */
         OrderId: components["schemas"]["Uuid"];
+        /** @description UUIDv4 sertifikat. */
+        CertificateId: components["schemas"]["Uuid"];
         RefundId: components["schemas"]["Uuid"];
         Limit: number;
         /** @description Nilai `next_cursor` dari halaman sebelumnya. */
@@ -1977,6 +2014,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicOrder"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getCertificateMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUIDv4 sertifikat. */
+                certificate_id: components["parameters"]["CertificateId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metadata sertifikat. */
+            200: {
+                headers: {
+                    "RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateMetadata"];
                 };
             };
             400: components["responses"]["BadRequest"];

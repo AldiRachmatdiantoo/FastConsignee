@@ -35,6 +35,7 @@ overrides:
   # Pembeli dan wallet tidak login. Keamanannya bergantung pada UUIDv4 dan rate limit.
   - files:
       - "openapi.yaml#/paths/~1api~1v1~1public~1orders~1%7Border_id%7D"
+      - "openapi.yaml#/paths/~1api~1v1~1public~1certificates~1%7Bcertificate_id%7D~1metadata"
       - "openapi.yaml#/paths/~1api~1v1~1solana-pay~1orders~1%7Border_id%7D"
     rules:
       owasp:api2:2023-read-restricted: off

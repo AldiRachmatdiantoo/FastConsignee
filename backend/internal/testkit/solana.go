@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sync"
 
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/mr-tron/base58"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/solana"
@@ -26,6 +27,10 @@ type FakeSolana struct {
 	Rent       uint64
 	Err        error
 	Calls      int
+	accounts   map[string]bool
+	sent       [][]byte
+	drop       bool
+	sendErr    error
 }
 
 // NewFakeSolana membuat RPC tiruan. Semua wallet dianggap sudah punya saldo sampai diubah.
@@ -35,6 +40,7 @@ func NewFakeSolana() *FakeSolana {
 		signatures: map[string][]solana.SignatureInfo{},
 		txs:        map[string]*solana.Transaction{},
 		malformed:  map[string]bool{},
+		accounts:   map[string]bool{},
 		Rent:       890880,
 	}
 }
@@ -44,6 +50,68 @@ func (f *FakeSolana) fail() error {
 	defer f.mu.Unlock()
 	f.Calls++
 	return f.Err
+}
+
+// DropTransactions membuat transaksi terkirim tidak pernah masuk jaringan.
+func (f *FakeSolana) DropTransactions(drop bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.drop = drop
+}
+
+// SetSendErr membuat pengiriman transaksi gagal.
+func (f *FakeSolana) SetSendErr(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.sendErr = err
+}
+
+// SentTransactions membaca transaksi yang pernah dikirim.
+func (f *FakeSolana) SentTransactions() [][]byte {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([][]byte(nil), f.sent...)
+}
+
+// AccountExists mengecek akun yang dibuat transaksi terkirim.
+func (f *FakeSolana) AccountExists(_ context.Context, address string) (bool, error) {
+	if err := f.fail(); err != nil {
+		return false, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.accounts[address], nil
+}
+
+// RentExemptFor menjawab saldo minimum tetap.
+func (f *FakeSolana) RentExemptFor(context.Context, uint64) (uint64, error) {
+	if err := f.fail(); err != nil {
+		return 0, err
+	}
+	return f.Rent, nil
+}
+
+// SendTransaction menyimpan transaksi. Semua penanda tangannya dianggap sudah punya akun.
+func (f *FakeSolana) SendTransaction(_ context.Context, raw []byte) (string, error) {
+	if err := f.fail(); err != nil {
+		return "", err
+	}
+	tx, err := sol.TransactionFromBytes(raw)
+	if err != nil {
+		return "", err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.sendErr != nil {
+		return "", f.sendErr
+	}
+	f.sent = append(f.sent, raw)
+	if !f.drop {
+		for _, key := range tx.Message.AccountKeys[:tx.Message.Header.NumRequiredSignatures] {
+			f.accounts[key.String()] = true
+		}
+	}
+	return tx.Signatures[0].String(), nil
 }
 
 // SetErr membuat semua panggilan RPC gagal.

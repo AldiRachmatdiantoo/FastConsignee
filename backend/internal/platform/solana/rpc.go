@@ -93,6 +93,46 @@ func (c *RPC) FindSignatures(ctx context.Context, reference string) ([]Signature
 	return infos, nil
 }
 
+// AccountExists mengecek akun sudah ada di jaringan.
+func (c *RPC) AccountExists(ctx context.Context, address string) (bool, error) {
+	key, err := sol.PublicKeyFromBase58(address)
+	if err != nil {
+		return false, fmt.Errorf("alamat: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
+	defer cancel()
+	out, err := c.client.GetAccountInfoWithOpts(ctx, key, &rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed})
+	if errors.Is(err, rpc.ErrNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("getAccountInfo: %w", err)
+	}
+	return out != nil && out.Value != nil, nil
+}
+
+// RentExemptFor membaca saldo minimum akun berukuran size byte.
+func (c *RPC) RentExemptFor(ctx context.Context, size uint64) (uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
+	defer cancel()
+	out, err := c.client.GetMinimumBalanceForRentExemption(ctx, size, rpc.CommitmentConfirmed)
+	if err != nil {
+		return 0, fmt.Errorf("getMinimumBalanceForRentExemption: %w", err)
+	}
+	return out, nil
+}
+
+// SendTransaction mengirim transaksi yang sudah ditandatangani.
+func (c *RPC) SendTransaction(ctx context.Context, raw []byte) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
+	defer cancel()
+	signature, err := c.client.SendRawTransactionWithOpts(ctx, raw, rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentConfirmed})
+	if err != nil {
+		return "", fmt.Errorf("sendTransaction: %w", err)
+	}
+	return signature.String(), nil
+}
+
 // GetTransaction membaca transaksi yang sudah terkonfirmasi.
 func (c *RPC) GetTransaction(ctx context.Context, signature string) (*Transaction, error) {
 	sig, err := sol.SignatureFromBase58(signature)

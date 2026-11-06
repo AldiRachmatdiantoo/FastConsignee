@@ -29,6 +29,9 @@ type product struct {
 	stock int32
 }
 
+// certifiedProduct adalah barang demo yang mengirim NFT sertifikat. Alur demo utama tidak memakainya.
+const certifiedProduct = "Kain Batik Tulis"
+
 type consignor struct {
 	name  string
 	email string
@@ -250,8 +253,8 @@ func (s *seeder) item(ctx context.Context, consignorID uuid.UUID, p product) err
 	if err != nil {
 		return err
 	}
-	_, err = s.q.Exec(ctx, `INSERT INTO items (id, consignor_id, name, price_idr, commission_bps, stock_on_hand) VALUES ($1, $2, $3, $4, $5, $6)`,
-		id, consignorID, p.name, p.price, p.bps, p.stock)
+	_, err = s.q.Exec(ctx, `INSERT INTO items (id, consignor_id, name, price_idr, commission_bps, stock_on_hand, certificate_enabled) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		id, consignorID, p.name, p.price, p.bps, p.stock, p.name == certifiedProduct)
 	if err != nil {
 		return fmt.Errorf("buat barang: %w", err)
 	}

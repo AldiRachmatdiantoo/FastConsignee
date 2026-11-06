@@ -1090,6 +1090,63 @@
           ]
         },
         {
+          "name": "Membaca metadata NFT sertifikat",
+          "request": {
+            "name": "Membaca metadata NFT sertifikat",
+            "description": "**Peran:** `public`\n\nDibaca wallet dan Explorer tanpa login, memakai format JSON standar Token Metadata.\nEndpoint ini tidak memuat nama penitip atau wallet pembeli.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "public",
+                "certificates",
+                ":certificate_id",
+                "metadata"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{certificate_id}}",
+                  "key": "certificate_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 sertifikat.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Memberi label dan ikon ke wallet",
           "request": {
             "name": "Memberi label dan ikon ke wallet",

@@ -198,6 +198,14 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
           value={form.stock}
           onChange={(event) => update({ stock: event.target.value })}
         />
+        <label className="flex min-h-11 items-center gap-2 self-end text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={form.certificate}
+            onChange={(event) => update({ certificate: event.target.checked })}
+          />
+          Kirim sertifikat NFT ke pembeli
+        </label>
         {item ? (
           <label className="flex min-h-11 items-center gap-2 self-end text-sm font-medium">
             <input type="checkbox" checked={form.active} onChange={(event) => update({ active: event.target.checked })} />

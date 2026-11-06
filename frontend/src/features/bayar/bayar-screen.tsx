@@ -54,7 +54,8 @@ function OrderView({ orderId, connectFailed, resetConnect }: OrderViewProps) {
   const order = latest ?? (state.status === "ready" ? state.data : null);
 
   const poll = useCallback(async () => setLatest(await load()), [load]);
-  usePolling(poll, POLL_MS, order?.status === "pending");
+  const certificateWaiting = order?.lines.some(({ certificate }) => certificate?.status === "pending") ?? false;
+  usePolling(poll, POLL_MS, order?.status === "pending" || certificateWaiting);
 
   if (state.status === "error") {
     return <Notice tone="danger">{state.message}</Notice>;
@@ -184,6 +185,18 @@ function PendingPayment({ order, connectFailed, resetConnect }: PendingPaymentPr
   );
 }
 
+type LineCertificate = PublicOrder["lines"][number]["certificate"];
+
+function CertificateRow({ name, certificate }: { name: string; certificate: LineCertificate }) {
+  if (certificate?.explorer_url) {
+    return <ExplorerLink href={certificate.explorer_url}>Sertifikat {name}</ExplorerLink>;
+  }
+  if (certificate?.status === "failed") {
+    return <p className="text-sm text-muted-foreground">Sertifikat {name} gagal dikirim. Hubungi toko.</p>;
+  }
+  return <p className="text-sm text-muted-foreground">Sertifikat {name} sedang dikirim ke wallet kamu.</p>;
+}
+
 function Receipt({ order }: { order: PublicOrder }) {
   return (
     <Card className="grid gap-3">
@@ -191,11 +204,9 @@ function Receipt({ order }: { order: PublicOrder }) {
       {order.confirmed_at ? <p className="text-sm text-muted-foreground">{formatDateTime(order.confirmed_at)}</p> : null}
       {order.explorer_url ? <ExplorerLink href={order.explorer_url} /> : null}
       {order.lines
-        .filter(({ certificate }) => certificate?.explorer_url)
+        .filter(({ certificate }) => certificate)
         .map(({ item_name: name, certificate }) => (
-          <ExplorerLink key={name} href={certificate?.explorer_url ?? ""}>
-            Sertifikat {name}
-          </ExplorerLink>
+          <CertificateRow key={name} name={name} certificate={certificate} />
         ))}
     </Card>
   );

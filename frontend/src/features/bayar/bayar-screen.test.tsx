@@ -104,6 +104,49 @@ describe("BayarScreen", () => {
     expect(screen.queryByTitle("QR pembayaran Solana Pay")).not.toBeInTheDocument();
   });
 
+  it("menampilkan status sertifikat di bukti pembayaran", async () => {
+    const line = (name: string, certificate: Record<string, unknown>) => ({
+      item_name: name,
+      quantity: 1,
+      line_total_idr: 45000,
+      certificate,
+    });
+    get.mockImplementation(() =>
+      ok(
+        publicOrder("confirmed", {
+          lines: [
+            line("Kain Batik", { status: "pending", mint_address: null, explorer_url: null }),
+            line("Tas Rotan", { status: "failed", mint_address: null, explorer_url: null }),
+            line("Selendang", { status: "sent", mint_address: "m", explorer_url: "https://explorer.test/nft" }),
+          ],
+        }),
+      ),
+    );
+    render(<BayarScreen orderId="o1" />);
+
+    expect(await screen.findByText("Sertifikat Kain Batik sedang dikirim ke wallet kamu.")).toBeVisible();
+    expect(screen.getByText("Sertifikat Tas Rotan gagal dikirim. Hubungi toko.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Sertifikat Selendang" })).toHaveAttribute(
+      "href",
+      "https://explorer.test/nft",
+    );
+  });
+
+  it("terus mengecek sampai sertifikat terkirim", async () => {
+    const order = (certificate: Record<string, unknown>) =>
+      publicOrder("confirmed", {
+        lines: [{ item_name: "Kain Batik", quantity: 1, line_total_idr: 45000, certificate }],
+      });
+    get.mockImplementationOnce(() => ok(order({ status: "pending", mint_address: null, explorer_url: null })));
+    get.mockImplementation(() =>
+      ok(order({ status: "sent", mint_address: "m", explorer_url: "https://explorer.test/nft" })),
+    );
+    render(<BayarScreen orderId="o1" />);
+
+    expect(await screen.findByText("Sertifikat Kain Batik sedang dikirim ke wallet kamu.")).toBeVisible();
+    expect(await screen.findByRole("link", { name: "Sertifikat Kain Batik" }, { timeout: 5000 })).toBeVisible();
+  }, 10_000);
+
   it("mengarahkan pembeli ke kasir kalau QR kedaluwarsa", async () => {
     get.mockImplementation(() => ok(publicOrder("expired")));
     render(<BayarScreen orderId="o1" />);
