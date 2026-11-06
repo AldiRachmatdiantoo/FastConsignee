@@ -43,3 +43,19 @@ test("refund menolak wallet selain wallet toko", async ({ browser }) => {
   await expect(other.page.getByText("Ini bukan wallet toko.")).toBeVisible();
   await expect(other.page.getByRole("button", { name: /^Refund satu/ }).first()).toBeDisabled();
 });
+
+test("API putus saat reload tidak mengeluarkan pengguna", async ({ browser }) => {
+  const cashier = await openActor(browser);
+  await login(cashier.page, "Kasir Demo");
+  const api = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/**`;
+
+  await cashier.context.route(api, (route) => route.abort());
+  await cashier.page.reload();
+  await expect(cashier.page.getByRole("heading", { name: "Belum tersambung" })).toBeVisible();
+  await expect(cashier.page).toHaveURL(/\/kasir$/);
+
+  await cashier.context.unroute(api);
+  await cashier.page.getByRole("button", { name: "Coba lagi" }).click();
+  await expect(cashier.page.getByRole("button", { name: "Keluar" })).toBeVisible();
+  await expect(cashier.page).toHaveURL(/\/kasir$/);
+});

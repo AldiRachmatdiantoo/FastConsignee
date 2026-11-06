@@ -2,12 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ApiError, ApiUnavailableError, createApiClient, unwrap, type Api, type Me } from "@/lib/api/client";
+import { hasGoogleSession, signOutGoogle, watchGoogleSession } from "./google";
 
 const STORAGE_KEY = "fastconsignee.token";
 
 export type Session =
   | { status: "loading" }
   | { status: "anonymous"; error?: string }
+  | { status: "unavailable"; error: string }
   | { status: "authenticated"; me: Me };
 
 type SessionContextValue = {
@@ -47,12 +49,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>({ status: "loading" });
   const [tokens] = useState(createTokenStore);
 
+  const dropToken = useCallback(() => {
+    tokens.set(null);
+    void signOutGoogle();
+  }, [tokens]);
+
   const clear = useCallback(
     (error?: string) => {
-      tokens.set(null);
+      dropToken();
       setSession({ status: "anonymous", error });
     },
-    [tokens],
+    [dropToken],
   );
 
   const api = useMemo(
@@ -74,7 +81,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return { status: "authenticated", me };
     } catch (error) {
       if (error instanceof ApiUnavailableError) {
-        return { status: "anonymous", error: error.message };
+        return { status: "unavailable", error: error.message };
       }
       if (!(error instanceof ApiError)) {
         throw error;
@@ -82,10 +89,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error.status === 401) {
         return null;
       }
-      tokens.set(null);
+      dropToken();
       return { status: "anonymous", error: error.message };
     }
-  }, [tokens, api]);
+  }, [tokens, api, dropToken]);
 
   const load = useCallback(async () => {
     const next = await resolve();
@@ -95,12 +102,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [resolve]);
 
   useEffect(() => {
-    tokens.restore();
-    void resolve().then((next) => {
-      if (next) {
+    let stop = () => {};
+    let left = false;
+
+    async function start() {
+      tokens.restore();
+      if (hasGoogleSession()) {
+        const unsubscribe = await watchGoogleSession(tokens.set);
+        if (left) {
+          unsubscribe();
+          return;
+        }
+        stop = unsubscribe;
+      }
+      const next = await resolve();
+      if (next && !left) {
         setSession(next);
       }
-    });
+    }
+
+    void start();
+    return () => {
+      left = true;
+      stop();
+    };
   }, [tokens, resolve]);
 
   const signInLocal = useCallback(

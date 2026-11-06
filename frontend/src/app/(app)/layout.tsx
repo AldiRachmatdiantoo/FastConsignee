@@ -6,9 +6,10 @@ import { AppShell } from "@/components/app-shell";
 import { Loading } from "@/components/ui";
 import { guardTarget } from "@/features/auth/routes";
 import { useSession } from "@/features/auth/session";
+import { UnavailableScreen } from "@/features/auth/unavailable-screen";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { session } = useSession();
+  const { session, refresh } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,6 +27,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [target, router]);
 
+  if (session.status === "unavailable") {
+    return <UnavailableScreen message={session.error} onRetry={refresh} />;
+  }
   if (session.status !== "authenticated" || target) {
     return <Loading />;
   }

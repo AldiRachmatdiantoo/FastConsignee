@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Notice } from "@/components/ui";
 import { LOCAL_ACCOUNTS } from "./accounts";
+import { googleEnabled, signInWithGoogle } from "./google";
 import { homePath } from "./routes";
 import { useSession } from "./session";
 import "./login.css";
@@ -55,6 +56,7 @@ export function LoginScreen() {
   const { session, signInLocal } = useSession();
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const localLogin = process.env.NEXT_PUBLIC_LOCAL_LOGIN === "true";
 
   useEffect(() => {
@@ -66,6 +68,12 @@ export function LoginScreen() {
   async function choose(email: string) {
     setPending(email);
     await signInLocal(email);
+    setPending(null);
+  }
+
+  async function chooseGoogle() {
+    setPending("google");
+    setGoogleError(await signInWithGoogle());
     setPending(null);
   }
 
@@ -117,12 +125,18 @@ export function LoginScreen() {
           <h2 className="login__heading" id="login-heading">
             Masuk
           </h2>
-          {session.status === "anonymous" && session.error ? <Notice tone="danger">{session.error}</Notice> : null}
+          {"error" in session && session.error ? <Notice tone="danger">{session.error}</Notice> : null}
           <div className="login__group">
-            <button type="button" className="login__google" disabled>
-              Masuk dengan Google
+            <button
+              type="button"
+              className="login__google"
+              disabled={!googleEnabled || pending !== null}
+              onClick={() => void chooseGoogle()}
+            >
+              {pending === "google" ? "Membuka Google..." : "Masuk dengan Google"}
             </button>
-            <p className="login__hint">Login Google belum tersambung.</p>
+            {googleEnabled ? null : <p className="login__hint">Login Google belum tersambung.</p>}
+            {googleError ? <Notice tone="danger">{googleError}</Notice> : null}
           </div>
           {localLogin ? (
             <div className="login__local">
