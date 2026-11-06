@@ -279,27 +279,76 @@
   #calls .calls__sticky { position: sticky; top: calc(50vh - 17.5rem); display: flex; justify-content: center; }
   #calls .calls__device { pointer-events: auto; }
   #calls .calls__device { transform-origin: 50% 60%; }
-  #calls .phone { font-size: 1rem; width: 17.5em; height: 35em; padding: 0.625em; border-radius: 2.75em; background: var(--color-1); box-shadow: var(--shadow-1); }
-  #calls .phone__screen { display: flex; flex-direction: column; gap: 0.75em; height: 100%; padding: 1.25em 0.875em 0.75em; overflow: hidden; border-radius: 2.15em; background: var(--color-2); color: var(--color-1); }
-  #calls .phone__top { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.25em 0.75em; }
-  #calls .phone__who { font-size: 1em; font-weight: 600; letter-spacing: -0.01em; }
-  #calls .phone__state { grid-column: 1; display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.75em; color: var(--color-5); }
-  #calls .phone__dot { width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--color-4); }
-  #calls .phone__end { grid-row: 1 / span 2; grid-column: 2; display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; background: var(--color-4); }
-  #calls .phone__end svg { width: 1.2em; height: 1.2em; fill: none; stroke: var(--color-1); stroke-width: 2; stroke-linecap: round; }
-  #calls .phone__number { align-self: center; padding: 0.35em 0.8em; border-radius: var(--radius-3); background: var(--color-3); font-size: 0.75em; font-weight: 600; }
-  #calls .phone__log { display: flex; flex-direction: column; gap: 0.55em; flex: 1; }
-  #calls .phone__msg { display: grid; justify-items: start; gap: 0.25em; }
-  #calls .phone__msg--you { justify-items: end; }
-  #calls .phone__msg .m-caption, #calls .phone__msg .m-caption-2 { max-width: 88%; font-size: 0.8125em; box-shadow: none; }
-  #calls .phone__note, #calls .phone__cue { font-size: 0.6875em; color: var(--color-5); }
-  #calls .phone__cue { padding-left: 0.35em; }
-  #calls .phone__saved { display: flex; align-items: center; justify-content: center; gap: 0.4em; padding: 0.5em; border-radius: 0.9em; background: var(--color-3); font-size: 0.75em; font-weight: 600; }
-  #calls .phone__saved svg { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  #calls .phone__bar { display: grid; grid-template-columns: repeat(4, 1fr); padding-top: 0.6em; border-top: 0.0625rem solid color-mix(in srgb, var(--color-1) 10%, transparent); }
-  #calls .phone__bar span { display: grid; justify-items: center; gap: 0.25em; font-size: 0.625em; color: var(--color-5); }
-  #calls .phone__bar span:first-child { color: var(--color-1); }
-  #calls .phone__bar svg { width: 1.6em; height: 1.6em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  #calls .phone { --ui: 0.7222; font-size: 1rem; width: 17.5em; height: 35em; padding: 0.625em; border-radius: 2.75em; background: var(--color-1); box-shadow: var(--shadow-1); }
+  /* The phone copies the real cashier and payment screens. Inside the screen 1em equals 1rem in the app, so sizes match its Tailwind classes. */
+  #calls .phone__screen { --line: #e5e7eb; --muted: #656d7a; --accent: #92400e; position: relative; height: 100%; overflow: hidden; border-radius: calc(2.15em / var(--ui)); background: var(--color-3); color: #262626; font-size: calc(var(--ui) * 1em); line-height: 1.5; }
+  #calls .phone__screen b { font-weight: 500; }
+  #calls .phone__screen strong { font-weight: 600; }
+  #calls .phone__screen i { font-style: normal; }
+  #calls .phone__screen code { display: block; color: var(--muted); font: 0.875em/1.43 ui-monospace, Consolas, monospace; }
+  #calls .phone__head { position: absolute; inset: 0 0 auto; z-index: 1; display: flex; align-items: center; gap: 0.75em; height: 5.75em; padding: 1.25em 1em 0; background: var(--color-3); }
+  #calls .phone__head > div { min-width: 0; margin-right: auto; }
+  #calls .phone__head .phone__sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #calls .phone__brand { display: flex; align-items: center; gap: 0.5em; font-size: 1.125em; font-weight: 600; letter-spacing: -0.025em; line-height: 1.55; white-space: nowrap; }
+  #calls .phone__brand svg { flex: none; width: 1.78em; height: 1.11em; }
+  #calls .phone__sub { display: block; color: var(--muted); font-size: 0.875em; line-height: 1.43; }
+  #calls .phone__pill { padding: 0.33em 0.83em; border-radius: var(--radius-3); background: #fffbeb; color: var(--accent); font-size: 0.75em; font-weight: 600; line-height: 1.33; }
+  #calls .phone__btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75em; padding: 0 1em; border-radius: 0.375em; background: var(--color-4); color: #000; font-weight: 600; white-space: nowrap; }
+  #calls .phone__btn--plain { border: 0.0625em solid var(--line); background: #fff; color: #262626; }
+  #calls .phone__btn--wide { display: flex; margin-top: 1em; }
+  #calls .phone__page { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 1.5em; padding: 6.5em 1em 1em; overflow: hidden; background: var(--color-3); }
+  #calls .phone__page--end { justify-content: flex-end; padding-bottom: 0.25em; }
+  #calls .phone__page--top { z-index: 2; }
+  #calls .phone__page--buyer { gap: 1em; padding-top: 3em; background: #fff; }
+  #calls .phone__buyer { flex: none; display: flex; align-items: center; justify-content: space-between; color: var(--accent); font-weight: 600; }
+  #calls .phone__card { flex: none; padding: 1.25em; border: 0.0625em solid color-mix(in srgb, var(--line) 60%, transparent); border-radius: 1em; background: #fff; box-shadow: 0 0.25em 0.5em -0.0625em rgb(0 0 0 / 0.1); }
+  #calls .phone__card--center, #calls .phone__center { text-align: center; }
+  #calls .phone__card--center .phone__strong { margin-top: 0.5em; }
+  #calls .phone__card--center .phone__link { margin-top: 0.57em; font-weight: 600; }
+  #calls .phone__title { font-size: 1.125em; font-weight: 600; line-height: 1.55; }
+  #calls .phone__strong { font-weight: 600; }
+  #calls .phone__gap { margin-top: 1.25em; }
+  #calls .phone__label { margin-top: 0.75em; font-size: 0.875em; font-weight: 500; line-height: 1.43; }
+  #calls .phone__input { display: flex; align-items: center; min-height: 2.75em; margin-top: 0.25em; padding: 0 0.75em; border: 0.0625em solid var(--line); border-radius: 0.375em; color: #8b8b8b; }
+  #calls .phone__items { display: grid; gap: 0.5em; margin-top: 1em; }
+  #calls .phone__item { display: grid; padding: 0.75em; border: 0.0625em solid var(--line); border-radius: 0.375em; }
+  #calls .phone__price { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5em; margin-top: 0.5em; }
+  #calls .phone__lines { margin-top: 0.5em; }
+  #calls .phone__line { display: grid; gap: 0.5em; padding-block: 0.75em; }
+  #calls .phone__line + .phone__line, #calls .phone__split li + li, #calls .phone__bill li + li, #calls .phone__balances li + li { border-top: 0.0625em solid var(--line); }
+  #calls .phone__line-top, #calls .phone__line-end { display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }
+  #calls .phone__line-top b { display: block; }
+  #calls .phone__x { width: 2.75em; color: var(--muted); text-align: center; }
+  #calls .phone__qty { display: flex; align-items: center; gap: 0.25em; }
+  #calls .phone__qty strong { min-width: 2em; text-align: center; }
+  #calls .phone__link { display: inline-block; padding-inline: 0.5em; color: var(--accent); font-size: 0.875em; font-weight: 500; line-height: 1.43; text-decoration: underline; text-underline-offset: 0.25em; }
+  #calls .phone__rule { margin-top: 1em; padding-top: 1em; border-top: 0.0625em solid var(--line); }
+  #calls .phone__split { font-size: 0.875em; line-height: 1.43; }
+  #calls .phone__split li { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75em; padding-block: 0.57em; }
+  #calls .phone__split i { display: block; color: var(--muted); }
+  #calls .phone__split li > :last-child { text-align: right; white-space: nowrap; }
+  #calls .phone__split code { font-size: 0.857em; }
+  #calls .phone__total { display: flex; align-items: baseline; justify-content: space-between; margin-top: 0.5em; padding-top: 0.5em; border-top: 0.0625em solid var(--line); }
+  #calls .phone__total > :last-child { text-align: right; }
+  #calls .phone__total strong { display: block; font-size: 1.25em; font-weight: 700; line-height: 1.4; }
+  #calls .phone__total code { font-size: 0.75em; }
+  #calls .phone__total--bill { margin-top: 0.75em; padding-top: 0.75em; }
+  #calls .phone__total--bill strong { font-size: 1.5em; line-height: 1.33; }
+  #calls .phone__total--bill code { font-size: 0.875em; }
+  #calls .phone__amount { margin-top: 0.27em; font-size: 1.875em; font-weight: 700; line-height: 1.2; }
+  #calls .phone__qr { display: block; width: 15.5em; height: 15.5em; margin: 1em auto 0.75em; padding: 0.75em; }
+  #calls .phone__notice { margin-top: 1em; padding: 0.57em 0.86em; border-radius: 0.43em; background: color-mix(in srgb, #166534 10%, transparent); color: #166534; font-size: 0.875em; line-height: 1.43; }
+  #calls .phone__card--center .phone__link--strong { margin-top: 0.75em; font-size: 1em; line-height: 1.5; }
+  #calls .phone__bill { margin-top: 0.75em; font-size: 0.875em; line-height: 1.43; }
+  #calls .phone__bill li { display: flex; justify-content: space-between; gap: 0.75em; padding-block: 0.57em; }
+  #calls .phone__fine { margin-top: 0.67em; color: var(--muted); font-size: 0.75em; line-height: 1.33; }
+  #calls .phone__screen .phone__address { margin-top: 0.29em; color: #262626; }
+  #calls .phone__actions { display: flex; flex-wrap: wrap; gap: 0.5em; margin-top: 1em; }
+  #calls .phone__actions .phone__btn { flex: 1; }
+  #calls .phone__balances { margin-top: 0.5em; font-size: 0.875em; line-height: 1.43; }
+  #calls .phone__balances li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 0.75em; padding-block: 0.57em; }
+  #calls .phone__balances code { color: #262626; font-size: 0.857em; }
+  #calls .phone__balances strong { margin-left: 0.5em; color: #166534; }
   @media (max-width: 47.99rem) {
     #calls .calls__head { grid-template-columns: 1fr; }
     #calls .calls__grid { grid-template-columns: 1fr; gap: 0; }
@@ -307,10 +356,6 @@
     #calls .calls__aside { z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
     #calls .calls__sticky { top: auto; bottom: 0.5rem; }
     #calls .phone { font-size: 0.66rem; height: 32.25em; }
-    #calls .phone__bar { display: none; }
-    #calls .phone__screen { gap: 0.45em; padding-top: 0.9em; }
-    #calls .phone__log { gap: 0.3em; }
-    #calls .phone__note { display: none; }
     #calls .calls__list { padding-bottom: calc(32.25 * 0.66rem + 2.5rem); }
     #calls .calls__item { min-height: 44vh; justify-content: flex-start; padding-top: 1.5rem; }
   }
@@ -606,15 +651,12 @@
 @keyframes calls-item-in { 0% { opacity: 0.32; } 100% { opacity: 1; } }
 @keyframes calls-item-out { 0% { opacity: 1; } 100% { opacity: 0.32; } }
 @keyframes calls-item-lit { 0% { opacity: 0.32; } 100% { opacity: 1; } }
-/* The phone's proof of step k rises in at k − 1 + 0.05 (a second node of the same step 0.18 later), for 0.3. */
+/* The phone's screen for step k rises over the last one at k − 1 + 0.05, for 0.3. Step 1 is the screen underneath. */
 [data-8b-live] #calls .phone [data-step] { animation-name: calls-step; animation-timeline: --calls-list; animation-timing-function: cubic-bezier(0.3333, 1, 0.6667, 1); animation-fill-mode: both; transform-origin: 50% 100%; animation-range: cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * var(--calls-at) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--calls-at) + 0.3) / 5.2); }
-[data-8b-live] #calls .phone [data-step="1"] { --calls-at: 0.05; }
 [data-8b-live] #calls .phone [data-step="2"] { --calls-at: 1.05; }
 [data-8b-live] #calls .phone [data-step="3"] { --calls-at: 2.05; }
 [data-8b-live] #calls .phone [data-step="4"] { --calls-at: 3.05; }
-[data-8b-live] #calls .phone [data-step="4"] ~ [data-step="4"] { --calls-at: 3.23; }
 [data-8b-live] #calls .phone [data-step="5"] { --calls-at: 4.05; }
-[data-8b-live] #calls .phone .phone__saved[data-step="5"] { --calls-at: 4.23; }
 @keyframes calls-step { 0% { opacity: 0; translate: 0px 14px; scale: 0.94; } 100% { opacity: 1; translate: 0px 0px; scale: 1; } }
 /* Exit: the phone shrinks, tilts and rises from the section's bottom at the bottom of the view to 30%. */
 [data-8b-live] #calls .calls__device { --calls-rise: -12vh; animation-name: calls-device-exit; animation-timeline: --calls-t1; animation-range: cover calc(100% - 100vh) cover calc(100% - 30vh); animation-timing-function: linear; animation-fill-mode: both; }
@@ -874,7 +916,7 @@ if (matchMedia('(prefers-reduced-motion: no-preference)').matches && CSS.support
     <div class="calls__head">
       <h2 class="m-text-3" id="calls-title" data-8b-motion="captionIn" data-8b-split="lines">One screen at the counter.</h2>
       <div class="calls__head-copy">
-        <p class="m-text-4 calls__lead">The cashier picks the items, checks the split and shows a QR. The buyer approves once in their wallet, and the screen confirms on its own.</p>
+        <p class="m-text-4 calls__lead">The cashier picks the items, checks the split and shows a QR. The buyer approves once in their wallet, and the screen confirms on its own. The phone here copies the app’s real screens, in Indonesian, with sample data.</p>
         <a class="m-btn" href="#setup"><span class="m-btn__label">See the three steps</span><span class="m-btn__wave" aria-hidden="true"><i></i><i></i><i></i></span></a>
       </div>
     </div>
@@ -889,27 +931,114 @@ if (matchMedia('(prefers-reduced-motion: no-preference)').matches && CSS.support
       <div class="calls__aside">
         <div class="calls__sticky">
           <div class="calls__device">
-            <figure class="phone" aria-label="Example of a sale on the FastConsignee cashier screen">
-              <div class="phone__screen">
-                <div class="phone__top">
-                  <p class="phone__who">Demo shop</p>
-                  <p class="phone__state"><span class="phone__dot" aria-hidden="true"></span>Waiting for payment · 04:12</p>
-                  <span class="phone__end" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 13l4 4 10-10"/></svg></span>
+            <figure class="phone" role="img" aria-label="The FastConsignee screens during one sale, from the catalog to the confirmed payment. Sample data, in Indonesian as in the app.">
+              <div class="phone__screen" lang="id" aria-hidden="true">
+                <div class="phone__head">
+                  <div><p class="phone__brand"><svg viewBox="0 0 40 28" fill="none" stroke-width="3" stroke-linecap="round"><path stroke="#f59e0b" d="M3 19C10 5 17 5 21 14s11 9 16-6"/><path stroke="currentColor" d="M3 10c7 13 14 13 18 4s11-10 16 5"/></svg>FastConsignee</p><p class="phone__sub">Toko Titip Nusantara</p></div>
+                  <span class="phone__pill">Devnet</span>
+                  <span class="phone__btn phone__btn--plain">Keluar</span>
                 </div>
-                <p class="phone__number" data-step="2">Cart · 2 items · 2 consignors</p>
-                <ol class="phone__log">
-                  <li class="phone__msg" data-step="1"><p class="m-caption"><span class="m-caption__wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="m-caption__text">Bamboo basket and Gayo coffee</span></p></li>
-                  <li class="phone__msg phone__msg--you" data-step="3"><p class="m-caption-2"><span class="m-caption__wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="m-caption__text">QR shown for Rp 180,000</span></p></li>
-                  <li class="phone__cue" data-step="4">Buyer · approving in the wallet</li>
-                  <li class="phone__msg" data-step="4"><p class="m-caption"><span class="m-caption__wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="m-caption__text">Approved once</span></p></li>
-                  <li class="phone__msg phone__msg--you" data-step="5"><p class="m-caption-2"><span class="m-caption__wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="m-caption__text">Confirmed. All shares sent.</span></p></li>
-                </ol>
-                <p class="phone__saved" data-step="5"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Recorded on Solana Devnet</p>
-                <div class="phone__bar" aria-hidden="true">
-                  <span><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8"/></svg>Items</span>
-                  <span><svg viewBox="0 0 24 24"><path d="M12 21v-8M12 13L6 7M12 13l6-6M6 11V7h4M18 11V7h-4"/></svg>Split</span>
-                  <span><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></svg>QR</span>
-                  <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Status</span>
+                <div class="phone__page">
+                  <div class="phone__card">
+                    <p class="phone__title">Katalog</p>
+                    <p class="phone__label">Cari barang</p>
+                    <p class="phone__input">Nama barang</p>
+                    <ul class="phone__items">
+                    <li class="phone__item"><b>Keranjang Bambu</b><span class="phone__sub">Sari Anyaman</span><span class="phone__price"><strong>Rp 95.000</strong><span class="phone__sub">Stok 20</span></span></li>
+                    <li class="phone__item"><b>Kopi Gayo 250 g</b><span class="phone__sub">Budi Kopi</span><span class="phone__price"><strong>Rp 85.000</strong><span class="phone__sub">Stok 40</span></span></li>
+                    <li class="phone__item"><b>Syal Batik</b><span class="phone__sub">Rina Batik</span><span class="phone__price"><strong>Rp 120.000</strong><span class="phone__sub">Stok 15</span></span></li>
+                    <li class="phone__item"><b>Gula Aren Cair</b><span class="phone__sub">Budi Kopi</span><span class="phone__price"><strong>Rp 38.000</strong><span class="phone__sub">Stok 25</span></span></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="phone__page phone__page--end" data-step="2">
+                  <div class="phone__card">
+                    <p class="phone__title">Keranjang</p>
+                    <ul class="phone__lines">
+                    <li class="phone__line"><span class="phone__line-top"><span><b>Keranjang Bambu</b><span class="phone__sub">Sari Anyaman · Rp 95.000</span></span><span class="phone__x">×</span></span><span class="phone__line-end"><span class="phone__qty"><span class="phone__btn phone__btn--plain">−</span><strong>1</strong><span class="phone__btn phone__btn--plain">+</span></span><span class="phone__link">Beri diskon</span></span></li>
+                    <li class="phone__line"><span class="phone__line-top"><span><b>Kopi Gayo 250 g</b><span class="phone__sub">Budi Kopi · Rp 85.000</span></span><span class="phone__x">×</span></span><span class="phone__line-end"><span class="phone__qty"><span class="phone__btn phone__btn--plain">−</span><strong>1</strong><span class="phone__btn phone__btn--plain">+</span></span><span class="phone__link">Beri diskon</span></span></li>
+                    </ul>
+                    <div class="phone__rule">
+                      <p class="phone__strong">Rincian pembagian</p>
+                      <ul class="phone__split">
+                        <li><span><b>Sari Anyaman</b><i>Bagian penitip</i></span><span><strong>Rp 76.000</strong><code>0,0304 SOL</code></span></li>
+                        <li><span><b>Budi Kopi</b><i>Bagian penitip</i></span><span><strong>Rp 76.500</strong><code>0,0306 SOL</code></span></li>
+                        <li><span><b>Toko Titip Nusantara</b><i>Komisi toko</i></span><span><strong>Rp 27.500</strong><code>0,011 SOL</code></span></li>
+                      </ul>
+                      <p class="phone__total"><span class="phone__strong">Total</span><span><strong>Rp 180.000</strong><code>0,072 SOL</code></span></p>
+                    </div>
+                    <span class="phone__btn phone__btn--wide">Buat QR pembayaran</span>
+                  </div>
+                </div>
+                <div class="phone__page" data-step="3">
+                  <div class="phone__card phone__card--center">
+                    <p class="phone__title">Pembayaran</p>
+                    <p class="phone__amount">Rp 180.000</p>
+                    <code>0,072 SOL</code>
+                    <svg class="phone__qr" viewBox="0 0 33 33" shape-rendering="crispEdges"><path id="phone-qr" d="M0 0h7v1H0zM9 0h1v1H9zM11 0h2v1H11zM15 0h1v1H15zM17 0h1v1H17zM21 0h2v1H21zM24 0h1v1H24zM26,0 h7v1H26zM0 1h1v1H0zM6 1h1v1H6zM8 1h1v1H8zM10 1h2v1H10zM13 1h2v1H13zM26 1h1v1H26zM32,1 h1v1H32zM0 2h1v1H0zM2 2h3v1H2zM6 2h1v1H6zM8 2h1v1H8zM10 2h1v1H10zM12 2h2v1H12zM15 2h1v1H15zM18 2h1v1H18zM21 2h2v1H21zM26 2h1v1H26zM28 2h3v1H28zM32,2 h1v1H32zM0 3h1v1H0zM2 3h3v1H2zM6 3h1v1H6zM8 3h1v1H8zM12 3h1v1H12zM17 3h2v1H17zM21 3h2v1H21zM24 3h1v1H24zM26 3h1v1H26zM28 3h3v1H28zM32,3 h1v1H32zM0 4h1v1H0zM2 4h3v1H2zM6 4h1v1H6zM9 4h1v1H9zM12 4h1v1H12zM15 4h1v1H15zM18 4h4v1H18zM23 4h1v1H23zM26 4h1v1H26zM28 4h3v1H28zM32,4 h1v1H32zM0 5h1v1H0zM6 5h1v1H6zM11 5h1v1H11zM14 5h1v1H14zM16 5h3v1H16zM24 5h1v1H24zM26 5h1v1H26zM32,5 h1v1H32zM0 6h7v1H0zM8 6h1v1H8zM10 6h1v1H10zM12 6h1v1H12zM14 6h1v1H14zM16 6h1v1H16zM18 6h1v1H18zM20 6h1v1H20zM22 6h1v1H22zM24 6h1v1H24zM26,6 h7v1H26zM8 7h1v1H8zM12 7h1v1H12zM19 7h2v1H19zM24 7h1v1H24zM0 8h1v1H0zM6 8h1v1H6zM8 8h1v1H8zM10 8h1v1H10zM13 8h3v1H13zM17 8h1v1H17zM19 8h1v1H19zM22 8h1v1H22zM24 8h3v1H24zM29 8h3v1H29zM2 9h4v1H2zM7 9h1v1H7zM14 9h7v1H14zM23 9h1v1H23zM25 9h1v1H25zM27 9h2v1H27zM30 9h1v1H30zM0 10h1v1H0zM4 10h4v1H4zM9 10h1v1H9zM11 10h2v1H11zM15 10h1v1H15zM17 10h1v1H17zM20 10h2v1H20zM27 10h4v1H27zM2 11h1v1H2zM4 11h2v1H4zM7 11h1v1H7zM9 11h3v1H9zM14 11h3v1H14zM18 11h1v1H18zM20 11h1v1H20zM25,11 h8v1H25zM0 12h2v1H0zM3 12h1v1H3zM5 12h2v1H5zM10 12h1v1H10zM13 12h2v1H13zM16 12h5v1H16zM23 12h4v1H23zM31,12 h2v1H31zM2 13h1v1H2zM4 13h2v1H4zM7 13h1v1H7zM9 13h1v1H9zM11 13h1v1H11zM14 13h1v1H14zM16 13h1v1H16zM18 13h3v1H18zM22 13h3v1H22zM26 13h2v1H26zM30 13h1v1H30zM32,13 h1v1H32zM0 14h1v1H0zM3 14h2v1H3zM6 14h2v1H6zM10 14h1v1H10zM13 14h1v1H13zM17 14h2v1H17zM20 14h1v1H20zM24 14h1v1H24zM30 14h2v1H30zM5 15h1v1H5zM9 15h2v1H9zM12 15h1v1H12zM15 15h1v1H15zM25 15h1v1H25zM29 15h2v1H29zM1 16h2v1H1zM4 16h1v1H4zM6 16h1v1H6zM8 16h5v1H8zM14 16h1v1H14zM17 16h1v1H17zM22 16h1v1H22zM24 16h2v1H24zM27 16h5v1H27zM2 17h1v1H2zM5 17h1v1H5zM8 17h1v1H8zM10 17h1v1H10zM12 17h2v1H12zM15 17h1v1H15zM17 17h1v1H17zM19 17h2v1H19zM23 17h1v1H23zM26 17h2v1H26zM30,17 h3v1H30zM3 18h1v1H3zM6 18h2v1H6zM11 18h1v1H11zM13 18h4v1H13zM19 18h8v1H19zM32,18 h1v1H32zM1 19h2v1H1zM4 19h2v1H4zM7 19h1v1H7zM9 19h1v1H9zM11 19h1v1H11zM13 19h1v1H13zM15 19h4v1H15zM20 19h1v1H20zM23 19h1v1H23zM27 19h5v1H27zM2 20h2v1H2zM5 20h2v1H5zM9 20h3v1H9zM14 20h1v1H14zM16 20h1v1H16zM19 20h1v1H19zM22 20h2v1H22zM25 20h1v1H25zM27 20h3v1H27zM32,20 h1v1H32zM0 21h2v1H0zM3 21h1v1H3zM5 21h1v1H5zM8 21h5v1H8zM14 21h1v1H14zM16 21h1v1H16zM18 21h2v1H18zM22 21h2v1H22zM27 21h2v1H27zM30 21h1v1H30zM32,21 h1v1H32zM0 22h1v1H0zM2 22h1v1H2zM6 22h1v1H6zM8 22h1v1H8zM12 22h1v1H12zM14 22h5v1H14zM20 22h2v1H20zM26 22h2v1H26zM29 22h3v1H29zM0 23h1v1H0zM3 23h1v1H3zM7 23h1v1H7zM10 23h2v1H10zM14 23h1v1H14zM18 23h1v1H18zM20 23h1v1H20zM22 23h2v1H22zM25 23h1v1H25zM29 23h2v1H29zM32,23 h1v1H32zM0 24h2v1H0zM3 24h2v1H3zM6 24h4v1H6zM12 24h5v1H12zM20 24h1v1H20zM24 24h5v1H24zM30 24h1v1H30zM32,24 h1v1H32zM8 25h2v1H8zM11 25h2v1H11zM14 25h3v1H14zM18 25h3v1H18zM24 25h1v1H24zM28 25h3v1H28zM32,25 h1v1H32zM0 26h7v1H0zM9 26h1v1H9zM13 26h4v1H13zM18 26h1v1H18zM21 26h1v1H21zM23 26h2v1H23zM26 26h1v1H26zM28 26h1v1H28zM30 26h2v1H30zM0 27h1v1H0zM6 27h1v1H6zM9 27h1v1H9zM11 27h1v1H11zM13 27h2v1H13zM20 27h1v1H20zM23 27h2v1H23zM28 27h3v1H28zM32,27 h1v1H32zM0 28h1v1H0zM2 28h3v1H2zM6 28h1v1H6zM9 28h4v1H9zM15 28h1v1H15zM18 28h1v1H18zM22 28h1v1H22zM24 28h5v1H24zM30 28h1v1H30zM32,28 h1v1H32zM0 29h1v1H0zM2 29h3v1H2zM6 29h1v1H6zM11 29h3v1H11zM16 29h1v1H16zM19 29h5v1H19zM25 29h1v1H25zM28 29h1v1H28zM30,29 h3v1H30zM0 30h1v1H0zM2 30h3v1H2zM6 30h1v1H6zM9 30h2v1H9zM13 30h1v1H13zM16 30h2v1H16zM19 30h1v1H19zM21 30h1v1H21zM24 30h2v1H24zM28 30h2v1H28zM31,30 h2v1H31zM0 31h1v1H0zM6 31h1v1H6zM11 31h1v1H11zM13 31h1v1H13zM15 31h2v1H15zM22 31h1v1H22zM25 31h4v1H25zM30 31h1v1H30zM0 32h7v1H0zM8 32h1v1H8zM10 32h3v1H10zM17 32h1v1H17zM19 32h2v1H19zM22 32h3v1H22zM26 32h2v1H26zM31 32h1v1H31z"/></svg>
+                    <p class="phone__sub">Pindai dengan Phantom yang diatur ke Devnet.</p>
+                    <p class="phone__strong">Menunggu pembayaran · 4:12</p>
+                    <span class="phone__link">Buka layar bayar di browser</span>
+                  </div>
+                  <div class="phone__card">
+                    <p class="phone__title">Rincian pembagian</p>
+                    <ul class="phone__split">
+                      <li><span><b>Sari Anyaman</b><i>Bagian penitip</i></span><span><strong>Rp 76.000</strong><code>0,0304 SOL</code></span></li>
+                      <li><span><b>Budi Kopi</b><i>Bagian penitip</i></span><span><strong>Rp 76.500</strong><code>0,0306 SOL</code></span></li>
+                      <li><span><b>Toko Titip Nusantara</b><i>Komisi toko</i></span><span><strong>Rp 27.500</strong><code>0,011 SOL</code></span></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="phone__page phone__page--top phone__page--buyer" data-step="4">
+                  <div class="phone__buyer"><p>FastConsignee</p><span class="phone__pill">Devnet</span></div>
+                  <div class="phone__card">
+                    <p class="phone__title">Toko Titip Nusantara</p>
+                    <ul class="phone__bill">
+                      <li><span>Keranjang Bambu × 1</span><b>Rp 95.000</b></li>
+                      <li><span>Kopi Gayo 250 g × 1</span><b>Rp 85.000</b></li>
+                    </ul>
+                    <p class="phone__total phone__total--bill"><span class="phone__strong">Total</span><span><strong>Rp 180.000</strong><code>0,072 SOL</code></span></p>
+                    <p class="phone__fine">Kurs terkunci Rp 2.500.000 per SOL. Ini jaringan Devnet, jadi tidak memakai uang sungguhan.</p>
+                  </div>
+                  <div class="phone__card">
+                    <p class="phone__strong phone__center">Bayar dalam 3:48</p>
+                    <p class="phone__sub phone__gap">Wallet terhubung</p>
+                    <code class="phone__address">4K1Qdt...ooDU5a</code>
+                    <p class="phone__actions"><span class="phone__btn">Bayar sekali</span><span class="phone__btn phone__btn--plain">Ganti wallet</span></p>
+                    <div class="phone__rule phone__center">
+                      <p class="phone__sub">Atau pindai dengan Phantom di HP</p>
+                      <svg class="phone__qr" viewBox="0 0 33 33" shape-rendering="crispEdges"><use href="#phone-qr"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="phone__page phone__page--top" data-step="5">
+                  <div class="phone__head">
+                    <div><p class="phone__brand"><svg viewBox="0 0 40 28" fill="none" stroke-width="3" stroke-linecap="round"><path stroke="#f59e0b" d="M3 19C10 5 17 5 21 14s11 9 16-6"/><path stroke="currentColor" d="M3 10c7 13 14 13 18 4s11-10 16 5"/></svg>FastConsignee</p><p class="phone__sub">Toko Titip Nusantara</p></div>
+                    <span class="phone__pill">Devnet</span>
+                    <span class="phone__btn phone__btn--plain">Keluar</span>
+                  </div>
+                  <div class="phone__card phone__card--center">
+                    <p class="phone__title">Pembayaran</p>
+                    <p class="phone__amount">Rp 180.000</p>
+                    <code>0,072 SOL</code>
+                    <p class="phone__notice">Pembayaran terkonfirmasi. Barang boleh diserahkan.</p>
+                    <span class="phone__link phone__link--strong">Lihat di Solana Explorer</span>
+                    <span class="phone__btn phone__btn--wide">Transaksi baru</span>
+                  </div>
+                  <div class="phone__card">
+                    <p class="phone__title">Rincian pembagian</p>
+                    <ul class="phone__split">
+                      <li><span><b>Sari Anyaman</b><i>Bagian penitip</i></span><span><strong>Rp 76.000</strong><code>0,0304 SOL</code></span></li>
+                      <li><span><b>Budi Kopi</b><i>Bagian penitip</i></span><span><strong>Rp 76.500</strong><code>0,0306 SOL</code></span></li>
+                      <li><span><b>Toko Titip Nusantara</b><i>Komisi toko</i></span><span><strong>Rp 27.500</strong><code>0,011 SOL</code></span></li>
+                    </ul>
+                    <p class="phone__strong phone__gap">Saldo wallet di Devnet</p>
+                    <ul class="phone__balances">
+                      <li><b>Sari Anyaman</b><code>2,0304 SOL <strong>+0,0304 SOL</strong></code></li>
+                      <li><b>Budi Kopi</b><code>2,0306 SOL <strong>+0,0306 SOL</strong></code></li>
+                      <li><b>Toko Titip Nusantara</b><code>2,011 SOL <strong>+0,011 SOL</strong></code></li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </figure>

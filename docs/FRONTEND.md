@@ -46,7 +46,7 @@ Semua layar di peta layar sudah ada, dan landing page sudah tampil di `/`. Sisan
 
 Hasil uji terakhir:
 
-- 148 test Vitest, lint, typecheck, dan build lolos.
+- 156 test Vitest, lint, typecheck, dan build lolos.
 - 17 uji Playwright lolos di Edge dan WebKit terhadap API Go dan Postgres lokal, dengan node Solana dan wallet tiruan.
 - axe bersih di 12 layar.
 - Alur demo lolos 3 kali berturut-turut, dari kasir sampai potongan refund di dasbor penitip.
@@ -442,6 +442,7 @@ Landing page hanya memuat hal yang benar hari ini:
 - Selalu jelas bahwa produk berjalan di Devnet, bukan uang sungguhan.
 - Tidak ada klaim siap dipakai toko di Indonesia, karena Bank Indonesia melarang kripto sebagai alat pembayaran.
 - Fitur yang belum teruji nyata tidak ditulis sebagai fitur yang sudah ada, termasuk NFT sertifikat.
+- Mockup HP di bagian *At the counter* menyalin layar kasir dan bayar yang asli, termasuk teks Indonesianya. Kalau teks layar berubah, mockup ikut diubah. `landing-phone.test.ts` gagal kalau tertinggal.
 
 ### Cara uji
 

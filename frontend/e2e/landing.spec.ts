@@ -23,6 +23,22 @@ test("landing page tampil tanpa error dan tanpa scroll samping", async ({ browse
   }
 });
 
+test("HP di landing page memakai layar asli dan satu status di tiap layar", async ({ browser }) => {
+  const { page } = await openActor(browser);
+  await page.goto("/");
+  const phone = page.locator("#calls .phone");
+  await expect(phone).toHaveAttribute("role", "img");
+  await expect(phone.locator("[data-step]")).toHaveCount(4);
+  const text = (await phone.textContent()) ?? "";
+  expect(text).toContain("Buat QR pembayaran");
+  expect(text).toContain("Bayar sekali");
+  expect(text).not.toMatch(/Demo shop|Waiting for payment|Approved once/);
+  for (const screen of await phone.locator(".phone__page").all()) {
+    const lines = (await screen.textContent()) ?? "";
+    expect(lines.includes("Menunggu pembayaran") && lines.includes("terkonfirmasi")).toBe(false);
+  }
+});
+
 test("tombol masuk di landing page sampai ke halaman login", async ({ browser }) => {
   const { page } = await openActor(browser);
   await page.goto("/");

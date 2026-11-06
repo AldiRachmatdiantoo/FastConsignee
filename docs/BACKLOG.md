@@ -174,6 +174,7 @@ Kebutuhan: belum ada di PRD. Rencana dan keputusannya ada di [FRONTEND.md](FRONT
 - [x] Landing page dari template Linea di `/`
 - [ ] Tombol utama mengarah ke video demo
 - [x] Halaman login mengikuti template Linea
+- [x] Mockup HP di landing menyalin layar kasir dan bayar yang asli. Sebelumnya berbentuk chat berbahasa Inggris dengan tab bawah yang tidak ada di aplikasi, dan "Waiting for payment" tampil bersama "Confirmed"
 
 Testing: Playwright di lebar 375 dan 1440 px, dengan reduced motion, dan rewrite `/` di `next start`. Halaman login juga diuji begitu, termasuk kembali ke `/`. Firefox belum diuji langsung.
 
@@ -199,7 +200,7 @@ Lighthouse mode HP di build produksi lokal, nilai tengah 3 kali uji:
 
 | Halaman | Performa | LCP | Bobot |
 | --- | --- | --- | --- |
-| Landing | 89 ke 100 | 3,2 ke 1,7 detik | 258 ke 155 KB |
+| Landing | 89 ke 100 | 3,2 ke 1,7 detik | 258 ke 158 KB |
 | Login | 92 sampai 97 ke 96 | 2,7 sampai 3,3 ke 2,7 detik | 425 ke 287 KB |
 | Bayar, dengan order asli | 91 ke 94 | 3,3 ke 2,8 detik | 390 ke 253 KB |
 
@@ -238,7 +239,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 | Uji batas permintaan dan order kedaluwarsa | 12 dari 12 lolos |
 | Newman, 29 request | 87 dari 87 assertion lolos |
 | Verifikasi JWKS dengan ES256 dan RS256 | Lolos, sekarang juga di `go test` |
-| ESLint, typecheck, Vitest 148 test, build produksi | Lolos |
+| ESLint, typecheck, Vitest 156 test, build produksi | Lolos |
 | Playwright Edge, 17 uji | Lolos di database baru |
 | Playwright WebKit, 17 uji | Lolos di database baru |
 | axe di 12 layar | Semua bersih |
