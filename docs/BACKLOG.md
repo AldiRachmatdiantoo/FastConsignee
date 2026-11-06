@@ -115,14 +115,19 @@ Testing: beban, keamanan, Solana Devnet.
 
 ## Frontend
 
-Frontend dimulai setelah backend selesai.
+Frontend dimulai setelah kode backend selesai. Sisa uji nyata backend menyusul saat Supabase dan wallet Devnet siap.
 
 ### F-01 Fondasi dan login
 
 Kebutuhan: FR-25, FR-27.
 
-- [ ] Next.js, klien API dari kontrak, dan Supabase Auth
-- [ ] Layar penautan wallet
+- [x] Next.js dan klien API dari kontrak
+- [x] Login lokal untuk pengembangan
+- [x] Layar penautan wallet
+- [x] Tema amber di aplikasi
+- [ ] Login Google lewat Supabase Auth
+
+Testing: unit dan komponen dengan Vitest, serta uji browser yang mengirim tanda tangan ed25519 asli ke API Go. Phantom sungguhan diuji di F-05.
 
 ### F-02 Kasir
 
@@ -148,6 +153,12 @@ Kebutuhan: NFR-05, NFR-10, NFR-11.
 
 - [ ] Vitest, Testing Library, dan Playwright
 - [ ] Uji Phantom di HP dan alur demo 5 kali
+
+### F-06 Landing page
+
+Kebutuhan: belum ada di PRD. Rencana dan keputusannya ada di [FRONTEND.md](FRONTEND.md).
+
+- [ ] Landing page dari template Linea di `/`
 
 ## Deploy
 
