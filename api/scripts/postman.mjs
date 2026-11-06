@@ -2,7 +2,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Converter from "openapi-to-postmanv2";
 import YAML from "yaml";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -13,6 +12,8 @@ const collectionId = "6f2f1a52-3c1e-4b7a-9d55-0b6e8c4a1f10";
 
 // Urutan alur kerja, jadi ID dari satu langkah sudah tersimpan saat langkah berikutnya butuh.
 const folderOrder = ["Health", "Auth", "Consignors", "Items", "Orders", "Payment", "Refunds", "Dashboard"];
+
+const methods = ["get", "post", "patch", "put", "delete"];
 
 // ID kosong membuat alamat seperti /refunds//signature, yang jawabannya bukan jawaban endpoint itu.
 const noId = "00000000-0000-0000-0000-000000000000";
@@ -32,6 +33,7 @@ const variables = [
   ["order_id", noId, "Terisi otomatis."],
   ["order_line_id", noId, "Terisi otomatis."],
   ["refund_id", noId, "Terisi otomatis."],
+  ["certificate_id", noId, "Isi dengan ID sertifikat yang sudah ada."],
 ];
 
 const cart = { lines: [{ item_id: "{{item_id}}", quantity: 1 }] };
@@ -74,107 +76,140 @@ function checkScript(operation) {
   ];
 }
 
-function convert(spec) {
-  const options = { folderStrategy: "Tags", parametersResolution: "Schema", requestNameSource: "Fallback", enableOptionalParameters: false };
-  return new Promise((resolve, reject) => {
-    Converter.convertV2({ type: "string", data: spec }, options, (err, result) => {
-      if (err) return reject(err);
-      if (!result.result) return reject(new Error(result.reason));
-      resolve(result.output[0].data);
+const contract = YAML.parse(readFileSync(join(root, "openapi.yaml"), "utf8"));
+
+function resolve(node) {
+  if (!node.$ref) {
+    return node;
+  }
+  return node.$ref
+    .split("/")
+    .slice(1)
+    .reduce((value, key) => value[key], contract);
+}
+
+function note(parameter) {
+  const prefix = parameter.required ? "(Required) " : "";
+  return { content: `${prefix}${(parameter.description ?? "").trim()}`, type: "text/plain" };
+}
+
+function queryNote(parameter) {
+  const choices = resolve(parameter.schema ?? {}).enum;
+  const hint = choices ? `Pilihan: ${choices.join(", ")}.` : "";
+  return [(parameter.description ?? "").trim(), hint].filter(Boolean).join(" ");
+}
+
+function headers(operation, parameters) {
+  const list = parameters
+    .filter((parameter) => parameter.in === "header")
+    .map((parameter) => {
+      if (parameter.name !== "Idempotency-Key") {
+        throw new Error(`Nilai header belum ada untuk ${parameter.name}`);
+      }
+      return { disabled: false, description: note(parameter), key: parameter.name, value: "{{$guid}}" };
     });
-  });
+  if (operation.requestBody) {
+    list.push({ key: "Content-Type", value: "application/json" });
+  }
+  list.push({ key: "Accept", value: "application/json" });
+  return list;
 }
 
-function operationKey(request) {
-  const path = request.url.path.map((part) => part.replace(/^:(.+)$/, "{$1}")).join("/");
-  return `${request.method} /${path}`;
+function url(path, parameters) {
+  const pathParts = path.slice(1).split("/");
+  return {
+    path: pathParts.map((part) => part.replace(/^\{(.+)\}$/, ":$1")),
+    host: ["{{baseUrl}}"],
+    query: parameters
+      .filter((parameter) => parameter.in === "query")
+      .map((parameter) => ({
+        disabled: true,
+        description: { content: queryNote(parameter), type: "text/plain" },
+        key: parameter.name,
+        value: parameter.name === "limit" ? "20" : "",
+      })),
+    variable: parameters
+      .filter((parameter) => parameter.in === "path")
+      .map((parameter) => ({
+        type: "any",
+        value: `{{${parameter.name}}}`,
+        key: parameter.name,
+        disabled: false,
+        description: note(parameter),
+      })),
+  };
 }
 
-function description(value) {
-  return typeof value === "string" ? value : (value?.content ?? "");
+function body(key, operation) {
+  if (!operation.requestBody) {
+    return {};
+  }
+  if (!bodies[key]) {
+    throw new Error(`Contoh body belum ada untuk ${key}`);
+  }
+  return {
+    mode: "raw",
+    raw: JSON.stringify(bodies[key], null, 2),
+    options: { raw: { headerFamily: "json", language: "json" } },
+  };
 }
 
-function cleanRequest(item, operation) {
-  const key = operationKey(item.request);
-  const { request } = item;
-  delete item.id;
-  delete item.response;
-  delete item.protocolProfileBehavior;
-  delete item.event;
-
+function toItem(path, method, operation, shared) {
+  const key = `${method.toUpperCase()} ${path}`;
+  const parameters = [...shared, ...(operation.parameters ?? [])].map(resolve);
   const roles = operation["x-roles"].map((role) => `\`${role}\``).join(", ");
-  request.description = `**Peran:** ${roles}\n\n${description(request.description)}`.trim();
-
-  delete request.auth;
+  const request = {
+    name: operation.summary,
+    description: `**Peran:** ${roles}\n\n${(operation.description ?? "").trim()}`.trim(),
+    url: url(path, parameters),
+    header: headers(operation, parameters),
+    method: method.toUpperCase(),
+    body: body(key, operation),
+  };
   if (operation.security?.length === 0) {
     request.auth = { type: "noauth" };
   }
-
-  for (const header of request.header ?? []) {
-    if (header.key === "Idempotency-Key") {
-      header.value = "{{$guid}}";
-    }
-  }
-  for (const param of request.url.variable ?? []) {
-    param.value = `{{${param.key}}}`;
-  }
-  for (const param of request.url.query ?? []) {
-    param.value = param.key === "limit" ? "20" : "";
-  }
-
-  if (operation.requestBody) {
-    if (!bodies[key]) {
-      throw new Error(`Contoh body belum ada untuk ${key}`);
-    }
-    request.body.raw = JSON.stringify(bodies[key], null, 2);
-  }
   const exec = [...checkScript(operation), ...(saves[key] ? saveScript(saves[key]) : [])];
-  item.event = [{ listen: "test", script: { type: "text/javascript", exec } }];
+  return { name: operation.summary, request, event: [{ listen: "test", script: { type: "text/javascript", exec } }] };
 }
 
-const spec = readFileSync(join(root, "openapi.yaml"), "utf8");
-const contract = YAML.parse(spec);
-const collection = await convert(spec);
-
-const operations = new Map();
-for (const [path, methods] of Object.entries(contract.paths)) {
-  for (const [method, operation] of Object.entries(methods)) {
-    if (operation.operationId) {
-      operations.set(`${method.toUpperCase()} ${path}`, operation);
-    }
-  }
-}
-
+const folders = new Map(contract.tags.map((tag) => [tag.name, { name: tag.name, description: tag.description, item: [] }]));
 let converted = 0;
-for (const folder of collection.item) {
-  delete folder.id;
-  for (const item of folder.item) {
-    const operation = operations.get(operationKey(item.request));
-    if (!operation) {
-      throw new Error(`Request tidak ada di kontrak: ${operationKey(item.request)}`);
+for (const [path, entry] of Object.entries(contract.paths)) {
+  // Urutan operasi mengikuti kontrak, karena POST /orders harus lebih dulu dari GET /orders.
+  for (const [method, operation] of Object.entries(entry).filter(([name]) => methods.includes(name))) {
+    const folder = folders.get(operation.tags[0]);
+    if (!folder) {
+      throw new Error(`Tag belum terdaftar: ${operation.tags[0]}`);
     }
-    cleanRequest(item, operation);
+    folder.item.push(toItem(path, method, operation, entry.parameters ?? []));
     converted++;
   }
 }
-if (converted !== operations.size) {
-  throw new Error(`Kontrak punya ${operations.size} operasi, koleksi punya ${converted}`);
-}
 
-collection.item.sort((a, b) => folderOrder.indexOf(a.name) - folderOrder.indexOf(b.name));
-if (collection.item.some((folder) => !folderOrder.includes(folder.name))) {
+const item = [...folders.values()].sort((a, b) => folderOrder.indexOf(a.name) - folderOrder.indexOf(b.name));
+if (item.some((folder) => !folderOrder.includes(folder.name))) {
   throw new Error("Ada tag baru yang belum masuk folderOrder");
 }
 
-collection.info._postman_id = collectionId;
-collection.info.version = contract.info.version;
-collection.event = [];
-collection.variable = variables.map(([key, value, note]) => ({
-  key,
-  value: key === "baseUrl" ? contract.servers[0].url : value,
-  type: "string",
-  description: note,
-}));
+const collection = {
+  item,
+  auth: { type: "bearer", bearer: [{ type: "any", value: "{{bearerToken}}", key: "token" }] },
+  event: [],
+  variable: variables.map(([key, value, description]) => ({
+    key,
+    value: key === "baseUrl" ? contract.servers[0].url : value,
+    type: "string",
+    description,
+  })),
+  info: {
+    _postman_id: collectionId,
+    name: contract.info.title,
+    version: contract.info.version,
+    schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    description: { content: contract.info.description, type: "text/plain" },
+  },
+};
 
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, `${JSON.stringify(collection, null, 2)}\n`);
