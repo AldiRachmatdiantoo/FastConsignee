@@ -2,6 +2,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -107,7 +108,15 @@ func DecodeLoose(w http.ResponseWriter, r *http.Request, dst any) error {
 
 func decode(w http.ResponseWriter, r *http.Request, dst any, strict bool) error {
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-	dec := json.NewDecoder(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return apperr.Validation(apperr.FieldError{Field: "body", Message: decodeMessage(err)})
+	}
+	// Decoder JSON diam-diam mengganti byte rusak dengan karakter pengganti, jadi harus dicek lebih dulu.
+	if !utf8.Valid(body) {
+		return apperr.Validation(apperr.FieldError{Field: "body", Message: "Body harus berupa teks UTF-8."})
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
 	if strict {
 		dec.DisallowUnknownFields()
 	}
@@ -168,8 +177,13 @@ func (v *Validator) Err() error {
 	return apperr.Validation(v.fields...)
 }
 
-// Text memeriksa panjang teks dalam karakter.
+// Text memeriksa isi dan panjang teks dalam karakter. Postgres menolak byte nol dan UTF-8 rusak,
+// jadi keduanya harus berhenti di sini supaya tidak menjadi error server.
 func (v *Validator) Text(field, value string, minLen, maxLen int) {
+	if !utf8.ValidString(value) || strings.ContainsRune(value, 0) {
+		v.Add(field, "Teks memuat karakter yang tidak valid.")
+		return
+	}
 	n := utf8.RuneCountInString(value)
 	if n < minLen || n > maxLen {
 		v.Add(field, fmt.Sprintf("Panjangnya harus %d sampai %d karakter.", minLen, maxLen))

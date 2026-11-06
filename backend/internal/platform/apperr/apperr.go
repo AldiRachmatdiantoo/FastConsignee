@@ -17,6 +17,7 @@ const (
 	RoleNotAssigned            Code = "ROLE_NOT_ASSIGNED"
 	WalletNotLinked            Code = "WALLET_NOT_LINKED"
 	NotFound                   Code = "NOT_FOUND"
+	MethodNotAllowed           Code = "METHOD_NOT_ALLOWED"
 	RateLimited                Code = "RATE_LIMITED"
 	Internal                   Code = "INTERNAL_ERROR"
 	ServiceUnavailable         Code = "SERVICE_UNAVAILABLE"
@@ -51,6 +52,7 @@ var codes = map[Code]meta{
 	RoleNotAssigned:            {http.StatusForbidden, "Akun belum terdaftar di toko"},
 	WalletNotLinked:            {http.StatusForbidden, "Wallet belum ditautkan"},
 	NotFound:                   {http.StatusNotFound, "Data tidak ditemukan"},
+	MethodNotAllowed:           {http.StatusMethodNotAllowed, "Metode tidak diizinkan"},
 	RateLimited:                {http.StatusTooManyRequests, "Terlalu banyak permintaan"},
 	Internal:                   {http.StatusInternalServerError, "Kesalahan server"},
 	ServiceUnavailable:         {http.StatusServiceUnavailable, "Layanan tidak tersedia"},

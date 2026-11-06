@@ -79,6 +79,9 @@ info:
     `solana-pay` yang memakai `SolanaPayError` karena dibaca wallet. Klien mengambil keputusan dari
     `code`, bukan dari `title` atau `detail`. Kesalahan per kolom ada di `errors`.
 
+    Metode yang tidak terdaftar di alamat yang ada menjawab `405 METHOD_NOT_ALLOWED` dengan header
+    `Allow`. Alamat yang tidak ada menjawab `404 NOT_FOUND`.
+
     Tiap jawaban memuat header `X-Request-Id`, yang nilainya sama dengan `request_id` pada error.
 
     ## Pagination
@@ -1862,6 +1865,7 @@ components:
         - ROLE_NOT_ASSIGNED
         - WALLET_NOT_LINKED
         - NOT_FOUND
+        - METHOD_NOT_ALLOWED
         - RATE_LIMITED
         - INTERNAL_ERROR
         - SERVICE_UNAVAILABLE

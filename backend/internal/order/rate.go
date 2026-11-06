@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/apperr"
@@ -18,6 +19,8 @@ const (
 	rateCacheKey = "rate:sol-idr"
 	rateTimeout  = 3 * time.Second
 	maxIDRPerSOL = 1_000_000_000_000
+	// Saat pasar tidak terbaca, percobaan berikutnya ditunda supaya kasir tidak tertahan terus.
+	rateFailureTTL = 5 * time.Minute
 )
 
 // RateProvider memberi kurs SOL ke Rupiah.
@@ -34,6 +37,7 @@ type MarketRate struct {
 	cache  cache.Cache
 	client *http.Client
 	now    func() time.Time
+	last   atomic.Int64
 }
 
 // NewMarketRate membuat penyedia kurs. url kosong berarti selalu memakai nilai cadangan.
@@ -46,19 +50,30 @@ func (m *MarketRate) Current(ctx context.Context) (Rate, error) {
 	if v, ok := m.cache.Get(rateCacheKey); ok {
 		return v.(Rate), nil
 	}
+	ttl := m.ttl
 	value, err := m.fetch(ctx)
-	if err != nil {
+	if err == nil {
+		m.last.Store(value)
+	} else {
 		if m.url != "" {
 			slog.Warn("kurs pasar tidak terbaca", "error", err)
 		}
-		if m.fixed <= 0 {
+		if value = m.fallback(); value <= 0 {
 			return Rate{}, apperr.New(apperr.RateUnavailable, "Kurs SOL tidak tersedia. Coba lagi sebentar.")
 		}
-		value = m.fixed
+		ttl = max(ttl, rateFailureTTL)
 	}
 	rate := Rate{IDRPerSOL: value, QuotedAt: m.now().UTC()}
-	m.cache.Set(rateCacheKey, rate, m.ttl)
+	m.cache.Set(rateCacheKey, rate, ttl)
 	return rate, nil
+}
+
+// fallback lebih memilih kurs pasar terakhir, karena nilainya lebih dekat ke harga sekarang.
+func (m *MarketRate) fallback() int64 {
+	if last := m.last.Load(); last > 0 {
+		return last
+	}
+	return m.fixed
 }
 
 func (m *MarketRate) fetch(ctx context.Context) (int64, error) {

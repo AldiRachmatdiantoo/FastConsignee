@@ -301,6 +301,57 @@ func TestRateReadsMarketAndCaches(t *testing.T) {
 	}
 }
 
+func TestRateRetriesLessOftenAfterFailure(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+	current := time.Date(2026, 11, 7, 0, 0, 0, 0, time.UTC)
+	clock := func() time.Time { return current }
+	m := NewMarketRate(server.URL, 2500000, 45*time.Second, cache.NewMemory(clock), clock)
+	for _, step := range []time.Duration{0, time.Minute, 3 * time.Minute} {
+		current = current.Add(step)
+		if _, err := m.Current(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("pasar yang mati dipanggil %d kali dalam 4 menit", calls)
+	}
+	current = current.Add(2 * time.Minute)
+	if _, err := m.Current(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 2 {
+		t.Fatalf("pasar seharusnya dicoba lagi setelah 5 menit, dipanggil %d kali", calls)
+	}
+}
+
+func TestRatePrefersLastMarketValueOverFixed(t *testing.T) {
+	healthy := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if !healthy {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		_, _ = w.Write([]byte(`{"solana":{"idr":3100000}}`))
+	}))
+	defer server.Close()
+	current := time.Date(2026, 11, 7, 0, 0, 0, 0, time.UTC)
+	clock := func() time.Time { return current }
+	m := NewMarketRate(server.URL, 2500000, 45*time.Second, cache.NewMemory(clock), clock)
+	if r, err := m.Current(context.Background()); err != nil || r.IDRPerSOL != 3100000 {
+		t.Fatalf("kurs %+v, error %v", r, err)
+	}
+	healthy = false
+	current = current.Add(time.Minute)
+	if r, err := m.Current(context.Background()); err != nil || r.IDRPerSOL != 3100000 {
+		t.Fatalf("seharusnya memakai kurs pasar terakhir: %+v, error %v", r, err)
+	}
+}
+
 func TestRateFallsBackToFixedValue(t *testing.T) {
 	for name, handler := range map[string]http.HandlerFunc{
 		"status 500": func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusInternalServerError) },

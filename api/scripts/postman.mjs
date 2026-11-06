@@ -14,6 +14,9 @@ const collectionId = "6f2f1a52-3c1e-4b7a-9d55-0b6e8c4a1f10";
 // Urutan alur kerja, jadi ID dari satu langkah sudah tersimpan saat langkah berikutnya butuh.
 const folderOrder = ["Health", "Auth", "Consignors", "Items", "Orders", "Payment", "Refunds", "Dashboard"];
 
+// ID kosong membuat alamat seperti /refunds//signature, yang jawabannya bukan jawaban endpoint itu.
+const noId = "00000000-0000-0000-0000-000000000000";
+
 const variables = [
   ["baseUrl", "", "Alamat API."],
   ["bearerToken", "", "JWT Supabase. Peran yang boleh memanggil tiap request tertulis di deskripsinya."],
@@ -24,11 +27,11 @@ const variables = [
   ["refund_signature", "", "Signature transaksi refund setelah dikirim wallet toko."],
   ["wallet_nonce", "", "Terisi otomatis."],
   ["wallet_message", "", "Terisi otomatis. Pesan yang harus ditandatangani wallet."],
-  ["consignor_id", "", "Terisi otomatis."],
-  ["item_id", "", "Terisi otomatis."],
-  ["order_id", "", "Terisi otomatis."],
-  ["order_line_id", "", "Terisi otomatis."],
-  ["refund_id", "", "Terisi otomatis."],
+  ["consignor_id", noId, "Terisi otomatis."],
+  ["item_id", noId, "Terisi otomatis."],
+  ["order_id", noId, "Terisi otomatis."],
+  ["order_line_id", noId, "Terisi otomatis."],
+  ["refund_id", noId, "Terisi otomatis."],
 ];
 
 const cart = { lines: [{ item_id: "{{item_id}}", quantity: 1 }] };
@@ -59,6 +62,16 @@ const saves = {
 function saveScript(fields) {
   const lines = Object.entries(fields).map(([name, path]) => `    pm.collectionVariables.set("${name}", ${path});`);
   return ["if (pm.response.code < 300) {", "    const body = pm.response.json();", ...lines, "}"];
+}
+
+// Tiap request diperiksa terhadap kontrak, jadi Newman gagal kalau API menjawab di luar kontrak.
+function checkScript(operation) {
+  const statuses = Object.keys(operation.responses).map(Number);
+  return [
+    `pm.test("status ada di kontrak", function () { pm.expect(${JSON.stringify(statuses)}).to.include(pm.response.code); });`,
+    'pm.test("tidak ada error server", function () { pm.expect(pm.response.code).to.be.below(500); });',
+    'pm.test("memuat X-Request-Id", function () { pm.response.to.have.header("X-Request-Id"); });',
+  ];
 }
 
 function convert(spec) {
@@ -115,9 +128,8 @@ function cleanRequest(item, operation) {
     }
     request.body.raw = JSON.stringify(bodies[key], null, 2);
   }
-  if (saves[key]) {
-    item.event = [{ listen: "test", script: { type: "text/javascript", exec: saveScript(saves[key]) } }];
-  }
+  const exec = [...checkScript(operation), ...(saves[key] ? saveScript(saves[key]) : [])];
+  item.event = [{ listen: "test", script: { type: "text/javascript", exec } }];
 }
 
 const spec = readFileSync(join(root, "openapi.yaml"), "utf8");

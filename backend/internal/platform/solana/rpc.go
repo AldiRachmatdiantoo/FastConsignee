@@ -13,8 +13,9 @@ import (
 
 const (
 	signatureLimit = 100
-	rpcTimeout     = 8 * time.Second
-	rentFreeBytes  = 0
+	// RPC publik Devnet pernah butuh 11 detik untuk koneksi pertama, lalu menjawab dalam 0,1 detik.
+	rpcTimeout    = 15 * time.Second
+	rentFreeBytes = 0
 
 	// Transaksi buatan server selalu legacy, tetapi siapa pun bisa menerbitkan versi lain yang
 	// memuat reference. Tanpa batas ini RPC menolak membacanya.

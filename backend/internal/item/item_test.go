@@ -110,6 +110,22 @@ func TestCreateRejectsBadInput(t *testing.T) {
 	f.a.Post(f.owner, "/api/v1/items", good()).Want(201)
 }
 
+func TestTextWithBytesPostgresRejectsIsNotAServerError(t *testing.T) {
+	f := setup(t)
+	token := f.a.Token(f.owner)
+	body := map[string]any{"name": "a\x00b", "price_idr": 1000, "commission_bps": 100, "consignor_id": f.consignor.ConsignorID, "stock_on_hand": 1}
+	f.a.Do(testkit.Request{Method: "POST", Path: "/api/v1/items", Token: token, Body: body}).WantProblem(400, "VALIDATION_FAILED")
+	for _, q := range []string{"%00", "%FF", "a%00b"} {
+		f.a.Do(testkit.Request{Method: "GET", Path: "/api/v1/items?q=" + q, Token: token}).WantProblem(400, "VALIDATION_FAILED")
+	}
+}
+
+func TestBodyWithBrokenUTF8IsRejected(t *testing.T) {
+	f := setup(t)
+	raw := []byte("{\"name\":\"\xff\xfe\",\"price_idr\":1000,\"commission_bps\":100,\"consignor_id\":\"" + f.consignor.ConsignorID.String() + "\",\"stock_on_hand\":1}")
+	f.a.Do(testkit.Request{Method: "POST", Path: "/api/v1/items", Token: f.a.Token(f.owner), Body: string(raw)}).WantProblem(400, "VALIDATION_FAILED")
+}
+
 func TestCreateRejectsConsignorFromOtherStore(t *testing.T) {
 	f := setup(t)
 	other := f.a.NewStore()

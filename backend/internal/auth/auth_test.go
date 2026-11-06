@@ -33,6 +33,15 @@ func TestUnknownRouteIsProblem(t *testing.T) {
 	}
 }
 
+func TestWrongMethodIsProblemWithAllow(t *testing.T) {
+	a := testkit.NewApp(t)
+	r := a.Do(testkit.Request{Method: http.MethodDelete, Path: "/api/v1/items", Raw: true}).WantProblem(405, "METHOD_NOT_ALLOWED")
+	if r.Header.Get("Allow") != "GET, POST" {
+		t.Fatalf("Allow %q", r.Header.Get("Allow"))
+	}
+	a.Do(testkit.Request{Method: http.MethodDelete, Path: "/tidak/ada", Raw: true}).WantProblem(404, "NOT_FOUND")
+}
+
 func TestCorsOnlyAllowsFrontendForPrivateRoutes(t *testing.T) {
 	a := testkit.NewApp(t)
 	r := a.Do(testkit.Request{Method: http.MethodOptions, Path: "/api/v1/me", Raw: true, Headers: map[string]string{

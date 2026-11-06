@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
@@ -81,6 +82,11 @@ func New(d Deps) *App {
 
 	mux.HandleFunc("GET /healthz", health(d.DB))
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		if allowed := allowedMethods(mux, req); len(allowed) > 0 {
+			w.Header().Set("Allow", strings.Join(allowed, ", "))
+			api.Error(w, req, apperr.New(apperr.MethodNotAllowed, "Endpoint ini tidak menerima metode tersebut."))
+			return
+		}
 		api.Error(w, req, apperr.New(apperr.NotFound, "Endpoint tidak ditemukan."))
 	})
 
@@ -197,6 +203,20 @@ func (p *publicLimiter) solanaPay(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next(w, r)
 	}
+}
+
+// allowedMethods mencari metode lain yang terdaftar di alamat ini. Route "/" menangkap semua
+// permintaan yang tidak cocok, jadi 405 bawaan ServeMux tidak pernah terpakai.
+func allowedMethods(mux *http.ServeMux, req *http.Request) []string {
+	var allowed []string
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPatch} {
+		probe := req.Clone(req.Context())
+		probe.Method = method
+		if _, pattern := mux.Handler(probe); pattern != "/" {
+			allowed = append(allowed, method)
+		}
+	}
+	return allowed
 }
 
 // RunWorkers menjalankan worker sampai ctx selesai. Panic di satu putaran hanya menghentikan putaran itu.

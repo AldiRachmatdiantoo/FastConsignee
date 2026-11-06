@@ -30,7 +30,20 @@
             "auth": {
               "type": "noauth"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,503]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -63,7 +76,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Meminta pesan untuk ditandatangani",
@@ -111,6 +137,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([201,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });",
                   "if (pm.response.code < 300) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set(\"wallet_nonce\", body.nonce);",
@@ -160,7 +189,20 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,409,422,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -212,7 +254,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Mendaftarkan penitip",
@@ -259,6 +314,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([201,400,401,403,409,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });",
                   "if (pm.response.code < 300) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set(\"consignor_id\", body.id);",
@@ -305,7 +363,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Mengubah data penitip",
@@ -357,7 +428,20 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -436,7 +520,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Menambah barang",
@@ -483,6 +580,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([201,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });",
                   "if (pm.response.code < 300) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set(\"item_id\", body.id);",
@@ -529,7 +629,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Mengubah barang",
@@ -581,7 +694,20 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,409,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -628,7 +754,20 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,409,422,429,500,503]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Membuat order dan QR",
@@ -684,6 +823,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([201,400,401,403,404,409,422,429,500,503]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });",
                   "if (pm.response.code < 300) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set(\"order_id\", body.id);",
@@ -765,7 +907,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Membaca detail order",
@@ -804,7 +959,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Memantau status pembayaran",
@@ -844,7 +1012,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -893,7 +1074,20 @@
             "auth": {
               "type": "noauth"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Memberi label dan ikon ke wallet",
@@ -936,7 +1130,20 @@
             "auth": {
               "type": "noauth"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Menyusun transaksi pembayaran",
@@ -992,7 +1199,20 @@
             "auth": {
               "type": "noauth"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,404,409,410,429,500,503]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1067,6 +1287,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([201,400,401,403,404,409,429,500,503]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });",
                   "if (pm.response.code < 300) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set(\"refund_id\", body.id);",
@@ -1147,7 +1370,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Memantau status refund",
@@ -1186,7 +1422,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,404,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Melaporkan signature refund",
@@ -1239,7 +1488,20 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([202,400,401,403,404,409,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1311,7 +1573,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Membaca potongan refund penitip",
@@ -1368,7 +1643,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Membaca sisa stok penitip",
@@ -1416,7 +1704,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Membaca ringkasan toko",
@@ -1464,7 +1765,20 @@
             ],
             "method": "GET",
             "body": {}
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status ada di kontrak\", function () { pm.expect([200,400,401,403,429,500]).to.include(pm.response.code); });",
+                  "pm.test(\"tidak ada error server\", function () { pm.expect(pm.response.code).to.be.below(500); });",
+                  "pm.test(\"memuat X-Request-Id\", function () { pm.response.to.have.header(\"X-Request-Id\"); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
@@ -1537,31 +1851,31 @@
     },
     {
       "key": "consignor_id",
-      "value": "",
+      "value": "00000000-0000-0000-0000-000000000000",
       "type": "string",
       "description": "Terisi otomatis."
     },
     {
       "key": "item_id",
-      "value": "",
+      "value": "00000000-0000-0000-0000-000000000000",
       "type": "string",
       "description": "Terisi otomatis."
     },
     {
       "key": "order_id",
-      "value": "",
+      "value": "00000000-0000-0000-0000-000000000000",
       "type": "string",
       "description": "Terisi otomatis."
     },
     {
       "key": "order_line_id",
-      "value": "",
+      "value": "00000000-0000-0000-0000-000000000000",
       "type": "string",
       "description": "Terisi otomatis."
     },
     {
       "key": "refund_id",
-      "value": "",
+      "value": "00000000-0000-0000-0000-000000000000",
       "type": "string",
       "description": "Terisi otomatis."
     }
@@ -1572,7 +1886,7 @@
     "version": "0.1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": {
-      "content": "Kontrak ini mengikat frontend Next.js dan backend Go. Semua fitur di PRD tercakup di sini,\ntermasuk yang berprioritas Sebaiknya dan Kalau sempat. Tiap operasi mencatat kebutuhannya di\n`x-fr`, prioritasnya di `x-priority`, peran yang boleh memanggilnya di `x-roles`, dan kode\nerror khususnya di `x-error-codes`.\n\n## Autentikasi dan peran\nLogin memakai Google lewat Supabase Auth langsung dari frontend, jadi API tidak punya endpoint\nlogin. Frontend mengirim JWT Supabase di header `Authorization: Bearer <token>`, dan API\nmemverifikasinya. JWT membuktikan identitas, lalu peran dibaca dari akun di database, sehingga\npencabutan peran langsung berlaku tanpa menunggu JWT kedaluwarsa. Akun yang belum terdaftar di toko\nmenerima `403 ROLE_NOT_ASSIGNED`.\n\n| Peran | Nilai | Akses |\n| --- | --- | --- |\n| Kasir | `cashier` | Katalog, membuat order, order yang dibuatnya sendiri |\n| Pemilik toko | `store_owner` | Semua data toko, termasuk refund, barang, dan penitip |\n| Penitip | `consignor` | Dasbor miliknya sendiri |\n\nPembeli tidak login. Endpoint `public` dan `solana-pay` terbuka, dan keamanannya bergantung pada\nID order UUIDv4 yang tidak bisa ditebak.\n\nPemilik toko dan penitip yang belum menautkan wallet hanya boleh memanggil `GET /api/v1/me` dan\n`/api/v1/wallet/*`. Semua endpoint lain menjawab `403 WALLET_NOT_LINKED`.\n\n## Uang\n- Harga dan bagian dihitung dalam Rupiah sebagai bilangan bulat, dengan akhiran `_idr`.\n- Nilai SOL memakai lamport (1 SOL = 1.000.000.000 lamport), dengan akhiran `_lamports`. Nilainya\n  dikirim sebagai string supaya tidak kehilangan presisi di JavaScript.\n- Komisi memakai basis point, dengan akhiran `_bps` (2000 berarti 20%).\n- Browser hanya mengirim `item_id`, jumlah, dan diskon. Harga, bagian, dan penerima selalu dihitung\n  server.\n\nUrutan perhitungan pembagian:\n1. `line_total_idr` = harga x jumlah, dikurangi diskon baris.\n2. Bagian penitip = pembulatan ke bawah dari harga x jumlah x (10000 - `commission_bps`) / 10000.\n   Komisi toko adalah sisanya, jadi sisa pembulatan Rupiah masuk ke toko.\n3. Diskon diserap seluruhnya oleh pihak yang menanggungnya. Diskon tidak boleh melebihi bagian\n   pihak itu pada baris tersebut.\n4. Bagian digabung per penerima. Potongan refund yang belum lunas dikurangkan dari penitip dan\n   ditambahkan ke toko.\n5. `total_lamports` = pembulatan ke atas dari `total_idr` x 1.000.000.000 / `idr_per_sol`.\n6. Lamport tiap penitip = pembulatan ke bawah dari `amount_idr` x 1.000.000.000 / `idr_per_sol`.\n   Toko menerima sisanya, jadi jumlah semua penerima selalu sama dengan `total_lamports`.\n\n## Status real-time\nStatus memakai polling, bukan WebSocket atau SSE, supaya API tetap stateless dan JWT tetap di\nheader. Klien memanggil endpoint status tiap 2 detik selama order masih `pending`. Status tidak\npernah di-cache.\n\nStatus `confirmed`, `expired`, dan `failed` bersifat final. Mencoba lagi berarti membuat order baru\ndengan `Idempotency-Key` baru. Keranjang disimpan di klien, jadi tidak ada resource keranjang di\nserver.\n\nQR berlaku 5 menit. Setelah `expires_at`, server berhenti menyusun transaksi, tetapi order tetap\n`pending` dan stoknya tetap tertahan selama masa tenggang 2 menit. Masa ini mencakup transaksi yang\nsudah terkirim sesaat sebelum batas waktu, supaya dana yang sudah terbagi tidak bertemu stok yang\nsudah dilepas. Durasi keduanya diatur konfigurasi server.\n\n## Idempotency\n`POST /api/v1/orders` dan `POST /api/v1/orders/{order_id}/refunds` wajib memakai header\n`Idempotency-Key`. Kunci yang sama dengan isi yang sama mengembalikan hasil pertama dan header\n`Idempotency-Replayed: true`. Kunci yang sama dengan isi berbeda menjawab\n`409 IDEMPOTENCY_KEY_REUSED`.\n\n## Error\nSemua error mengikuti RFC 9457 dengan media type `application/problem+json`, kecuali endpoint\n`solana-pay` yang memakai `SolanaPayError` karena dibaca wallet. Klien mengambil keputusan dari\n`code`, bukan dari `title` atau `detail`. Kesalahan per kolom ada di `errors`.\n\nTiap jawaban memuat header `X-Request-Id`, yang nilainya sama dengan `request_id` pada error.\n\n## Pagination\nDaftar memakai cursor: kirim `next_cursor` sebagai `cursor`, dan `null` berarti data sudah habis.\n\n## Rate limit\nEndpoint yang butuh login dibatasi per akun, sedangkan endpoint `public` dan `solana-pay` dibatasi\nper IP dan per order. `/healthz` dikecualikan. Batas bawaannya 120 permintaan per menit per akun,\n60 per menit per IP, dan 30 per menit per order, jadi polling 2 detik masih aman. Jawaban `429`\nmemuat `Retry-After` dan header `RateLimit-*`.\n\n## CORS\nEndpoint `solana-pay` dipanggil wallet dari origin apa pun, jadi harus menjawab preflight `OPTIONS`\ndan mengirim `Access-Control-Allow-Origin: *`. Endpoint lain hanya menerima origin frontend.\n\n\nContact Support:\n Name: FastConsignee",
+      "content": "Kontrak ini mengikat frontend Next.js dan backend Go. Semua fitur di PRD tercakup di sini,\ntermasuk yang berprioritas Sebaiknya dan Kalau sempat. Tiap operasi mencatat kebutuhannya di\n`x-fr`, prioritasnya di `x-priority`, peran yang boleh memanggilnya di `x-roles`, dan kode\nerror khususnya di `x-error-codes`.\n\n## Autentikasi dan peran\nLogin memakai Google lewat Supabase Auth langsung dari frontend, jadi API tidak punya endpoint\nlogin. Frontend mengirim JWT Supabase di header `Authorization: Bearer <token>`, dan API\nmemverifikasinya. JWT membuktikan identitas, lalu peran dibaca dari akun di database, sehingga\npencabutan peran langsung berlaku tanpa menunggu JWT kedaluwarsa. Akun yang belum terdaftar di toko\nmenerima `403 ROLE_NOT_ASSIGNED`.\n\n| Peran | Nilai | Akses |\n| --- | --- | --- |\n| Kasir | `cashier` | Katalog, membuat order, order yang dibuatnya sendiri |\n| Pemilik toko | `store_owner` | Semua data toko, termasuk refund, barang, dan penitip |\n| Penitip | `consignor` | Dasbor miliknya sendiri |\n\nPembeli tidak login. Endpoint `public` dan `solana-pay` terbuka, dan keamanannya bergantung pada\nID order UUIDv4 yang tidak bisa ditebak.\n\nPemilik toko dan penitip yang belum menautkan wallet hanya boleh memanggil `GET /api/v1/me` dan\n`/api/v1/wallet/*`. Semua endpoint lain menjawab `403 WALLET_NOT_LINKED`.\n\n## Uang\n- Harga dan bagian dihitung dalam Rupiah sebagai bilangan bulat, dengan akhiran `_idr`.\n- Nilai SOL memakai lamport (1 SOL = 1.000.000.000 lamport), dengan akhiran `_lamports`. Nilainya\n  dikirim sebagai string supaya tidak kehilangan presisi di JavaScript.\n- Komisi memakai basis point, dengan akhiran `_bps` (2000 berarti 20%).\n- Browser hanya mengirim `item_id`, jumlah, dan diskon. Harga, bagian, dan penerima selalu dihitung\n  server.\n\nUrutan perhitungan pembagian:\n1. `line_total_idr` = harga x jumlah, dikurangi diskon baris.\n2. Bagian penitip = pembulatan ke bawah dari harga x jumlah x (10000 - `commission_bps`) / 10000.\n   Komisi toko adalah sisanya, jadi sisa pembulatan Rupiah masuk ke toko.\n3. Diskon diserap seluruhnya oleh pihak yang menanggungnya. Diskon tidak boleh melebihi bagian\n   pihak itu pada baris tersebut.\n4. Bagian digabung per penerima. Potongan refund yang belum lunas dikurangkan dari penitip dan\n   ditambahkan ke toko.\n5. `total_lamports` = pembulatan ke atas dari `total_idr` x 1.000.000.000 / `idr_per_sol`.\n6. Lamport tiap penitip = pembulatan ke bawah dari `amount_idr` x 1.000.000.000 / `idr_per_sol`.\n   Toko menerima sisanya, jadi jumlah semua penerima selalu sama dengan `total_lamports`.\n\n## Status real-time\nStatus memakai polling, bukan WebSocket atau SSE, supaya API tetap stateless dan JWT tetap di\nheader. Klien memanggil endpoint status tiap 2 detik selama order masih `pending`. Status tidak\npernah di-cache.\n\nStatus `confirmed`, `expired`, dan `failed` bersifat final. Mencoba lagi berarti membuat order baru\ndengan `Idempotency-Key` baru. Keranjang disimpan di klien, jadi tidak ada resource keranjang di\nserver.\n\nQR berlaku 5 menit. Setelah `expires_at`, server berhenti menyusun transaksi, tetapi order tetap\n`pending` dan stoknya tetap tertahan selama masa tenggang 2 menit. Masa ini mencakup transaksi yang\nsudah terkirim sesaat sebelum batas waktu, supaya dana yang sudah terbagi tidak bertemu stok yang\nsudah dilepas. Durasi keduanya diatur konfigurasi server.\n\n## Idempotency\n`POST /api/v1/orders` dan `POST /api/v1/orders/{order_id}/refunds` wajib memakai header\n`Idempotency-Key`. Kunci yang sama dengan isi yang sama mengembalikan hasil pertama dan header\n`Idempotency-Replayed: true`. Kunci yang sama dengan isi berbeda menjawab\n`409 IDEMPOTENCY_KEY_REUSED`.\n\n## Error\nSemua error mengikuti RFC 9457 dengan media type `application/problem+json`, kecuali endpoint\n`solana-pay` yang memakai `SolanaPayError` karena dibaca wallet. Klien mengambil keputusan dari\n`code`, bukan dari `title` atau `detail`. Kesalahan per kolom ada di `errors`.\n\nMetode yang tidak terdaftar di alamat yang ada menjawab `405 METHOD_NOT_ALLOWED` dengan header\n`Allow`. Alamat yang tidak ada menjawab `404 NOT_FOUND`.\n\nTiap jawaban memuat header `X-Request-Id`, yang nilainya sama dengan `request_id` pada error.\n\n## Pagination\nDaftar memakai cursor: kirim `next_cursor` sebagai `cursor`, dan `null` berarti data sudah habis.\n\n## Rate limit\nEndpoint yang butuh login dibatasi per akun, sedangkan endpoint `public` dan `solana-pay` dibatasi\nper IP dan per order. `/healthz` dikecualikan. Batas bawaannya 120 permintaan per menit per akun,\n60 per menit per IP, dan 30 per menit per order, jadi polling 2 detik masih aman. Jawaban `429`\nmemuat `Retry-After` dan header `RateLimit-*`.\n\n## CORS\nEndpoint `solana-pay` dipanggil wallet dari origin apa pun, jadi harus menjawab preflight `OPTIONS`\ndan mengirim `Access-Control-Allow-Origin: *`. Endpoint lain hanya menerima origin frontend.\n\n\nContact Support:\n Name: FastConsignee",
       "type": "text/plain"
     }
   }

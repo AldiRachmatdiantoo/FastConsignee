@@ -110,6 +110,8 @@ DEVNET_PAYER_SECRET=kunci_base58 go test -tags devnet -run TestDevnetPaymentAndR
 - `DATABASE_URL` memakai Session Pooler Supabase, karena koneksi langsung Supabase hanya IPv6.
 - `TRUSTED_PROXY_HOPS=1`
 - `PUBLIC_API_URL` dan `FRONTEND_URL` diisi alamat asli, tanpa garis miring di akhir.
+- `FIXED_IDR_PER_SOL` wajib diisi. Tanpa nilai ini, API menjawab `503 RATE_UNAVAILABLE` saat CoinGecko tidak terjangkau dan belum ada kurs pasar terakhir.
+- Jangan memakai login lokal ke database produksi. Akun yang pernah login lokal terikat ke subject `local:...`, jadi email yang sama ditolak `403 ROLE_NOT_ASSIGNED` saat login Google.
 - Layanan cron eksternal memanggil `/healthz` tiap 10 menit agar instance gratis tidak tidur.
 
 RPC publik Devnet membatasi `getTransaction`. Worker mencoba lagi pada tick berikutnya saat kena batas ini, jadi konfirmasi hanya melambat. Untuk order yang lebih ramai, isi `SOLANA_RPC_URL` dengan endpoint Devnet gratis dari penyedia RPC.
