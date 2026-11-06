@@ -694,13 +694,36 @@ Fotonya berasal dari Unsplash. Daftar lengkap foto, font, dan lisensinya ada di 
 
 Produknya sendiri dibuat untuk proyek ini, yaitu kasir, pembagian dana, refund, dan dasbor.
 
+## Penggunaan AI
+
+Proyek ini dikerjakan solo dengan bantuan AI. Bagian ini mencatat apa yang dibantu, sesuai aturan MLH.
+
+Alat yang dipakai adalah Claude Code dari Anthropic, untuk:
+
+- Membantu menyusun PRD, backlog, dan dokumentasi.
+- Menulis dan memperbaiki kode backend, frontend, kontrak API, dan test.
+- Menjalankan pengujian, lalu mencatat hasilnya di backlog.
+
+Keputusan produk, pilihan stack, referensi desain, dan pemeriksaan hasil dilakukan oleh pembuat proyek. Semua commit dikirim dari akun pembuat proyek, jadi riwayat git tidak membedakan kode tulisan AI dan tulisan manusia.
+
+Framework dan library utama:
+
+| Area | Yang dipakai |
+| --- | --- |
+| Frontend | Next.js, React, Tailwind CSS, `openapi-fetch` |
+| Backend | Go, `net/http`, `pgx`, `goose`, `golang-jwt` |
+| Solana | `@solana/web3.js`, Solana Wallet Adapter, `qrcode.react`, `solana-go` |
+| Login | Supabase Auth dengan `@supabase/auth-js` |
+| Kontrak API | OpenAPI 3.1, Redocly, Spectral |
+| Pengujian | Vitest, Testing Library, Playwright, Newman, axe |
+
 ## Pertanyaan terbuka
 
 Pertanyaan pertama perlu diputuskan sebelum kode backend dipakai untuk pengumpulan.
 
 - [ ] Apakah kode yang dibuat sebelum opening boleh dipakai? Contest Terms MLH untuk Fall 2025 sampai Spring 2026 menyatakan semua pekerjaan harus dilakukan selama acara, dan pekerjaan sebelum acara bisa menggugurkan proyek. Aturan khusus acara ini belum terbaca, jadi kode backend disimpan di branch lokal dan belum di-push.
 - [x] Jam berapa batas resminya? Laman MLH menulis pengumpulan awal Minggu 22:00 WIB dan final Minggu 23:45 WIB. Acara dimulai Sabtu 00:00 WIB.
-- [ ] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Bagian ini perlu disiapkan sebelum submit. Template sudah ditulis di bagian Kredit, sedangkan penggunaan AI belum.
+- [x] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Template ada di bagian Kredit, dan penggunaan AI ada di bagian Penggunaan AI. Isinya masih perlu disalin ke Devpost saat submit.
 - [x] Dikerjakan solo atau tim? Solo.
 - [x] Pembayaran memakai SOL atau USDC? SOL di Devnet.
 - [ ] Apakah satu proyek boleh ikut Best Beginner Hack dan DeFi Track sekaligus?

@@ -110,7 +110,7 @@ Kebutuhan: FR-21, FR-24, NFR-02, NFR-15, NFR-25.
 - [ ] Pembayaran nyata di Devnet. Transaksinya sudah lolos simulasi di Devnet, tetapi `requestAirdrop` dijawab `410` karena faucet RPC ditutup, dan faucet web memakai CAPTCHA. Uji ini butuh wallet Devnet yang sudah punya saldo
 - [ ] Login dengan token Supabase asli
 - [x] Kode pengiriman NFT sertifikat, lolos uji worker dan simulasi di program Token, Associated Token, dan Token Metadata yang asli di Devnet
-- [ ] Pengiriman NFT sertifikat nyata di Devnet, menunggu `CERTIFICATE_SIGNER_SECRET` berisi wallet yang punya saldo. Satu sertifikat memakai sekitar 0,0163 SOL
+- [ ] Pengiriman NFT sertifikat nyata di Devnet, menunggu wallet yang punya saldo. Satu sertifikat memakai sekitar 0,0163 SOL. Perintah ujinya ada di `backend/README.md`, dan `TestDevnetCertificateMints` belum pernah berjalan nyata
 
 Testing: beban, keamanan, Solana Devnet.
 
@@ -188,8 +188,8 @@ Kebutuhan: belum ada di PRD. Angkanya diukur dari build produksi lokal pada 6 No
 - [x] Layar bayar hanya memuat `@solana/web3.js` saat pembeli menekan "Bayar dengan wallet", jadi pembeli yang memindai QR tidak mengunduhnya. Memuatnya otomatis setelah layar tampil malah menurunkan nilainya ke 81, jadi cara itu dibatalkan. Belum diuji dengan Phantom asli
 - [x] Kalau berkas wallet gagal dimuat, layar bayar memberi pesan dan QR tetap bisa dipakai
 - [x] Uji tab yang masih terbuka saat ada deploy baru, dengan dua build berbeda. Tab lama tetap login, tetap bisa pindah layar, dan kasir tetap bisa membuat QR. Layar yang belum di-prefetch dimuat ulang penuh oleh Next.js
-- [ ] Foto latar login menjadi LCP di 2,6 detik, dan belum dimuat lebih awal
-- [ ] Foto hero landing masih dari Unsplash. Menyimpannya di server sendiri butuh izin mengunduh berkas
+- [x] Foto latar login sekarang berupa `img`, jadi browser memintanya bersamaan dengan CSS. Nilai Lighthouse tidak ikut naik, yaitu 96 dengan LCP 2,7 detik, karena unduhan foto hanya 6% dari LCP di simulasi
+- [x] Foto hero landing dan login disimpan di server sendiri, dalam AVIF dengan cadangan WebP. Lima foto landing lain masih dari Unsplash, dan semuanya di bawah layar pertama
 - [ ] Ukur PageSpeed beberapa kali setelah web online, lalu ambil nilai tengahnya
 - [ ] Ukur latensi API setelah deploy, karena angka lokal belum memuat jarak ke Render dan Supabase. Render gratis juga tidur kalau tidak ada lalu lintas, jadi cron `/healthz` harus jalan sebelum demo
 
@@ -199,8 +199,8 @@ Lighthouse mode HP di build produksi lokal, nilai tengah 3 kali uji:
 
 | Halaman | Performa | LCP | Bobot |
 | --- | --- | --- | --- |
-| Landing | 89 ke 99 | 3,2 ke 2,0 detik | 258 ke 155 KB |
-| Login | 92 sampai 97 ke 96 sampai 97 | 2,7 sampai 3,3 ke 2,6 detik | 425 ke 286 KB |
+| Landing | 89 ke 100 | 3,2 ke 1,7 detik | 258 ke 155 KB |
+| Login | 92 sampai 97 ke 96 | 2,7 sampai 3,3 ke 2,7 detik | 425 ke 287 KB |
 | Bayar, dengan order asli | 91 ke 94 | 3,3 ke 2,8 detik | 390 ke 253 KB |
 
 Nilai aksesibilitas Lighthouse: login dan bayar 100, landing 96. Sisa temuan landing berasal dari teks animasi yang belum terlihat sebelum di-scroll, dan axe bersih saat animasi dimatikan.
@@ -213,9 +213,9 @@ Waktu sampai isi layar tampil, memakai HP lambat tiruan dengan CPU 4 kali lebih 
 | Dasbor | 2,2 detik | 0,6 detik | 213 KB | 187 KB |
 | Barang | 2,7 detik | 1,2 detik | 230 KB | 184 KB |
 | Refund | 2,9 detik | 0,7 detik | 364 KB | 324 KB |
-| Bayar | 2,9 detik | 0,7 detik | 350 KB | 290 KB |
+| Bayar | 2,2 detik | 0,7 detik | 213 KB | 153 KB |
 
-Wallet memuat 319 KB, penitip 185 KB, dan login 177 KB JavaScript setelah gzip. Tanpa pembatas, semua layar tampil dalam 0,2 detik. Baris bayar di tabel diukur sebelum kode wallet dipisah, jadi angkanya belum diperbarui.
+Wallet memuat 319 KB, penitip 185 KB, dan login 177 KB JavaScript setelah gzip. Tanpa pembatas, semua layar tampil dalam 0,2 detik. JavaScript bayar dihitung dari unduhan browser sebelum tombol wallet ditekan, sedangkan layar lain dihitung dari berkas hasil build.
 
 API lokal menjawab endpoint baca dengan p95 di bawah 7 ms, dari 200 panggilan per endpoint. Checkout menangani 103 order per detik dengan p95 233 ms. Angka ini bukan pengganti PageSpeed dan latensi setelah deploy.
 
@@ -275,7 +275,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 - [x] Koleksi Postman belum punya assertion. Tiap request sekarang memeriksa status terhadap kontrak, tidak ada `5xx`, dan ada `X-Request-Id`
 - [x] `NewJWKSVerifier` belum tersentuh `go test`. Sekarang ada uji kunci ES256 dan RS256, serta token palsu
 - [x] `npm audit` frontend menemukan 18 celah moderate. Sekarang 0, setelah `jayson` dan `minimatch` dinaikkan lewat `overrides`
-- [ ] `npm audit` folder `api` tinggal 3 high, semuanya dari `@faker-js/faker` 5.5.3 lewat `openapi-to-postmanv2`. Versi faker baru membuat alat itu gagal, dan belum ada perbaikan. Paket ini hanya alat pengembangan, jadi tidak ikut ke produksi
+- [x] `npm audit` folder `api` menemukan 4 high dan 2 moderate. Sekarang 0, karena `openapi-to-postmanv2` diganti generator sendiri di `api/scripts/postman.mjs`. Isi koleksinya sama, kecuali petunjuk pilihan nilai yang sekarang berbahasa Indonesia, teks kontak di deskripsi yang hilang, dan variabel baru `certificate_id`
 - [ ] `govulncheck` mencatat GO-2026-5932 di `golang.org/x/crypto`. Kode tidak memanggilnya, dan perbaikannya baru ada di versi pseudo
 
 ## Deploy
@@ -287,4 +287,5 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Proyek Vercel
 - [ ] Repo dibuat publik sebelum submit Devpost
 - [x] Pernyataan template di README
-- [ ] Pernyataan AI di README, serta pernyataan AI dan template di Devpost
+- [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
+- [ ] Pernyataan AI dan template di Devpost
