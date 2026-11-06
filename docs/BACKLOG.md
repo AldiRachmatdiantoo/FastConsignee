@@ -21,7 +21,7 @@ Kebutuhan: NFR-08, NFR-16 sampai NFR-20, NFR-23, NFR-25.
 - [x] `GET /healthz` dan graceful shutdown
 - [x] Test harness: database per test, klien API, dan validator kontrak
 - [x] Workflow CI GitHub Actions
-- [ ] Run CI pertama lolos di GitHub, termasuk `-race`
+- [x] Run CI pertama lolos di GitHub, termasuk `-race`
 
 Testing: unit, repository untuk constraint dan indeks, handler, kontrak.
 
