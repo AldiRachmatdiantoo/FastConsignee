@@ -6,11 +6,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"os"
 	"strings"
 	"testing"
+	"time"
 
 	sol "github.com/gagliardetto/solana-go"
 
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/auth"
+	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/config"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/platform/solana"
 	"github.com/AldiRachmatdiantoo/FastConsignee/backend/internal/testkit"
 )
@@ -111,6 +115,87 @@ func TestDevnetCertificateSimulates(t *testing.T) {
 		t.Fatalf("program metadata tidak berjalan:\n%s", logs)
 	}
 	t.Logf("%d byte, biaya %d lamport", len(raw), cost)
+}
+
+// TestDevnetCertificateMints membayar order bersertifikat, lalu memastikan NFT-nya sampai di wallet
+// pembeli. Wallet buangan yang sama membayar order dan menerbitkan sertifikat.
+func TestDevnetCertificateMints(t *testing.T) {
+	secret := os.Getenv("DEVNET_PAYER_SECRET")
+	if secret == "" {
+		t.Skip("isi DEVNET_PAYER_SECRET dengan kunci wallet Devnet yang punya saldo")
+	}
+	buyer, err := testkit.WalletFromSecret(secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	d, client := devnetClient(t)
+	a := testkit.NewAppWith(t, client, func(c *config.Config) { c.CertificateSigner = secret })
+	store := a.NewStore()
+	cashier := a.NewUser(store.ID, auth.RoleCashier)
+	consignor := a.NewConsignor(store.ID)
+	item := a.NewItem(consignor.ConsignorID, 100000, 2000, 5)
+	a.Exec(`UPDATE items SET certificate_enabled = true WHERE id = $1`, item)
+	d.transfer(client, buyer, store.Wallet.Address, storeFunding)
+
+	var o struct {
+		ID string `json:"id"`
+	}
+	a.PostKey(cashier, "/api/v1/orders", "kunci-devnet-sertifikat", map[string]any{
+		"lines": []map[string]any{{"item_id": item, "quantity": 1}},
+	}).Want(201).JSON(&o)
+	var pay struct {
+		Transaction string `json:"transaction"`
+	}
+	a.Public("POST", "/api/v1/solana-pay/orders/"+o.ID, map[string]any{"account": buyer.Address}).Want(200).JSON(&pay)
+	d.send(buyer, pay.Transaction)
+	d.waitFor(func() bool {
+		a.Tick()
+		var n int
+		a.Scalar(&n, `SELECT count(*) FROM certificates`)
+		return n == 1
+	}, "order confirmed")
+
+	// Jam uji berbeda dari now() database, jadi waktu antrean disamakan dengan jam uji.
+	a.Exec(`UPDATE certificates SET created_at = $1, updated_at = $1`, a.Clock.Now())
+	a.Clock.Advance(time.Second)
+	d.waitFor(func() bool {
+		if err := a.API.Certificates.Tick(ctx); err != nil {
+			t.Fatal(err)
+		}
+		var status string
+		a.Scalar(&status, `SELECT status FROM certificates`)
+		return status == "sent"
+	}, "sertifikat terkirim")
+
+	var address string
+	a.Scalar(&address, `SELECT mint_address FROM certificates`)
+	mint := sol.MustPublicKeyFromBase58(address)
+	tokenAccount, _, err := sol.FindAssociatedTokenAddress(sol.MustPublicKeyFromBase58(buyer.Address), mint)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var balance struct {
+		Value struct {
+			Amount string `json:"amount"`
+		} `json:"value"`
+	}
+	params := []any{tokenAccount.String(), map[string]any{"commitment": "confirmed"}}
+	if err := d.call("getTokenAccountBalance", params, &balance); err != nil {
+		t.Fatal(err)
+	}
+	if balance.Value.Amount != "1" {
+		t.Fatalf("saldo NFT pembeli %q", balance.Value.Amount)
+	}
+	metadata, _, err := sol.FindTokenMetadataAddress(mint)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := client.AccountExists(ctx, metadata.String())
+	if err != nil || !exists {
+		t.Fatalf("akun metadata tidak ada: %v", err)
+	}
+	t.Logf("NFT %s", solana.ExplorerAddressURL(address))
 }
 
 func TestDevnetPaymentSimulates(t *testing.T) {

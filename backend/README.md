@@ -96,10 +96,16 @@ Uji jaringan Devnet. Yang pertama hanya membaca dan tidak butuh saldo:
 go test -tags devnet -run TestDevnetReadsRealNetwork -v ./internal/payment
 ```
 
-Uji pembayaran dan refund sungguhan butuh wallet buangan berisi sekitar 0,1 SOL Devnet. Jangan pernah memakai kunci wallet utama:
+Yang kedua mensimulasikan transaksi bayar dan NFT di program asli, jadi juga tidak butuh saldo:
 
 ```bash
-DEVNET_PAYER_SECRET=kunci_base58 go test -tags devnet -run TestDevnetPaymentAndRefund -v ./internal/payment
+go test -tags devnet -run 'TestDevnet(Certificate|Payment)Simulates' -v ./internal/payment
+```
+
+Uji pembayaran, refund, dan NFT sungguhan butuh wallet buangan berisi sekitar 0,3 SOL Devnet. Jangan pernah memakai kunci wallet utama:
+
+```bash
+DEVNET_PAYER_SECRET=kunci_base58 go test -tags devnet -run 'TestDevnetPaymentAndRefund|TestDevnetCertificateMints' -v ./internal/payment
 ```
 
 ## Deploy ke Render
