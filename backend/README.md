@@ -40,6 +40,18 @@ Migrasi berjalan otomatis saat `AUTO_MIGRATE=true`. Cek dengan `GET /healthz`.
 4. Seed membuat wallet penitip acak yang kunci privatnya dibuang. Untuk melihat saldo penitip di Phantom, isi `SEED_CONSIGNOR_WALLETS` dengan tiga alamat milikmu.
 5. Penitip yang ingin membuka dasbor harus login dan membuktikan wallet-nya dengan tanda tangan.
 
+## Mencoba API di Postman
+
+Import [api/postman/FastConsignee.postman_collection.json](../api/postman/FastConsignee.postman_collection.json). Koleksi ini dibuat dari kontrak. Kalau kontrak berubah, jalankan `npm run postman` di folder `api`, lalu import lagi.
+
+1. Pastikan `http://localhost:3000` ada di Redirect URLs Supabase.
+2. Buka alamat ini di browser, ganti `PROJECT` dengan proyek Supabase-mu, lalu login Google:
+   `https://PROJECT.supabase.co/auth/v1/authorize?provider=google&redirect_to=http://localhost:3000`
+3. Salin nilai `access_token` dari address bar ke variabel `bearerToken` di koleksi. Kalau API menjawab `401`, ambil token baru.
+4. Jalankan request dari atas ke bawah. ID hasil `POST` tersimpan otomatis, dan `Idempotency-Key` selalu baru di tiap kirim.
+
+Peran yang boleh memanggil tiap request tertulis di deskripsinya. Akun pemilik menjawab `403 WALLET_NOT_LINKED` sampai wallet toko tertaut. Postman tidak bisa menandatangani dengan wallet, jadi `wallet_signature` dan `refund_signature` harus diisi dari hasil tanda tangan wallet.
+
 ## Testing
 
 Test butuh Postgres dengan akun yang boleh membuat database, karena tiap test memakai database sendiri:

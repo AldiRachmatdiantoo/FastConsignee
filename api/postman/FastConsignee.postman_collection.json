@@ -1,0 +1,1579 @@
+{
+  "item": [
+    {
+      "name": "Health",
+      "description": "Health check untuk cron dan load balancer.",
+      "item": [
+        {
+          "name": "Memeriksa API hidup",
+          "request": {
+            "name": "Memeriksa API hidup",
+            "description": "**Peran:** `public`\n\nDipanggil cron eksternal dan load balancer. Tidak terkena rate limit.",
+            "url": {
+              "path": [
+                "healthz"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Profil pengguna dan penautan wallet.",
+      "item": [
+        {
+          "name": "Membaca profil pengguna yang login",
+          "request": {
+            "name": "Membaca profil pengguna yang login",
+            "description": "**Peran:** `cashier`, `store_owner`, `consignor`\n\nFrontend memanggil ini setelah login untuk menentukan layar berikutnya. Kalau\n`wallet_required` bernilai true dan `wallet` bernilai null, frontend membuka penautan wallet.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "me"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Meminta pesan untuk ditandatangani",
+          "request": {
+            "name": "Meminta pesan untuk ditandatangani",
+            "description": "**Peran:** `store_owner`, `consignor`\n\nMembuat nonce sekali pakai untuk alamat wallet. Klien menandatangani `message` apa adanya\ndengan wallet tersebut. Menandatangani pesan tidak memakai saldo dan tidak mengirim transaksi.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "nonce"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"{{wallet_address}}\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set(\"wallet_nonce\", body.nonce);",
+                  "    pm.collectionVariables.set(\"wallet_message\", body.message);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Menautkan wallet dengan tanda tangan",
+          "request": {
+            "name": "Menautkan wallet dengan tanda tangan",
+            "description": "**Peran:** `store_owner`, `consignor`\n\nMemverifikasi tanda tangan, lalu menautkan wallet ke toko untuk `store_owner` atau ke penitip\nuntuk `consignor`. Pemanggilan ulang dengan wallet lain mengganti wallet tertaut, dan order\nyang sudah dibuat tetap memakai wallet lama.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "link"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"{{wallet_address}}\",\n  \"nonce\": \"{{wallet_nonce}}\",\n  \"signature\": \"{{wallet_signature}}\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consignors",
+      "description": "Pendaftaran penitip oleh pemilik toko.",
+      "item": [
+        {
+          "name": "Membaca daftar penitip",
+          "request": {
+            "name": "Membaca daftar penitip",
+            "description": "**Peran:** `store_owner`\n\nMemuat status wallet tiap penitip, supaya pemilik toko tahu siapa yang belum bisa menerima dana.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "consignors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Mendaftarkan penitip",
+          "request": {
+            "name": "Mendaftarkan penitip",
+            "description": "**Peran:** `store_owner`\n\nAlamat wallet divalidasi formatnya dan berstatus `unverified` sampai penitip menandatanganinya\nlewat `POST /api/v1/wallet/link`. Email dipakai untuk mencocokkan akun Google penitip. Pembayaran\nmemakai SOL, jadi tidak ada token account yang dibuat.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "consignors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sari Anyaman\",\n  \"email\": \"sari+{{$timestamp}}@example.com\",\n  \"wallet_address\": \"{{consignor_wallet}}\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set(\"consignor_id\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membaca satu penitip",
+          "request": {
+            "name": "Membaca satu penitip",
+            "description": "**Peran:** `store_owner`\n\nPenitip dari toko lain menjawab `404 NOT_FOUND`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "consignors",
+                ":consignor_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{consignor_id}}",
+                  "key": "consignor_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Mengubah data penitip",
+          "request": {
+            "name": "Mengubah data penitip",
+            "description": "**Peran:** `store_owner`\n\nWallet tidak bisa diubah lewat endpoint ini. Hanya penitip yang bisa menggantinya dengan tanda tangan.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "consignors",
+                ":consignor_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{consignor_id}}",
+                  "key": "consignor_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sari Anyaman Nusantara\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "description": "Katalog dan pengaturan barang.",
+      "item": [
+        {
+          "name": "Membaca katalog barang",
+          "request": {
+            "name": "Membaca katalog barang",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nBarang dengan `stock_available` 0 tetap tampil, tetapi tidak bisa dipilih kasir.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "items"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Mencari nama barang.",
+                    "type": "text/plain"
+                  },
+                  "key": "q",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "consignor_id",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Bawaannya hanya barang aktif.",
+                    "type": "text/plain"
+                  },
+                  "key": "active",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Menambah barang",
+          "request": {
+            "name": "Menambah barang",
+            "description": "**Peran:** `store_owner`\n\nBarang baru langsung aktif dan masuk katalog. Penitipnya harus berasal dari toko yang sama.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "items"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tas Rotan Bundar\",\n  \"price_idr\": 185000,\n  \"commission_bps\": 2000,\n  \"consignor_id\": \"{{consignor_id}}\",\n  \"stock_on_hand\": 12\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set(\"item_id\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membaca satu barang",
+          "request": {
+            "name": "Membaca satu barang",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nMemuat stok fisik, stok tertahan, dan stok yang bisa dijual.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "items",
+                ":item_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{item_id}}",
+                  "key": "item_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Mengubah barang",
+          "request": {
+            "name": "Mengubah barang",
+            "description": "**Peran:** `store_owner`\n\nPerubahan harga dan komisi berlaku untuk penjualan berikutnya, karena order menyimpan salinan\nnilainya. Barang tidak dihapus supaya riwayat tetap utuh, jadi kirim `active: false` untuk\nmenariknya dari katalog.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "items",
+                ":item_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{item_id}}",
+                  "key": "item_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_idr\": 190000,\n  \"stock_on_hand\": 10\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Rincian pembagian, pembuatan order, dan riwayat.",
+      "item": [
+        {
+          "name": "Menghitung rincian pembagian",
+          "request": {
+            "name": "Menghitung rincian pembagian",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nMenghitung total, diskon, dan bagian tiap penerima tanpa menyimpan apa pun dan tanpa\nmereservasi stok. Kurs di sini belum dikunci, dan baru dikunci saat order dibuat.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "preview"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lines\": [\n    {\n      \"item_id\": \"{{item_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Membuat order dan QR",
+          "request": {
+            "name": "Membuat order dan QR",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nDalam satu transaksi database, endpoint ini menyimpan order, item, pembagian dana, dan reservasi\nstok, lalu mengunci kurs sampai `expires_at`. Frontend menggambar QR dari\n`payment.solana_pay_url`. Reservasi dilepas saat order `expired` atau `failed`, dan stok terpotong\nsaat `confirmed`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": {
+                  "content": "(Required) Kunci unik per percobaan, disarankan UUID.",
+                  "type": "text/plain"
+                },
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lines\": [\n    {\n      \"item_id\": \"{{item_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set(\"order_id\", body.id);",
+                  "    pm.collectionVariables.set(\"order_line_id\", body.lines[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membaca riwayat order",
+          "request": {
+            "name": "Membaca riwayat order",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nKasir hanya melihat order yang dibuatnya. Pemilik toko melihat semua order toko, dan memakai\ndaftar ini untuk memilih barang yang di-refund.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": " (This can only be one of pending,confirmed,expired,failed)",
+                    "type": "text/plain"
+                  },
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Awal periode, inklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Akhir periode, eksklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "to",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Membaca detail order",
+          "request": {
+            "name": "Membaca detail order",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nDipakai untuk rincian transaksi dan untuk memilih barang yang di-refund. Kasir menerima\n`404 NOT_FOUND` untuk order yang tidak dibuatnya.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":order_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Memantau status pembayaran",
+          "request": {
+            "name": "Memantau status pembayaran",
+            "description": "**Peran:** `cashier`, `store_owner`\n\nEndpoint ringan untuk polling layar kasir. Worker mencari transaksi lewat `reference`, lalu\nmencocokkan jumlah dan penerima dengan order sebelum menandainya `confirmed`. Kalau tidak cocok,\norder menjadi `failed` dengan `failure_code` `VALIDATION_MISMATCH`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":order_id",
+                "status"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "description": "Layar bayar pembeli dan Solana Pay Transaction Request.",
+      "item": [
+        {
+          "name": "Membaca layar bayar dan bukti pembayaran",
+          "request": {
+            "name": "Membaca layar bayar dan bukti pembayaran",
+            "description": "**Peran:** `public`\n\nDipakai pembeli tanpa login. Selama `pending`, ini menjadi layar bayar dengan total Rupiah, nilai\nSOL, dan label Devnet. Setelah `confirmed`, ini menjadi bukti pembayaran. Endpoint ini tidak\nmemuat nama penitip, wallet penerima, atau wallet pembayar.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "public",
+                "orders",
+                ":order_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Memberi label dan ikon ke wallet",
+          "request": {
+            "name": "Memberi label dan ikon ke wallet",
+            "description": "**Peran:** `public`\n\nLangkah GET pada Solana Pay Transaction Request. Jawaban sukses harus HTTP 200.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "solana-pay",
+                "orders",
+                ":order_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Menyusun transaksi pembayaran",
+          "request": {
+            "name": "Menyusun transaksi pembayaran",
+            "description": "**Peran:** `public`\n\nLangkah POST pada Solana Pay Transaction Request. Tombol wallet adapter di browser memanggil\nendpoint yang sama, jadi transaksinya sama dengan alur QR.\n\nTransaksi berisi satu transfer ke tiap penerima dengan nilai di atas 0, sehingga semuanya berhasil\natau gagal bersama. `reference` order ikut sebagai akun read-only supaya worker bisa menemukannya.\n`account` menjadi fee payer dan satu-satunya penanda tangan, dan menjadi wallet tujuan refund\nsetelah transaksinya terkonfirmasi. Transaksi dikirim tanpa tanda tangan, dengan `recentBlockhash`\nterbaru, dan tidak memuat data pribadi.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "solana-pay",
+                "orders",
+                ":order_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account\": \"{{payer_wallet}}\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refunds",
+      "description": "Refund satu barang dari wallet toko ke wallet pembayar.",
+      "item": [
+        {
+          "name": "Menyusun transaksi refund satu barang",
+          "request": {
+            "name": "Menyusun transaksi refund satu barang",
+            "description": "**Peran:** `store_owner`\n\nMenyusun transaksi dari wallet toko ke wallet pembayar untuk satu unit barang. Jumlah lamport\nsama dengan yang dibayar pembeli untuk unit itu, jadi kurs saat refund tidak berpengaruh. Klien\nmeminta wallet toko menandatangani dan mengirim `transaction`, lalu melapor lewat\n`POST /api/v1/refunds/{refund_id}/signature`. Barang dengan jumlah 2 berarti dua kali refund.\n\nPotongan penitip baru tercatat setelah refund `completed`. Refund `failed` atau `expired` tidak\nmengubah saldo dan catatan, dan pemilik toko bisa memanggil endpoint ini lagi dengan\n`Idempotency-Key` baru.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":order_id",
+                "refunds"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{order_id}}",
+                  "key": "order_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) UUIDv4 yang tidak bisa ditebak.",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": {
+                  "content": "(Required) Kunci unik per percobaan, disarankan UUID.",
+                  "type": "text/plain"
+                },
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_line_id\": \"{{order_line_id}}\",\n  \"reason\": \"Barang cacat\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set(\"refund_id\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membaca riwayat refund",
+          "request": {
+            "name": "Membaca riwayat refund",
+            "description": "**Peran:** `store_owner`\n\nMemuat semua percobaan refund toko, termasuk yang `failed` dan `expired`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "refunds"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": " (This can only be one of awaiting_signature,confirming,completed,failed,expired)",
+                    "type": "text/plain"
+                  },
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Awal periode, inklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Akhir periode, eksklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "to",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Memantau status refund",
+          "request": {
+            "name": "Memantau status refund",
+            "description": "**Peran:** `store_owner`\n\nKlien memanggil endpoint ini tiap 2 detik selama status masih `confirming`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "refunds",
+                ":refund_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{refund_id}}",
+                  "key": "refund_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Melaporkan signature refund",
+          "request": {
+            "name": "Melaporkan signature refund",
+            "description": "**Peran:** `store_owner`\n\nMempercepat pemeriksaan setelah wallet mengirim transaksi. Worker tetap bisa menemukan refund\nlewat `reference` kalau laporan ini tidak sampai. Setelah transaksi tervalidasi, refund dan\npotongan penitip disimpan dalam satu transaksi database.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "refunds",
+                ":refund_id",
+                "signature"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "{{refund_id}}",
+                  "key": "refund_id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signature\": \"{{refund_signature}}\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dasbor penitip dan pemilik toko.",
+      "item": [
+        {
+          "name": "Membaca penjualan penitip",
+          "request": {
+            "name": "Membaca penjualan penitip",
+            "description": "**Peran:** `consignor`\n\nPenitip dibaca dari JWT, jadi tidak ada parameter ID dan satu penitip tidak bisa membaca data\npenitip lain. Hanya order `confirmed` yang tampil. `order_transfer_lamports` sama persis dengan\nnilai yang terlihat di Solana Explorer untuk wallet penitip.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "consignor",
+                "sales"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Awal periode, inklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Akhir periode, eksklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "to",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Membaca potongan refund penitip",
+          "request": {
+            "name": "Membaca potongan refund penitip",
+            "description": "**Peran:** `consignor`\n\nPotongan dicatat dalam Rupiah dan tidak pernah di-cache.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "consignor",
+                "deductions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": " (This can only be one of outstanding,settled)",
+                    "type": "text/plain"
+                  },
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Membaca sisa stok penitip",
+          "request": {
+            "name": "Membaca sisa stok penitip",
+            "description": "**Peran:** `consignor`\n\nNilainya sama dengan `stock_available` di katalog kasir.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "consignor",
+                "stock"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Nilai `next_cursor` dari halaman sebelumnya.",
+                    "type": "text/plain"
+                  },
+                  "key": "cursor",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        },
+        {
+          "name": "Membaca ringkasan toko",
+          "request": {
+            "name": "Membaca ringkasan toko",
+            "description": "**Peran:** `store_owner`\n\nHanya menghitung order `confirmed`, dan bisa di-cache sekitar 30 detik. Tautan Explorer tiap\ntransaksi ada di `GET /api/v1/orders`.",
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "store",
+                "summary"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Awal periode, inklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Akhir periode, eksklusif.",
+                    "type": "text/plain"
+                  },
+                  "key": "to",
+                  "value": ""
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "type": "any",
+        "value": "{{bearerToken}}",
+        "key": "token"
+      }
+    ]
+  },
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Alamat API."
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Supabase. Peran yang boleh memanggil tiap request tertulis di deskripsinya."
+    },
+    {
+      "key": "wallet_address",
+      "value": "",
+      "type": "string",
+      "description": "Alamat wallet yang akan ditautkan. Harus wallet yang bisa kamu tanda tangani."
+    },
+    {
+      "key": "wallet_signature",
+      "value": "",
+      "type": "string",
+      "description": "Tanda tangan base58 atas wallet_message."
+    },
+    {
+      "key": "consignor_wallet",
+      "value": "4K1QdtVP3i1opNAymPThdcizR7YzRrsHdzbMUMooDU5a",
+      "type": "string",
+      "description": "Contoh saja, kuncinya sudah dibuang. Ganti dengan wallet Devnet penitip."
+    },
+    {
+      "key": "payer_wallet",
+      "value": "7Pxwcgh7QWWfjLrvbdKHm5ssob54s8ynyKHJ1tFz8zYk",
+      "type": "string",
+      "description": "Contoh saja, kuncinya sudah dibuang. Ganti dengan wallet pembeli."
+    },
+    {
+      "key": "refund_signature",
+      "value": "",
+      "type": "string",
+      "description": "Signature transaksi refund setelah dikirim wallet toko."
+    },
+    {
+      "key": "wallet_nonce",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    },
+    {
+      "key": "wallet_message",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis. Pesan yang harus ditandatangani wallet."
+    },
+    {
+      "key": "consignor_id",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    },
+    {
+      "key": "item_id",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    },
+    {
+      "key": "order_line_id",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    },
+    {
+      "key": "refund_id",
+      "value": "",
+      "type": "string",
+      "description": "Terisi otomatis."
+    }
+  ],
+  "info": {
+    "_postman_id": "6f2f1a52-3c1e-4b7a-9d55-0b6e8c4a1f10",
+    "name": "FastConsignee API",
+    "version": "0.1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Kontrak ini mengikat frontend Next.js dan backend Go. Semua fitur di PRD tercakup di sini,\ntermasuk yang berprioritas Sebaiknya dan Kalau sempat. Tiap operasi mencatat kebutuhannya di\n`x-fr`, prioritasnya di `x-priority`, peran yang boleh memanggilnya di `x-roles`, dan kode\nerror khususnya di `x-error-codes`.\n\n## Autentikasi dan peran\nLogin memakai Google lewat Supabase Auth langsung dari frontend, jadi API tidak punya endpoint\nlogin. Frontend mengirim JWT Supabase di header `Authorization: Bearer <token>`, dan API\nmemverifikasinya. JWT membuktikan identitas, lalu peran dibaca dari akun di database, sehingga\npencabutan peran langsung berlaku tanpa menunggu JWT kedaluwarsa. Akun yang belum terdaftar di toko\nmenerima `403 ROLE_NOT_ASSIGNED`.\n\n| Peran | Nilai | Akses |\n| --- | --- | --- |\n| Kasir | `cashier` | Katalog, membuat order, order yang dibuatnya sendiri |\n| Pemilik toko | `store_owner` | Semua data toko, termasuk refund, barang, dan penitip |\n| Penitip | `consignor` | Dasbor miliknya sendiri |\n\nPembeli tidak login. Endpoint `public` dan `solana-pay` terbuka, dan keamanannya bergantung pada\nID order UUIDv4 yang tidak bisa ditebak.\n\nPemilik toko dan penitip yang belum menautkan wallet hanya boleh memanggil `GET /api/v1/me` dan\n`/api/v1/wallet/*`. Semua endpoint lain menjawab `403 WALLET_NOT_LINKED`.\n\n## Uang\n- Harga dan bagian dihitung dalam Rupiah sebagai bilangan bulat, dengan akhiran `_idr`.\n- Nilai SOL memakai lamport (1 SOL = 1.000.000.000 lamport), dengan akhiran `_lamports`. Nilainya\n  dikirim sebagai string supaya tidak kehilangan presisi di JavaScript.\n- Komisi memakai basis point, dengan akhiran `_bps` (2000 berarti 20%).\n- Browser hanya mengirim `item_id`, jumlah, dan diskon. Harga, bagian, dan penerima selalu dihitung\n  server.\n\nUrutan perhitungan pembagian:\n1. `line_total_idr` = harga x jumlah, dikurangi diskon baris.\n2. Bagian penitip = pembulatan ke bawah dari harga x jumlah x (10000 - `commission_bps`) / 10000.\n   Komisi toko adalah sisanya, jadi sisa pembulatan Rupiah masuk ke toko.\n3. Diskon diserap seluruhnya oleh pihak yang menanggungnya. Diskon tidak boleh melebihi bagian\n   pihak itu pada baris tersebut.\n4. Bagian digabung per penerima. Potongan refund yang belum lunas dikurangkan dari penitip dan\n   ditambahkan ke toko.\n5. `total_lamports` = pembulatan ke atas dari `total_idr` x 1.000.000.000 / `idr_per_sol`.\n6. Lamport tiap penitip = pembulatan ke bawah dari `amount_idr` x 1.000.000.000 / `idr_per_sol`.\n   Toko menerima sisanya, jadi jumlah semua penerima selalu sama dengan `total_lamports`.\n\n## Status real-time\nStatus memakai polling, bukan WebSocket atau SSE, supaya API tetap stateless dan JWT tetap di\nheader. Klien memanggil endpoint status tiap 2 detik selama order masih `pending`. Status tidak\npernah di-cache.\n\nStatus `confirmed`, `expired`, dan `failed` bersifat final. Mencoba lagi berarti membuat order baru\ndengan `Idempotency-Key` baru. Keranjang disimpan di klien, jadi tidak ada resource keranjang di\nserver.\n\nQR berlaku 5 menit. Setelah `expires_at`, server berhenti menyusun transaksi, tetapi order tetap\n`pending` dan stoknya tetap tertahan selama masa tenggang 2 menit. Masa ini mencakup transaksi yang\nsudah terkirim sesaat sebelum batas waktu, supaya dana yang sudah terbagi tidak bertemu stok yang\nsudah dilepas. Durasi keduanya diatur konfigurasi server.\n\n## Idempotency\n`POST /api/v1/orders` dan `POST /api/v1/orders/{order_id}/refunds` wajib memakai header\n`Idempotency-Key`. Kunci yang sama dengan isi yang sama mengembalikan hasil pertama dan header\n`Idempotency-Replayed: true`. Kunci yang sama dengan isi berbeda menjawab\n`409 IDEMPOTENCY_KEY_REUSED`.\n\n## Error\nSemua error mengikuti RFC 9457 dengan media type `application/problem+json`, kecuali endpoint\n`solana-pay` yang memakai `SolanaPayError` karena dibaca wallet. Klien mengambil keputusan dari\n`code`, bukan dari `title` atau `detail`. Kesalahan per kolom ada di `errors`.\n\nTiap jawaban memuat header `X-Request-Id`, yang nilainya sama dengan `request_id` pada error.\n\n## Pagination\nDaftar memakai cursor: kirim `next_cursor` sebagai `cursor`, dan `null` berarti data sudah habis.\n\n## Rate limit\nEndpoint yang butuh login dibatasi per akun, sedangkan endpoint `public` dan `solana-pay` dibatasi\nper IP dan per order. `/healthz` dikecualikan. Batas bawaannya 120 permintaan per menit per akun,\n60 per menit per IP, dan 30 per menit per order, jadi polling 2 detik masih aman. Jawaban `429`\nmemuat `Retry-After` dan header `RateLimit-*`.\n\n## CORS\nEndpoint `solana-pay` dipanggil wallet dari origin apa pun, jadi harus menjawab preflight `OPTIONS`\ndan mengirim `Access-Control-Allow-Origin: *`. Endpoint lain hanya menerima origin frontend.\n\n\nContact Support:\n Name: FastConsignee",
+      "type": "text/plain"
+    }
+  }
+}

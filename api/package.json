@@ -4,11 +4,14 @@
   "scripts": {
     "lint": "npm run lint:redocly && npm run lint:owasp",
     "lint:redocly": "redocly lint openapi.yaml --config redocly.yaml",
-    "lint:owasp": "spectral lint openapi.yaml --ruleset .spectral.yaml --fail-severity warn"
+    "lint:owasp": "spectral lint openapi.yaml --ruleset .spectral.yaml --fail-severity warn",
+    "postman": "node scripts/postman.mjs"
   },
   "devDependencies": {
     "@redocly/cli": "2.76.0",
     "@stoplight/spectral-cli": "6.17.0",
-    "@stoplight/spectral-owasp-ruleset": "2.0.1"
+    "@stoplight/spectral-owasp-ruleset": "2.0.1",
+    "openapi-to-postmanv2": "6.4.2",
+    "yaml": "1.10.2"
   }
 }
