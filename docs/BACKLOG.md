@@ -175,8 +175,13 @@ Kebutuhan: belum ada di PRD. Rencana dan keputusannya ada di [FRONTEND.md](FRONT
 - [ ] Tombol utama mengarah ke video demo
 - [x] Halaman login mengikuti template Linea
 - [x] Mockup HP di landing menyalin layar kasir dan bayar yang asli. Sebelumnya berbentuk chat berbahasa Inggris dengan tab bawah yang tidak ada di aplikasi, dan "Waiting for payment" tampil bersama "Confirmed"
+- [ ] Cek kepala layar kasir di lebar 320 px. Hitungan dari mockup menunjukkan logo bisa menimpa label Devnet, tetapi aplikasi aslinya belum diuji di lebar itu
 
 Testing: Playwright di lebar 375 dan 1440 px, dengan reduced motion, dan rewrite `/` di `next start`. Halaman login juga diuji begitu, termasuk kembali ke `/`. Firefox belum diuji langsung.
+
+Mockup HP diuji di lebar 320, 390, 768, dan 1440 px, tanpa scroll samping dan tanpa teks bertumpuk di kepala layar. `landing-phone.test.ts` gagal kalau teks layar asli berubah tetapi mockup tertinggal. Test itu hanya memeriksa teks, bukan tata letak. Uji landing yang baru dijalankan di Edge, belum di WebKit.
+
+Catatan mockup: QR-nya hanya berisi teks, jadi tidak membuka pembayaran. Kurs dan saldonya data uji lokal. Chip kecil di bagian *three steps*, seperti "QR for Rp 180,000", tetap berbahasa Inggris karena hiasan, bukan salinan layar.
 
 ### F-07 Performa
 
@@ -242,6 +247,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 | ESLint, typecheck, Vitest 156 test, build produksi | Lolos |
 | Playwright Edge, 17 uji | Lolos di database baru |
 | Playwright WebKit, 17 uji | Lolos di database baru |
+| Playwright landing di Edge, 8 uji termasuk mockup HP | Lolos di build produksi. Uji penuh yang kini berisi 18 uji belum diulang |
 | axe di 12 layar | Semua bersih |
 | Layar saat API mati, `500`, `429`, dan sesi habis | Lolos, tanpa error halaman |
 
