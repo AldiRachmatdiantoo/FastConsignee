@@ -41,6 +41,7 @@ test("alur demo berjalan dari kasir sampai dasbor penitip", async ({ browser }) 
     const href = await cashier.page.getByRole("link", { name: "Buka layar bayar di browser" }).getAttribute("href");
     await buyer.page.goto(href ?? "");
     await expect(buyer.page.getByText("Toko Titip Nusantara")).toBeVisible();
+    await buyer.page.getByRole("button", { name: "Bayar dengan wallet" }).click();
     await buyer.page.getByRole("button", { name: "Test Wallet" }).click();
     await buyer.page.getByRole("button", { name: "Bayar sekali" }).click();
     await expect(buyer.page.getByText("Pembayaran terkonfirmasi. Terima kasih.")).toBeVisible({ timeout: 30_000 });

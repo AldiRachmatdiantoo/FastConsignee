@@ -60,6 +60,8 @@ describe("BayarScreen", () => {
     expect(screen.getByText("Devnet")).toBeVisible();
     expect(screen.getByText(/tidak memakai uang sungguhan/)).toBeVisible();
     expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Bayar dengan wallet" }));
     expect(await screen.findByRole("link", { name: "Pasang Phantom" })).toBeVisible();
   });
 
@@ -72,6 +74,7 @@ describe("BayarScreen", () => {
     const user = userEvent.setup();
     render(<BayarScreen orderId="o1" />);
 
+    await user.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
     await user.click(await screen.findByRole("button", { name: "Bayar sekali" }));
 
     expect(await screen.findByText("Transaksi terkirim. Menunggu konfirmasi jaringan...")).toBeVisible();
@@ -87,6 +90,7 @@ describe("BayarScreen", () => {
     const user = userEvent.setup();
     render(<BayarScreen orderId="o1" />);
 
+    await user.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
     await user.click(await screen.findByRole("button", { name: "Bayar sekali" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Saldo tidak berubah, jadi kamu bisa mencoba lagi.");

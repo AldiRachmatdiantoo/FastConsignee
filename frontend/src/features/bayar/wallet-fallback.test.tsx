@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { ok } from "@/test/api";
 import { BayarScreen } from "./bayar-screen";
@@ -28,6 +29,7 @@ vi.mock("./wallet-payment", () => {
 it("tetap menampilkan QR kalau berkas wallet gagal dimuat", async () => {
   render(<BayarScreen orderId="o1" />);
 
+  await userEvent.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
   expect(await screen.findByText(/Wallet tidak bisa dimuat/)).toBeVisible();
   expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
 });

@@ -206,6 +206,7 @@ export async function paidOrder(browser: Browser, item: string) {
   await cashier.page.getByRole("button", { name: "Buat QR pembayaran" }).click();
   const href = await cashier.page.getByRole("link", { name: "Buka layar bayar di browser" }).getAttribute("href");
   await buyer.page.goto(href ?? "");
+  await buyer.page.getByRole("button", { name: "Bayar dengan wallet" }).click();
   await buyer.page.getByRole("button", { name: "Test Wallet" }).click();
   await buyer.page.getByRole("button", { name: "Bayar sekali" }).click();
   await expect(buyer.page.getByText("Pembayaran terkonfirmasi. Terima kasih.")).toBeVisible({ timeout: 30_000 });

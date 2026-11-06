@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { PaymentQr } from "@/components/payment-qr";
-import { Card, ExplorerLink, InlineLoading, Notice } from "@/components/ui";
+import { Button, Card, ExplorerLink, InlineLoading, Notice } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -19,7 +19,8 @@ function WalletUnavailable() {
   return <Notice tone="danger">Wallet tidak bisa dimuat. Muat ulang halaman, atau pindai QR di bawah.</Notice>;
 }
 
-// Kalau berkas wallet gagal dimuat, pembeli masih bisa membayar lewat QR.
+// Berkas wallet hanya dimuat saat pembeli memilih wallet, karena pembeli yang memindai QR tidak butuh web3.js.
+// Kalau gagal dimuat, pembeli masih bisa membayar lewat QR.
 const WalletPayment = dynamic(
   () =>
     import("./wallet-payment")
@@ -100,6 +101,7 @@ function OrderView({ orderId }: { orderId: string }) {
 
 function PendingPayment({ order }: { order: PublicOrder }) {
   const [sent, setSent] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const now = useNow(true);
 
   if (sent) {
@@ -117,7 +119,11 @@ function PendingPayment({ order }: { order: PublicOrder }) {
       <p role="status" className="text-center font-semibold">
         Bayar dalam {formatCountdown(secondsUntil(order.expires_at, now))}
       </p>
-      <WalletPayment orderId={order.id} onSent={() => setSent(true)} />
+      {walletOpen ? (
+        <WalletPayment orderId={order.id} onSent={() => setSent(true)} />
+      ) : (
+        <Button onClick={() => setWalletOpen(true)}>Bayar dengan wallet</Button>
+      )}
 
       <div className="border-t border-border pt-4 text-center">
         <p className="text-sm text-muted-foreground">Atau pindai dengan Phantom di HP</p>

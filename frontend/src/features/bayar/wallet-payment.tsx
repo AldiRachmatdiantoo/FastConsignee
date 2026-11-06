@@ -14,7 +14,7 @@ type WalletPaymentProps = {
   onSent: () => void;
 };
 
-// Berkas ini membawa web3.js, jadi dimuat terpisah supaya rincian order dan QR tampil lebih dulu.
+// Berkas ini membawa web3.js, jadi dimuat terpisah saat pembeli memilih bayar dengan wallet.
 export function WalletPayment({ orderId, onSent }: WalletPaymentProps) {
   const [connectFailed, setConnectFailed] = useState(false);
   const onError = useCallback(() => setConnectFailed(true), []);
