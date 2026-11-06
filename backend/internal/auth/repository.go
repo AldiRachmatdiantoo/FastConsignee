@@ -64,15 +64,17 @@ func (r *PgRepository) FindBySubject(ctx context.Context, subject string) (*Prin
 	return r.principal(ctx, "WHERE u.auth_subject = $1", subject)
 }
 
-// FindUnboundByEmail mencari akun terdaftar yang belum pernah login.
+// FindUnboundByEmail mencari akun terdaftar yang belum terikat ke identitas Google. Subject lokal
+// dianggap belum terikat, karena login lokal hanya ada di mesin pengembang.
 func (r *PgRepository) FindUnboundByEmail(ctx context.Context, email string) (*Principal, error) {
-	return r.principal(ctx, "WHERE u.email = $1 AND u.auth_subject IS NULL", email)
+	return r.principal(ctx, "WHERE u.email = $1 AND (u.auth_subject IS NULL OR u.auth_subject LIKE 'local:%')", email)
 }
 
 // BindSubject mengikat akun ke identitas Google.
 func (r *PgRepository) BindSubject(ctx context.Context, userID uuid.UUID, subject string) error {
 	_, err := r.db.Q(ctx).Exec(ctx,
-		`UPDATE users SET auth_subject = $2, updated_at = now() WHERE id = $1 AND auth_subject IS NULL`,
+		`UPDATE users SET auth_subject = $2, updated_at = now()
+		 WHERE id = $1 AND (auth_subject IS NULL OR auth_subject LIKE 'local:%')`,
 		userID, subject)
 	if err != nil {
 		return fmt.Errorf("ikat akun: %w", err)

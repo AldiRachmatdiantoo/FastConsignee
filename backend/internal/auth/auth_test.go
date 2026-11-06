@@ -162,6 +162,23 @@ func TestFirstLoginMatchesVerifiedEmailOnce(t *testing.T) {
 	a.Do(me).WantProblem(403, "ROLE_NOT_ASSIGNED")
 }
 
+func TestGoogleLoginTakesOverLocalSubject(t *testing.T) {
+	a := testkit.NewApp(t)
+	store := a.NewStore()
+	u := a.NewUser(store.ID, auth.RoleCashier)
+	a.Exec(`UPDATE users SET auth_subject = $2 WHERE id = $1`, u.ID, "local:"+u.Email)
+	me := testkit.Request{Method: http.MethodGet, Path: "/api/v1/me"}
+
+	me.Token = a.SignToken(testkit.TokenClaims{Subject: "google-1", Email: u.Email, EmailVerified: false})
+	a.Do(me).WantProblem(403, "ROLE_NOT_ASSIGNED")
+
+	me.Token = a.SignToken(testkit.TokenClaims{Subject: "google-1", Email: u.Email, EmailVerified: true})
+	a.Do(me).Want(200)
+
+	me.Token = a.SignToken(testkit.TokenClaims{Subject: "google-2", Email: u.Email, EmailVerified: true})
+	a.Do(me).WantProblem(403, "ROLE_NOT_ASSIGNED")
+}
+
 func TestUnknownAccountIsRejected(t *testing.T) {
 	a := testkit.NewApp(t)
 	token := a.SignToken(testkit.TokenClaims{Subject: "asing", Email: "asing@x.id", EmailVerified: true})
