@@ -41,6 +41,14 @@ Buka `http://localhost:3000`, lalu pilih akun. Kalau API tidak berjalan di port 
 
 Login lokal hanya ada di `next dev`. Di produksi route-nya menjawab 404, dan API yang memakai JWKS tetap menolak token lokal.
 
+## Login Google
+
+Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` di `.env.local`. Tanpa keduanya, tombol Google nonaktif.
+
+Di Supabase, aktifkan provider Google, lalu masukkan `<alamat frontend>/login` ke Redirect URLs. Di `backend/.env`, isi `SUPABASE_JWKS_URL` dan `SUPABASE_JWT_ISSUER`.
+
+Email harus sudah terdaftar di toko. Akun lokal dengan email yang sama berpindah ke akun Google saat login pertama.
+
 ## Testing
 
 ```bash

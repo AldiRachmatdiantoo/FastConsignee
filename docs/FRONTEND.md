@@ -46,8 +46,8 @@ Semua layar di peta layar sudah ada, dan landing page sudah tampil di `/`. Sisan
 
 Hasil uji terakhir:
 
-- 130 test Vitest, lint, typecheck, dan build lolos.
-- 16 uji Playwright lolos di Edge dan WebKit terhadap API Go dan Postgres lokal, dengan node Solana dan wallet tiruan.
+- 148 test Vitest, lint, typecheck, dan build lolos.
+- 17 uji Playwright lolos di Edge dan WebKit terhadap API Go dan Postgres lokal, dengan node Solana dan wallet tiruan.
 - axe bersih di 12 layar.
 - Alur demo lolos 3 kali berturut-turut, dari kasir sampai potongan refund di dasbor penitip.
 - Semua layar muat di lebar 375 px.
@@ -59,9 +59,10 @@ Yang belum:
 - Pembayaran sungguhan di Devnet. Uji di atas memakai node tiruan yang memeriksa tanda tangan dan mengubah saldo, tetapi bukan jaringan asli.
 - Phantom di HP, yang butuh API di alamat HTTPS publik.
 - Alur demo 5 kali di Devnet (NFR-10).
-- Login Google, menunggu proyek Supabase.
+- Login Google. Kodenya sudah ada, tetapi menunggu proyek Supabase untuk diuji.
+- Layar bayar dengan Phantom asli, karena kode wallet sekarang dimuat saat pembeli menekan "Bayar dengan wallet".
 - Firefox belum diuji langsung. Browser tanpa scroll-driven animation memakai jalur yang sama dengan reduced motion, dan jalur itu lolos di Edge.
-- Form barang belum punya pilihan sertifikat. `item-form.ts` sudah membawa nilainya, tetapi layarnya belum menampilkan kotak centang, dan pengiriman NFT sertifikat di backend juga belum jadi.
+- Pengiriman NFT sertifikat nyata di Devnet, menunggu wallet yang punya saldo. Transaksinya sudah lolos simulasi di program asli.
 
 ## Peta layar
 
@@ -440,7 +441,7 @@ Landing page hanya memuat hal yang benar hari ini:
 - Tidak ada harga, karena belum diputuskan.
 - Selalu jelas bahwa produk berjalan di Devnet, bukan uang sungguhan.
 - Tidak ada klaim siap dipakai toko di Indonesia, karena Bank Indonesia melarang kripto sebagai alat pembayaran.
-- Fitur yang belum jadi tidak ditulis sebagai fitur yang sudah ada, termasuk NFT sertifikat.
+- Fitur yang belum teruji nyata tidak ditulis sebagai fitur yang sudah ada, termasuk NFT sertifikat.
 
 ### Cara uji
 
