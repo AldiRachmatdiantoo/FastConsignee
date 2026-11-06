@@ -5,7 +5,8 @@ import { SessionProvider } from "@/features/auth/session";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
+// Font ini hanya dipakai untuk alamat wallet, jadi tidak perlu berebut unduhan di awal halaman.
+const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", preload: false });
 
 export const metadata: Metadata = {
   title: "FastConsignee",

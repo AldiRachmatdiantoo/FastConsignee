@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Me } from "@/lib/api/client";
-import { guardTarget, homePath, roleLabel } from "./routes";
+import { guardTarget, homePath, navLinks, roleLabel } from "./routes";
 
 const wallet = { address: "4K1QdtVP3i1opNAymPThdcizR7YzRrsHdzbMUMooDU5a", linked_at: "2026-11-07T00:00:00Z" };
 
@@ -52,5 +52,29 @@ describe("guardTarget", () => {
 describe("roleLabel", () => {
   it("menerjemahkan peran", () => {
     expect(roleLabel("store_owner")).toBe("Pemilik toko");
+  });
+});
+
+describe("layar khusus pemilik", () => {
+  it("mengembalikan penitip ke dasbor", () => {
+    for (const path of ["/kasir", "/refund", "/barang", "/penitip"]) {
+      expect(guardTarget(me("consignor", true), path)).toBe("/dasbor");
+    }
+  });
+
+  it("mengizinkan pemilik membukanya", () => {
+    for (const path of ["/kasir", "/refund", "/barang", "/penitip"]) {
+      expect(guardTarget(me("store_owner", true), path)).toBeNull();
+    }
+  });
+});
+
+describe("navLinks", () => {
+  const paths = (role: Me["role"]) => navLinks(me(role, true)).map(({ href }) => href);
+
+  it("hanya memuat layar yang boleh dibuka peran itu", () => {
+    expect(paths("cashier")).toEqual(["/kasir"]);
+    expect(paths("consignor")).toEqual(["/dasbor", "/wallet"]);
+    expect(paths("store_owner")).toEqual(["/dasbor", "/kasir", "/refund", "/barang", "/penitip", "/wallet"]);
   });
 });

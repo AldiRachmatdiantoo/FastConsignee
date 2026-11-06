@@ -116,4 +116,16 @@ describe("LoginScreen", () => {
     expect(await screen.findByText("Login Google belum tersambung.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Kasir Demo/ })).not.toBeInTheDocument();
   });
+
+  it("menonaktifkan tombol Google selama belum tersambung", async () => {
+    stubFetch(() => json(cashier));
+    show();
+    expect(await screen.findByRole("button", { name: "Masuk dengan Google" })).toBeDisabled();
+  });
+
+  it("menyediakan jalan kembali ke landing page", async () => {
+    stubFetch(() => json(cashier));
+    show();
+    expect(await screen.findByRole("link", { name: "Kembali ke beranda" })).toHaveAttribute("href", "/");
+  });
 });

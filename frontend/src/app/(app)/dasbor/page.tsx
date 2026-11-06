@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/ui";
+import { DasborScreen } from "@/features/dasbor/dasbor-screen";
 
 export default function DashboardPage() {
-  return <ComingSoon title="Dasbor" text="Penjualan, potongan, dan stok akan muncul di sini." />;
+  return <DasborScreen />;
 }

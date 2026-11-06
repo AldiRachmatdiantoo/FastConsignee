@@ -1,28 +1,23 @@
 "use client";
 
-import { WalletReadyState } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, useWallet, WalletProvider } from "@solana/wallet-adapter-react";
-import { clusterApiUrl } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Button, Notice } from "@/components/ui";
 import { homePath } from "@/features/auth/routes";
 import { useSession } from "@/features/auth/session";
 import { linkErrorMessage, linkWallet, shortAddress } from "./link-wallet";
-
-const ENDPOINT = clusterApiUrl("devnet");
-const NO_ADAPTERS: never[] = [];
+import { SolanaProvider } from "./solana-provider";
+import { WalletPicker } from "./wallet-picker";
 
 export function WalletScreen() {
   const [connectFailed, setConnectFailed] = useState(false);
   const onError = useCallback(() => setConnectFailed(true), []);
 
   return (
-    <ConnectionProvider endpoint={ENDPOINT}>
-      <WalletProvider wallets={NO_ADAPTERS} autoConnect onError={onError}>
-        <LinkWallet connectFailed={connectFailed} resetConnect={() => setConnectFailed(false)} />
-      </WalletProvider>
-    </ConnectionProvider>
+    <SolanaProvider onError={onError}>
+      <LinkWallet connectFailed={connectFailed} resetConnect={() => setConnectFailed(false)} />
+    </SolanaProvider>
   );
 }
 
@@ -33,7 +28,7 @@ type LinkWalletProps = {
 
 function LinkWallet({ connectFailed, resetConnect }: LinkWalletProps) {
   const { session, api, refresh } = useSession();
-  const { wallets, select, publicKey, signMessage, disconnect, connecting } = useWallet();
+  const { publicKey, signMessage, disconnect } = useWallet();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +39,6 @@ function LinkWallet({ connectFailed, resetConnect }: LinkWalletProps) {
   const { me } = session;
   const address = publicKey?.toBase58() ?? null;
   const linked = me.wallet?.address ?? null;
-  const available = wallets.filter(
-    ({ readyState }) => readyState === WalletReadyState.Installed || readyState === WalletReadyState.Loadable,
-  );
   const message = error ?? (connectFailed ? "Wallet tidak bisa dihubungkan. Buka wallet, lalu coba lagi." : null);
 
   async function submit() {
@@ -104,43 +96,13 @@ function LinkWallet({ connectFailed, resetConnect }: LinkWalletProps) {
               </Button>
             </div>
           </div>
-        ) : available.length > 0 ? (
-          <div>
-            <p className="font-medium">Pilih wallet</p>
-            <ul className="mt-3 grid gap-2">
-              {available.map(({ adapter }) => (
-                <li key={adapter.name}>
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    disabled={connecting}
-                    onClick={() => {
-                      setError(null);
-                      resetConnect();
-                      select(adapter.name);
-                    }}
-                  >
-                    {connecting ? "Menghubungkan..." : adapter.name}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
         ) : (
-          <div>
-            <p className="font-medium">Belum ada wallet di browser ini</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Pasang Phantom, aktifkan Testnet Mode, pilih Solana Devnet, lalu muat ulang halaman ini.
-            </p>
-            <a
-              href="https://phantom.com/download"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-block font-semibold text-accent-foreground underline underline-offset-4"
-            >
-              Pasang Phantom
-            </a>
-          </div>
+          <WalletPicker
+            onPick={() => {
+              setError(null);
+              resetConnect();
+            }}
+          />
         )}
       </div>
     </section>

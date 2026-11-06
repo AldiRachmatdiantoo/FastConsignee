@@ -1,0 +1,594 @@
+/* Diadaptasi dari hero dan form kontak template Linea oleh 8B, lisensi MIT.
+   Teks lisensinya ada di public/landing/LICENSE.txt, dan kredit fotonya di public/landing/CREDITS.md. */
+
+.login {
+  --login-ink: #171717;
+  --login-white: #ffffff;
+  --login-soft: #fde68a;
+  --login-gutter: clamp(1.125rem, 4.2vw, 3.5rem);
+  --login-ease: cubic-bezier(0.16, 0.84, 0.3, 1);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: max(100svh, 40rem);
+  overflow-x: clip;
+  background: var(--login-ink);
+  color: var(--login-white);
+}
+
+.login :focus-visible {
+  outline: 0.1875rem solid var(--login-white);
+  outline-offset: 0.1875rem;
+}
+
+.login__media {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 16%;
+  background: url("https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&auto=format&fit=crop&w=1600&q=60") 50% 28% / cover no-repeat;
+  mask-image: linear-gradient(90deg, transparent, #000 30%);
+}
+
+.login__shade {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--login-ink) 50%, transparent), transparent 24%),
+    linear-gradient(90deg, color-mix(in srgb, var(--login-ink) 78%, transparent), color-mix(in srgb, var(--login-ink) 42%, transparent) 34%, transparent 56%);
+  pointer-events: none;
+}
+
+.login__talk {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.login__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.login__arc,
+.login__flow {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.login__arc {
+  stroke: color-mix(in srgb, var(--login-white) 62%, transparent);
+  stroke-width: 1.5;
+}
+
+.login__flow {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.012 0.088;
+}
+
+.login__arc--a,
+.login__flow--a {
+  cx: 58%;
+  cy: 136%;
+  rx: 26%;
+  ry: 64%;
+}
+
+.login__arc--b,
+.login__flow--b {
+  cx: 60%;
+  cy: 150%;
+  rx: 36%;
+  ry: 66%;
+}
+
+.login__chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  offset-rotate: 0deg;
+}
+
+.login__chip--1 {
+  offset-path: ellipse(26% 64% at 58% 136%);
+  offset-distance: 70%;
+  offset-anchor: 50% 100%;
+}
+
+.login__chip--2 {
+  offset-path: ellipse(36% 66% at 60% 150%);
+  offset-distance: 73%;
+  offset-anchor: 50% 0%;
+}
+
+.login__caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem 0.625rem 0.8125rem;
+  border-radius: 1.25rem 1.25rem 1.25rem 0.3125rem;
+  background: var(--login-white);
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  box-shadow: 0 1.5rem 3rem -1.5rem color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.login__caption--amber {
+  border-radius: 1.25rem 1.25rem 0.3125rem 1.25rem;
+  background: var(--primary);
+}
+
+.login__wave {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.125rem;
+  height: 0.875rem;
+}
+
+.login__wave i {
+  width: 0.1875rem;
+  height: 45%;
+  border-radius: 0.125rem;
+  background: var(--primary);
+}
+
+.login__wave i:nth-child(2) {
+  height: 100%;
+}
+
+.login__wave i:nth-child(3) {
+  height: 65%;
+}
+
+.login__wave i:nth-child(4) {
+  height: 85%;
+}
+
+.login__caption--amber .login__wave i {
+  background: var(--foreground);
+}
+
+.login__nav {
+  position: relative;
+  z-index: 3;
+  padding: 0.875rem var(--login-gutter) 0;
+}
+
+.login__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 84rem;
+  margin-inline: auto;
+  padding: 0.4375rem 0.4375rem 0.4375rem 1.25rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--login-white) 12%, transparent);
+  border-radius: 62.5rem;
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  backdrop-filter: blur(0.875rem) saturate(1.3);
+}
+
+.login__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.login__mark {
+  flex: none;
+  width: 2.25rem;
+  height: 1.5rem;
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.login__mark-a {
+  stroke: var(--primary);
+}
+
+.login__mark-b {
+  stroke: var(--login-white);
+}
+
+.login__back {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.25rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--login-white) 22%, transparent);
+  border-radius: 62.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.login__back svg {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.login__body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+  gap: 2.5rem 5rem;
+  width: 100%;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 7vh, 4.5rem) var(--login-gutter);
+}
+
+.login__intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+}
+
+.login__title {
+  max-width: 9em;
+  font-size: clamp(2.6rem, 5vw, 4.75rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.login__lower {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 24rem;
+}
+
+.login__lead {
+  font-size: clamp(1.125rem, 1.35vw, 1.3125rem);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.login__points {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+}
+
+.login__points li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+}
+
+.login__points svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--login-soft);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.login__card {
+  align-self: center;
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 1.75rem;
+  background: var(--login-white);
+  color: var(--foreground);
+  box-shadow: 0 1.5rem 3rem -1.5rem color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.login__card :focus-visible {
+  outline-color: var(--foreground);
+}
+
+.login__heading {
+  font-size: clamp(1.75rem, 2.4vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.login__hint {
+  color: var(--secondary-foreground);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.login__google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.875rem 1.625rem;
+  border: 0;
+  border-radius: 62.5rem;
+  background: var(--primary);
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  box-shadow: 0 0.75rem 1.75rem -0.75rem color-mix(in srgb, var(--primary) 85%, transparent);
+}
+
+.login__google:disabled {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.login__group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.login__local {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 0.0625rem solid var(--border);
+}
+
+.login__accounts {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.login__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.625rem 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  border-radius: 0.875rem;
+  background: var(--login-white);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.login__account:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.login__account-name {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.login__account-role {
+  flex: none;
+  color: var(--secondary-foreground);
+  font-size: 0.875rem;
+}
+
+@media (hover: hover) {
+  .login__back:hover {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--foreground);
+  }
+
+  .login__account:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: var(--accent);
+  }
+}
+
+/* Gerakannya berhenti sendiri sebelum 5 detik, supaya tidak mengganggu orang yang sedang login. */
+@media (prefers-reduced-motion: no-preference) {
+  .login__intro,
+  .login__card {
+    animation: login-rise 1s var(--login-ease) backwards;
+  }
+
+  .login__card {
+    animation-delay: 0.1s;
+  }
+
+  .login__media {
+    animation: login-settle 1.2s var(--login-ease) backwards;
+  }
+
+  .login__arc {
+    stroke-dasharray: 1;
+    animation: login-draw 1.2s cubic-bezier(0.5, 0, 0.2, 1) backwards;
+  }
+
+  .login__flow {
+    animation: login-flow 4.5s linear both;
+  }
+
+  .login__chip {
+    animation: login-ride 4.5s ease-out both;
+  }
+
+  .login__chip--1 {
+    --login-from: 65%;
+    --login-to: 70%;
+  }
+
+  .login__chip--2 {
+    --login-from: 69%;
+    --login-to: 73%;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    translate: 0 1.75rem;
+  }
+}
+
+@keyframes login-settle {
+  from {
+    scale: 1.08;
+  }
+}
+
+@keyframes login-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes login-flow {
+  to {
+    stroke-dashoffset: -0.5;
+  }
+}
+
+@keyframes login-ride {
+  from {
+    offset-distance: var(--login-from);
+  }
+
+  to {
+    offset-distance: var(--login-to);
+  }
+}
+
+/* Di lebar ini kartu masuk menutupi tempat chip dan sebagian foto, jadi foto digeser ke kiri. */
+@media (max-width: 81.99rem) {
+  .login__media {
+    background-position: 100% 28%;
+  }
+
+  .login__shade {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--login-ink) 50%, transparent), transparent 24%),
+      linear-gradient(0deg, color-mix(in srgb, var(--login-ink) 86%, transparent) 18%, transparent 52%),
+      linear-gradient(90deg, color-mix(in srgb, var(--login-ink) 78%, transparent), color-mix(in srgb, var(--login-ink) 42%, transparent) 34%, transparent 56%);
+  }
+
+  .login__chip {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  .login__media {
+    inset: auto 0 0;
+    height: min(62%, 36rem);
+    background-image: url("https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&auto=format&fit=crop&w=800&q=60");
+    background-position: 50% 20%;
+    mask-image: linear-gradient(180deg, transparent, #000 24%);
+  }
+
+  .login__shade {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--login-ink) 50%, transparent), transparent 20%);
+  }
+
+  .login__body {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    max-width: 36rem;
+    padding-top: 2.25rem;
+    padding-bottom: 9rem;
+  }
+
+  .login__intro {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+
+  .login__lower {
+    max-width: none;
+  }
+
+  .login__points {
+    display: none;
+  }
+
+  .login__card {
+    align-self: start;
+  }
+
+  .login__arc--a,
+  .login__flow--a {
+    cx: 50%;
+    cy: 108%;
+    rx: 80%;
+    ry: 14%;
+  }
+
+  .login__arc--b,
+  .login__flow--b {
+    cx: 50%;
+    cy: 118%;
+    rx: 110%;
+    ry: 20%;
+  }
+
+  .login__chip--1 {
+    display: block;
+    offset-path: ellipse(80% 14% at 50% 108%);
+    offset-distance: 75%;
+    --login-from: 73%;
+    --login-to: 75%;
+  }
+
+}
+
+@media (max-width: 26rem) {
+  .login__back {
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .login__back-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}

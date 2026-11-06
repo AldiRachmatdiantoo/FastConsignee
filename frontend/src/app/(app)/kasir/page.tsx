@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/ui";
+import { KasirScreen } from "@/features/kasir/kasir-screen";
 
 export default function CashierPage() {
-  return <ComingSoon title="Kasir" text="Katalog, keranjang, dan QR pembayaran akan muncul di sini." />;
+  return <KasirScreen />;
 }

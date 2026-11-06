@@ -6,6 +6,50 @@ import { Notice } from "@/components/ui";
 import { LOCAL_ACCOUNTS } from "./accounts";
 import { homePath } from "./routes";
 import { useSession } from "./session";
+import "./login.css";
+
+const POINTS = [
+  "Berjalan di Solana Devnet",
+  "Satu transaksi untuk semua bagian",
+  "Setiap penjualan bisa dicek di Explorer",
+];
+
+function Caption({ amber = false, children }: { amber?: boolean; children: string }) {
+  return (
+    <p className={amber ? "login__caption login__caption--amber" : "login__caption"}>
+      <span className="login__wave">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+      {children}
+    </p>
+  );
+}
+
+function Scene() {
+  return (
+    <>
+      <div className="login__media" aria-hidden="true" />
+      <div className="login__shade" aria-hidden="true" />
+      <div className="login__talk" aria-hidden="true">
+        <svg className="login__lines">
+          <ellipse className="login__arc login__arc--a" pathLength={1} />
+          <ellipse className="login__arc login__arc--b" pathLength={1} />
+          <ellipse className="login__flow login__flow--a" pathLength={1} />
+          <ellipse className="login__flow login__flow--b" pathLength={1} />
+        </svg>
+        <div className="login__chip login__chip--1">
+          <Caption>Pembeli bayar sekali</Caption>
+        </div>
+        <div className="login__chip login__chip--2">
+          <Caption amber>Bagian penitip terkirim</Caption>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export function LoginScreen() {
   const { session, signInLocal } = useSession();
@@ -26,47 +70,82 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="mx-auto grid min-h-dvh max-w-5xl content-center gap-10 px-4 py-10 md:grid-cols-2 md:items-center md:gap-16 md:px-8">
-      <section>
-        <p className="font-semibold text-accent-foreground">FastConsignee</p>
-        <h1 className="mt-3 text-3xl leading-tight font-bold tracking-tight text-balance md:text-5xl">
-          Sekali bayar, semua penitip langsung terima bagiannya.
-        </h1>
-        <p className="mt-4 max-w-md text-muted-foreground">
-          Kasir untuk toko konsinyasi. Bagian penitip dan komisi toko keluar dalam satu transaksi Solana.
-        </p>
-      </section>
+    <main className="login">
+      <Scene />
 
-      <section className="rounded-xl border border-border bg-card p-5 md:p-6">
-        <h2 className="text-lg font-semibold">Masuk</h2>
-        {session.status === "anonymous" && session.error ? (
-          <div className="mt-3">
-            <Notice tone="danger">{session.error}</Notice>
-          </div>
-        ) : null}
-        {localLogin ? (
-          <>
-            <p className="mt-1 text-sm text-muted-foreground">Mode lokal. Pilih akun seed untuk masuk.</p>
-            <ul className="mt-4 divide-y divide-border">
-              {LOCAL_ACCOUNTS.map((account) => (
-                <li key={account.email}>
-                  <button
-                    type="button"
-                    disabled={pending !== null}
-                    onClick={() => void choose(account.email)}
-                    className="flex min-h-14 w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
-                  >
-                    <span className="font-medium">{account.name}</span>
-                    <span className="text-sm text-muted-foreground">{pending === account.email ? "Masuk..." : account.role}</span>
-                  </button>
+      {/* Tautan biasa, karena `/` adalah file statis lewat rewrite dan tidak bisa dibuka lewat navigasi klien. */}
+      <nav className="login__nav" aria-label="Utama">
+        <div className="login__bar">
+          <a className="login__brand" href="/">
+            <svg className="login__mark" viewBox="0 0 40 28" aria-hidden="true">
+              <path className="login__mark-a" d="M3 19C10 5 17 5 21 14s11 9 16-6" />
+              <path className="login__mark-b" d="M3 10c7 13 14 13 18 4s11-10 16 5" />
+            </svg>
+            FastConsignee
+          </a>
+          <a className="login__back" href="/">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6" />
+            </svg>
+            <span className="login__back-text">Kembali ke beranda</span>
+          </a>
+        </div>
+      </nav>
+
+      <div className="login__body">
+        <section className="login__intro">
+          <h1 className="login__title">Setiap penjualan, langsung terbagi.</h1>
+          <div className="login__lower">
+            <p className="login__lead">
+              Kasir untuk toko konsinyasi. Pembeli bayar sekali, lalu bagian penitip dan komisi toko keluar dalam satu
+              transaksi Solana.
+            </p>
+            <ul className="login__points">
+              {POINTS.map((point) => (
+                <li key={point}>
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M3 8.5l3 3 7-7" />
+                  </svg>
+                  {point}
                 </li>
               ))}
             </ul>
-          </>
-        ) : (
-          <p className="mt-2 text-sm text-muted-foreground">Login Google belum tersambung.</p>
-        )}
-      </section>
+          </div>
+        </section>
+
+        <section className="login__card" aria-labelledby="login-heading">
+          <h2 className="login__heading" id="login-heading">
+            Masuk
+          </h2>
+          {session.status === "anonymous" && session.error ? <Notice tone="danger">{session.error}</Notice> : null}
+          <div className="login__group">
+            <button type="button" className="login__google" disabled>
+              Masuk dengan Google
+            </button>
+            <p className="login__hint">Login Google belum tersambung.</p>
+          </div>
+          {localLogin ? (
+            <div className="login__local">
+              <p className="login__hint">Mode lokal. Pilih akun seed untuk masuk.</p>
+              <ul className="login__accounts">
+                {LOCAL_ACCOUNTS.map((account) => (
+                  <li key={account.email}>
+                    <button
+                      type="button"
+                      className="login__account"
+                      disabled={pending !== null}
+                      onClick={() => void choose(account.email)}
+                    >
+                      <span className="login__account-name">{account.name}</span>
+                      <span className="login__account-role">{pending === account.email ? "Masuk..." : account.role}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      </div>
     </main>
   );
 }
