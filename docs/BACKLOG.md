@@ -20,7 +20,8 @@ Kebutuhan: NFR-08, NFR-16 sampai NFR-20, NFR-23, NFR-25.
 - [x] Error RFC 9457, request ID, log, recover, dan CORS
 - [x] `GET /healthz` dan graceful shutdown
 - [x] Test harness: database per test, klien API, dan validator kontrak
-- [x] CI GitHub Actions
+- [x] Workflow CI GitHub Actions
+- [ ] Run CI pertama lolos di GitHub, termasuk `-race`
 
 Testing: unit, repository untuk constraint dan indeks, handler, kontrak.
 
@@ -77,7 +78,7 @@ Kebutuhan: FR-07 sampai FR-14, NFR-01, NFR-04, NFR-12 sampai NFR-14, NFR-21.
 - [x] Penyusun transaksi split dengan `reference`
 - [x] Worker konfirmasi, validasi, dan kedaluwarsa
 
-Testing: unit isi transaksi, service dengan RPC tiruan, concurrency untuk konfirmasi ganda, kontrak, Devnet kalau airdrop tersedia.
+Testing: unit isi transaksi, service dengan RPC tiruan, concurrency untuk konfirmasi ganda, kontrak, Devnet dengan wallet berisi SOL.
 
 ### B-06 Refund
 
@@ -105,7 +106,9 @@ Kebutuhan: FR-21, FR-24, NFR-02, NFR-15, NFR-25.
 - [x] Seed data 3 penitip
 - [x] Cara menjalankan backend di dokumentasi
 - [x] Uji beban, `gosec`, dan `govulncheck`
+- [x] Koleksi Postman dari kontrak, diuji lewat Newman
 - [ ] Pembayaran nyata di Devnet
+- [ ] Login dengan token Supabase asli
 - [ ] Pengiriman NFT sertifikat
 
 Testing: beban, keamanan, Solana Devnet.
