@@ -8,7 +8,7 @@ Based on the free [Linea template by 8B](https://8b.com/templates/linea/), MIT L
 
 ## Photos (Unsplash License)
 
-Loaded from images.unsplash.com. Free to use under the [Unsplash License](https://unsplash.com/license), and not covered by the template's MIT license.
+Photo 1 is stored next to this file as `hero-*.avif` and `hero-1200.webp`. The others load from images.unsplash.com. Free to use under the [Unsplash License](https://unsplash.com/license), and not covered by the template's MIT license.
 
 | # | Photo | Author | Used in |
 |---|---|---|---|

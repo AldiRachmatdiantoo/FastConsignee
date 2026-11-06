@@ -19,6 +19,7 @@
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'8'%20fill%3D'%23f59e0b'%2F%3E%3Cpath%20d%3D'M9%208h14v4H13v4h8v4h-8v6H9z'%20fill%3D'%23000'%2F%3E%3C%2Fsvg%3E">
 <link rel="preload" href="/landing/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" type="image/avif" imagesrcset="/landing/hero-800.avif 800w, /landing/hero-1200.avif 1200w, /landing/hero-1600.avif 1600w" imagesizes="(max-width: 47.99rem) 100vw, 84vw" fetchpriority="high">
 <style>@font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/landing/inter-latin.woff2") format("woff2"); }</style>
 <style data-8b-part="layers">@layer tokens, base, atoms, layout, sections, scenes;</style>
 <style data-8b-part="tokens">
@@ -160,6 +161,7 @@
   #hero { position: relative; isolation: isolate; overflow-x: clip; display: flex; flex-direction: column; min-height: max(100svh, 40rem); background: var(--color-6); color: var(--color-2); }
   #hero::after { content: ""; position: absolute; z-index: -1; top: 100%; left: 0; right: 0; height: 100vh; background: var(--color-6); }
   #hero .hero__media { position: absolute; z-index: 0; top: 0; bottom: -4rem; left: 16%; right: 0; overflow: hidden; mask-image: linear-gradient(90deg, transparent, var(--color-1) 30%); }
+  #hero .hero__media picture { display: contents; }
   #hero .hero__media img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
   #hero .hero__shade { position: absolute; z-index: 0; inset: 0 0 -4rem; background: linear-gradient(180deg, color-mix(in srgb, var(--color-6) 50%, transparent), transparent 24%), linear-gradient(90deg, color-mix(in srgb, var(--color-6) 78%, transparent), color-mix(in srgb, var(--color-6) 42%, transparent) 34%, transparent 56%); pointer-events: none; }
   #hero .hero__talk { position: absolute; z-index: 1; inset: 0; overflow: clip; pointer-events: none; }
@@ -799,7 +801,10 @@ if (matchMedia('(prefers-reduced-motion: no-preference)').matches && CSS.support
 <!-- hero: first screen: headline over a full-bleed photo, lead, proof line, button; caption chips ride curved lines across the photo (animation: scene:hero) -->
 <section class="hero on-dark" id="hero" data-8b-section="hero" aria-labelledby="hero-title">
   <div class="hero__media">
-    <img src="https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&amp;auto=format&amp;fit=crop&amp;w=1600&amp;q=60" srcset="https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60 800w, https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&amp;auto=format&amp;fit=crop&amp;w=1200&amp;q=60 1200w, https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&amp;auto=format&amp;fit=crop&amp;w=1600&amp;q=60 1600w" sizes="(max-width: 47.99rem) 100vw, 84vw" width="1600" height="1067" alt="A shopkeeper leans on the counter of a small, well-stocked shop" fetchpriority="high" decoding="async">
+    <picture>
+      <source type="image/avif" srcset="/landing/hero-800.avif 800w, /landing/hero-1200.avif 1200w, /landing/hero-1600.avif 1600w" sizes="(max-width: 47.99rem) 100vw, 84vw">
+      <img src="/landing/hero-1200.webp" width="1600" height="1067" alt="A shopkeeper leans on the counter of a small, well-stocked shop" fetchpriority="high" decoding="async">
+    </picture>
   </div>
   <div class="hero__shade" aria-hidden="true"></div>
   <div class="hero__talk" aria-hidden="true">

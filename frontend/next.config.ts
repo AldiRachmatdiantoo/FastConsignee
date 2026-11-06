@@ -17,7 +17,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/", destination: "/landing.html" }];
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/landing/:file*", headers: [{ key: "Cache-Control", value: "public, max-age=604800" }] },
+    ];
   },
   turbopack: {
     rules: {

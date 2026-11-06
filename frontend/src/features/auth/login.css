@@ -27,8 +27,19 @@
   position: absolute;
   z-index: 0;
   inset: 0 0 0 16%;
-  background: url("https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&auto=format&fit=crop&w=1600&q=60") 50% 28% / cover no-repeat;
   mask-image: linear-gradient(90deg, transparent, #000 30%);
+}
+
+.login__media picture {
+  display: contents;
+}
+
+.login__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
 }
 
 .login__shade {
@@ -498,8 +509,8 @@
 
 /* Di lebar ini kartu masuk menutupi tempat chip dan sebagian foto, jadi foto digeser ke kiri. */
 @media (max-width: 81.99rem) {
-  .login__media {
-    background-position: 100% 28%;
+  .login__media img {
+    object-position: 100% 28%;
   }
 
   .login__shade {
@@ -518,9 +529,11 @@
   .login__media {
     inset: auto 0 0;
     height: min(62%, 36rem);
-    background-image: url("https://images.unsplash.com/photo-1687422808311-a776f467a468?ixlib=rb-4.1.0&auto=format&fit=crop&w=800&q=60");
-    background-position: 50% 20%;
     mask-image: linear-gradient(180deg, transparent, #000 24%);
+  }
+
+  .login__media img {
+    object-position: 50% 20%;
   }
 
   .login__shade {

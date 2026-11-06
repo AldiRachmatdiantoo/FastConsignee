@@ -32,7 +32,16 @@ function Caption({ amber = false, children }: { amber?: boolean; children: strin
 function Scene() {
   return (
     <>
-      <div className="login__media" aria-hidden="true" />
+      <div className="login__media" aria-hidden="true">
+        <picture>
+          <source
+            type="image/avif"
+            srcSet="/landing/hero-800.avif 800w, /landing/hero-1200.avif 1200w, /landing/hero-1600.avif 1600w"
+            sizes="(max-width: 63.99rem) 100vw, 84vw"
+          />
+          <img src="/landing/hero-1200.webp" alt="" fetchPriority="high" />
+        </picture>
+      </div>
       <div className="login__shade" aria-hidden="true" />
       <div className="login__talk" aria-hidden="true">
         <svg className="login__lines">
