@@ -59,8 +59,8 @@ describe("BayarScreen", () => {
     expect(await screen.findByRole("heading", { name: "Toko Titip Nusantara" })).toBeVisible();
     expect(screen.getByText("Devnet")).toBeVisible();
     expect(screen.getByText(/tidak memakai uang sungguhan/)).toBeVisible();
-    expect(screen.getByRole("link", { name: "Pasang Phantom" })).toBeVisible();
     expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Pasang Phantom" })).toBeVisible();
   });
 
   it("membayar dengan transaksi dari server", async () => {

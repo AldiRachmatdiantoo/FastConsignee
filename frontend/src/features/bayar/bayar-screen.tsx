@@ -1,48 +1,46 @@
 "use client";
 
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { PaymentQr } from "@/components/payment-qr";
-import { Button, Card, ExplorerLink, InlineLoading, Notice } from "@/components/ui";
+import { Card, ExplorerLink, InlineLoading, Notice } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
-import { shortAddress } from "@/features/wallet/link-wallet";
-import { SolanaProvider } from "@/features/wallet/solana-provider";
-import { WalletPicker } from "@/features/wallet/wallet-picker";
 import { unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatCountdown, formatDateTime, formatRupiah, formatSol, secondsUntil } from "@/lib/format";
 import { useNow, usePolling, useResource } from "@/lib/hooks";
-import { payErrorMessage, requestTransaction } from "./pay";
 
 type PublicOrder = components["schemas"]["PublicOrder"];
 
 // Endpoint publik dibatasi 30 permintaan per menit per order, jadi polling di sini lebih longgar.
 const POLL_MS = 3000;
 
-export function BayarScreen({ orderId }: { orderId: string }) {
-  const [connectFailed, setConnectFailed] = useState(false);
-  const onError = useCallback(() => setConnectFailed(true), []);
+function WalletUnavailable() {
+  return <Notice tone="danger">Wallet tidak bisa dimuat. Muat ulang halaman, atau pindai QR di bawah.</Notice>;
+}
 
+// Kalau berkas wallet gagal dimuat, pembeli masih bisa membayar lewat QR.
+const WalletPayment = dynamic(
+  () =>
+    import("./wallet-payment")
+      .then((module) => module.WalletPayment)
+      .catch(() => WalletUnavailable),
+  { ssr: false, loading: () => <InlineLoading /> },
+);
+
+export function BayarScreen({ orderId }: { orderId: string }) {
   return (
-    <SolanaProvider onError={onError}>
-      <main className="mx-auto grid min-h-dvh max-w-lg content-start gap-4 px-4 py-8">
-        <header className="flex items-center justify-between gap-3">
-          <p className="font-semibold text-accent-foreground">FastConsignee</p>
-          <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">Devnet</span>
-        </header>
-        <OrderView orderId={orderId} connectFailed={connectFailed} resetConnect={() => setConnectFailed(false)} />
-      </main>
-    </SolanaProvider>
+    <main className="mx-auto grid min-h-dvh max-w-lg content-start gap-4 px-4 py-8">
+      <header className="flex items-center justify-between gap-3">
+        <p className="font-semibold text-accent-foreground">FastConsignee</p>
+        <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">Devnet</span>
+      </header>
+      <OrderView orderId={orderId} />
+    </main>
   );
 }
 
-type OrderViewProps = {
-  orderId: string;
-  connectFailed: boolean;
-  resetConnect: () => void;
-};
-
-function OrderView({ orderId, connectFailed, resetConnect }: OrderViewProps) {
+function OrderView({ orderId }: { orderId: string }) {
   const { api } = useSession();
   const [latest, setLatest] = useState<PublicOrder | null>(null);
 
@@ -90,9 +88,7 @@ function OrderView({ orderId, connectFailed, resetConnect }: OrderViewProps) {
         </p>
       </Card>
 
-      {order.status === "pending" ? (
-        <PendingPayment order={order} connectFailed={connectFailed} resetConnect={resetConnect} />
-      ) : null}
+      {order.status === "pending" ? <PendingPayment order={order} /> : null}
       {order.status === "confirmed" ? <Receipt order={order} /> : null}
       {order.status === "expired" ? <Notice tone="danger">QR sudah kedaluwarsa. Minta kasir membuat QR baru.</Notice> : null}
       {order.status === "failed" ? (
@@ -102,39 +98,9 @@ function OrderView({ orderId, connectFailed, resetConnect }: OrderViewProps) {
   );
 }
 
-type PendingPaymentProps = {
-  order: PublicOrder;
-  connectFailed: boolean;
-  resetConnect: () => void;
-};
-
-function PendingPayment({ order, connectFailed, resetConnect }: PendingPaymentProps) {
-  const { api } = useSession();
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction, disconnect } = useWallet();
-  const [busy, setBusy] = useState(false);
+function PendingPayment({ order }: { order: PublicOrder }) {
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const now = useNow(true);
-
-  const message = error ?? (connectFailed ? "Wallet tidak bisa dihubungkan. Buka wallet, lalu coba lagi." : null);
-
-  async function pay() {
-    if (!publicKey) {
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const transaction = await requestTransaction(api, order.id, publicKey.toBase58());
-      await sendTransaction(transaction, connection);
-      setSent(true);
-    } catch (failure) {
-      setError(payErrorMessage(failure));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   if (sent) {
     return (
@@ -151,29 +117,7 @@ function PendingPayment({ order, connectFailed, resetConnect }: PendingPaymentPr
       <p role="status" className="text-center font-semibold">
         Bayar dalam {formatCountdown(secondsUntil(order.expires_at, now))}
       </p>
-      {message ? <Notice tone="danger">{message}</Notice> : null}
-
-      {publicKey ? (
-        <div>
-          <p className="text-sm text-muted-foreground">Wallet terhubung</p>
-          <p className="mt-1 font-mono text-sm">{shortAddress(publicKey.toBase58())}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button className="flex-1" disabled={busy} onClick={() => void pay()}>
-              {busy ? "Menunggu wallet..." : "Bayar sekali"}
-            </Button>
-            <Button variant="secondary" disabled={busy} onClick={() => void disconnect()}>
-              Ganti wallet
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <WalletPicker
-          onPick={() => {
-            setError(null);
-            resetConnect();
-          }}
-        />
-      )}
+      <WalletPayment orderId={order.id} onSent={() => setSent(true)} />
 
       <div className="border-t border-border pt-4 text-center">
         <p className="text-sm text-muted-foreground">Atau pindai dengan Phantom di HP</p>
