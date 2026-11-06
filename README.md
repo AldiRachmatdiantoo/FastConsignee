@@ -684,13 +684,23 @@ Risiko terbesar adalah alur Transaction Request, jadi bagian itu diuji paling aw
 | Siapa pun yang tahu reference bisa menerbitkan transaksi sampah, dan order gagal kalau transaksi itu terlihat lebih dulu. | Transaksi sah menang kalau keduanya terlihat pada putaran worker yang sama. Kalau tidak, pemilik toko menanganinya manual. |
 | Faucet lewat RPC publik Devnet sudah ditutup. | Ambil SOL Devnet dari faucet web, lalu jalankan uji pembayaran Devnet sebelum demo. |
 
+## Kredit
+
+Landing page dan halaman login memakai [template Linea dari 8B](https://8b.com/templates/linea/) yang gratis, dengan lisensi MIT. Landing page memakai template itu langsung, lalu teks, warna, foto, dan font-nya diganti. Halaman login ditulis ulang di React dengan gaya yang sama.
+
+Tata letak dasbor mengambil contoh dari Datta Able oleh CodedThemes. Itu hanya referensi tampilan, jadi kodenya ditulis sendiri.
+
+Fotonya berasal dari Unsplash. Daftar lengkap foto, font, dan lisensinya ada di [CREDITS.md](frontend/public/landing/CREDITS.md).
+
+Produknya sendiri dibuat untuk proyek ini, yaitu kasir, pembagian dana, refund, dan dasbor.
+
 ## Pertanyaan terbuka
 
 Pertanyaan pertama perlu diputuskan sebelum kode backend dipakai untuk pengumpulan.
 
 - [ ] Apakah kode yang dibuat sebelum opening boleh dipakai? Contest Terms MLH untuk Fall 2025 sampai Spring 2026 menyatakan semua pekerjaan harus dilakukan selama acara, dan pekerjaan sebelum acara bisa menggugurkan proyek. Aturan khusus acara ini belum terbaca, jadi kode backend disimpan di branch lokal dan belum di-push.
 - [x] Jam berapa batas resminya? Laman MLH menulis pengumpulan awal Minggu 22:00 WIB dan final Minggu 23:45 WIB. Acara dimulai Sabtu 00:00 WIB.
-- [ ] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Bagian ini perlu disiapkan sebelum submit.
+- [ ] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Bagian ini perlu disiapkan sebelum submit. Template sudah ditulis di bagian Kredit, sedangkan penggunaan AI belum.
 - [x] Dikerjakan solo atau tim? Solo.
 - [x] Pembayaran memakai SOL atau USDC? SOL di Devnet.
 - [ ] Apakah satu proyek boleh ikut Best Beginner Hack dan DeFi Track sekaligus?

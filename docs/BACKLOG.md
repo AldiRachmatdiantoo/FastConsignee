@@ -133,38 +133,152 @@ Testing: unit dan komponen dengan Vitest, serta uji browser yang mengirim tanda 
 
 Kebutuhan: FR-01 sampai FR-06, FR-10.
 
-- [ ] Katalog, keranjang, rincian pembagian, QR, dan status
+- [x] Katalog, keranjang, rincian pembagian, QR, dan status
+
+Testing: komponen dengan Vitest, serta Playwright terhadap API Go dengan Solana tiruan, termasuk 4 transfer dalam satu transaksi.
 
 ### F-03 Pembeli
 
 Kebutuhan: FR-08, FR-13, FR-14.
 
-- [ ] Layar bayar, wallet adapter, dan bukti pembayaran
+- [x] Layar bayar, wallet adapter, dan bukti pembayaran
+- [ ] Pembayaran sungguhan di Devnet lewat wallet
+
+Testing: komponen dengan Vitest, serta Playwright dengan wallet tiruan lewat Wallet Standard. Pembayaran di Devnet butuh wallet berisi SOL.
 
 ### F-04 Dasbor dan refund
 
 Kebutuhan: FR-15, FR-16, FR-18, FR-19, FR-20, FR-22, FR-23.
 
-- [ ] Dasbor penitip, dasbor toko, refund, barang, dan penitip
+- [x] Dasbor penitip, dasbor toko, refund, barang, dan penitip
+- [ ] Pilihan sertifikat di form barang, setelah pengiriman NFT sertifikat jadi
+- [x] Tampilan dasbor dan menu samping mengikuti referensi Datta Able, dengan warna landing page
+
+Testing: komponen dengan Vitest, serta Playwright untuk refund, potongan di dasbor penitip, hak akses tiap peran, wallet yang salah, dan menu samping di desktop dan HP.
 
 ### F-05 Uji akhir
 
 Kebutuhan: NFR-05, NFR-10, NFR-11.
 
-- [ ] Vitest, Testing Library, dan Playwright
+- [x] Vitest, Testing Library, dan Playwright
+- [x] Pemeriksaan web di lokal oleh pilot, 6 November 2026
+- [x] Pengujian menyeluruh di lokal, 6 November 2026. Hasil dan kendalanya ada di bagian Kendala dari pengujian
 - [ ] Uji Phantom di HP dan alur demo 5 kali
+- [ ] Uji landing page langsung di Firefox
 
 ### F-06 Landing page
 
 Kebutuhan: belum ada di PRD. Rencana dan keputusannya ada di [FRONTEND.md](FRONTEND.md).
 
-- [ ] Landing page dari template Linea di `/`
+- [x] Landing page dari template Linea di `/`
+- [ ] Tombol utama mengarah ke video demo
+- [x] Halaman login mengikuti template Linea
+
+Testing: Playwright di lebar 375 dan 1440 px, dengan reduced motion, dan rewrite `/` di `next start`. Halaman login juga diuji begitu, termasuk kembali ke `/`. Firefox belum diuji langsung.
+
+### F-07 Performa
+
+Kebutuhan: belum ada di PRD. Angkanya diukur dari build produksi lokal pada 6 November 2026, sebelum dan sesudah perbaikan.
+
+- [x] Kasir membaca saldo tanpa `@solana/web3.js`, jadi JavaScript-nya turun dari 278 KB ke 192 KB setelah gzip
+- [x] Font Inter di landing dikirim dari server sendiri, bukan dari Google Fonts
+- [x] Foto hero landing dan latar login punya versi kecil untuk HP, jadi unduhan fotonya turun dari 188 KB ke 81 KB
+- [x] Font monospace tidak lagi diunduh di awal setiap halaman
+- [ ] Layar bayar memuat `@solana/web3.js` sejak awal, padahal pembeli yang memindai QR tidak memerlukannya. Ini bagian terberat yang tersisa, 139 KB dari 390 KB, dan nilainya paling rendah. Perbaikannya menyentuh alur bayar, jadi sebaiknya dikerjakan setelah demo
+- [ ] Uji tab yang masih terbuka saat ada deploy baru, karena tab kasir bisa terbuka seharian
+- [ ] Ukur PageSpeed beberapa kali setelah web online, lalu ambil nilai tengahnya
+- [ ] Ukur latensi API setelah deploy, karena angka lokal belum memuat jarak ke Render dan Supabase. Render gratis juga tidur kalau tidak ada lalu lintas, jadi cron `/healthz` harus jalan sebelum demo
+
+Kesimpulan: web ini kencang untuk HP, selama diukur di lokal. Tidak ada halaman yang berat kecuali layar bayar, refund, dan wallet, karena ketiganya memuat `@solana/web3.js`.
+
+Lighthouse mode HP di build produksi lokal, nilai tengah 3 kali uji:
+
+| Halaman | Performa | LCP | Bobot |
+| --- | --- | --- | --- |
+| Landing | 89 ke 99 | 3,2 ke 2,0 detik | 258 ke 155 KB |
+| Login | 92 sampai 97 ke 97 | 2,7 sampai 3,3 ke 2,6 detik | 425 ke 285 KB |
+| Bayar, dengan order asli | 91 | 3,3 detik | 390 KB |
+
+Nilai aksesibilitas Lighthouse: login dan bayar 100, landing 96. Sisa temuan landing berasal dari teks animasi yang belum terlihat sebelum di-scroll, dan axe bersih saat animasi dimatikan.
+
+Waktu sampai isi layar tampil, memakai HP lambat tiruan dengan CPU 4 kali lebih lambat dan jaringan setara Slow 4G:
+
+| Layar | Kunjungan pertama | Kunjungan ulang | Unduhan pertama | JavaScript gzip |
+| --- | --- | --- | --- | --- |
+| Kasir | 2,7 detik | 1,2 detik | 225 KB | 192 KB |
+| Dasbor | 2,2 detik | 0,6 detik | 213 KB | 187 KB |
+| Barang | 2,7 detik | 1,2 detik | 230 KB | 184 KB |
+| Refund | 2,9 detik | 0,7 detik | 364 KB | 324 KB |
+| Bayar | 2,9 detik | 0,7 detik | 350 KB | 290 KB |
+
+Wallet memuat 321 KB, penitip 184 KB, dan login 176 KB JavaScript setelah gzip. Tanpa pembatas, semua layar tampil dalam 0,2 detik.
+
+API lokal menjawab endpoint baca dengan p95 di bawah 7 ms, dari 200 panggilan per endpoint. Checkout menangani 103 order per detik dengan p95 233 ms. Angka ini bukan pengganti PageSpeed dan latensi setelah deploy.
+
+## Kendala dari pengujian
+
+Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database uji terpisah dan Solana tiruan. Tabel ini memuat hasil setelah perbaikan.
+
+| Uji | Hasil |
+| --- | --- |
+| `go vet`, `go build`, `go test` | Lolos, cakupan 85,2% |
+| `go test -race` | Lolos di image Docker Go, karena Windows ini tidak punya gcc |
+| Fuzz 3 fungsi, masing-masing 20 detik | Lolos |
+| Uji beban 1.000 order dengan 20 pekerja | Lolos, 103 order per detik, p95 233 ms |
+| `gosec` dan `govulncheck` | Lolos, tanpa celah yang terpanggil kode |
+| Uji baca Devnet | Lolos |
+| Lint kontrak dan sinkron tipe API serta Postman | Lolos |
+| Uji endpoint hidup, 28 dari 28 operasi | 443 dari 444 pemeriksaan lolos, dan semua jawaban sesuai kontrak. Yang gagal hanya ringkasan yang masih tersimpan 30 detik di cache, dan angkanya sama setelah cache habis |
+| Uji batas permintaan dan order kedaluwarsa | 12 dari 12 lolos |
+| Newman, 28 request | 84 dari 84 assertion lolos |
+| Verifikasi JWKS dengan ES256 dan RS256 | Lolos, sekarang juga di `go test` |
+| ESLint, typecheck, Vitest 130 test, build produksi | Lolos |
+| Playwright Edge, 16 uji | Lolos di database baru |
+| Playwright WebKit, 16 uji | Lolos 3 kali berturut-turut di database baru |
+| axe di 12 layar | Semua bersih |
+| Layar saat API mati, `500`, `429`, dan sesi habis | Lolos, tanpa error halaman |
+
+### Sebelum demo
+
+- [x] `STORE_ICON_URL` bawaan menunjuk `/icon.png`, padahal berkas itu tidak ada. Sekarang `public/icon.png` berukuran 256 px dibuat dari `icon.svg`, dan menjawab `200`
+- [x] RPC Devnet publik sempat butuh 11 detik di koneksi pertama, melewati batas 8 detik di `rpc.go`. Batasnya sekarang 15 detik, dan uji baca Devnet lolos
+- [x] CoinGecko tidak terjangkau dari jaringan lokal saat diuji, dan rincian pertama tiap 45 detik tertahan 3 detik. Sekarang percobaan berikutnya ditunda 5 menit, dan kurs pasar terakhir lebih diutamakan daripada `FIXED_IDR_PER_SOL`. Nilai ini tetap harus diisi di Render
+- [ ] Akun yang pernah login lokal terikat ke subject `local:...`, jadi email yang sama ditolak `403 ROLE_NOT_ASSIGNED` saat login Google. Perilakunya belum berubah. Aturannya sudah dicatat di `backend/README.md`: jangan login lokal ke database produksi
+
+### Bug API
+
+- [x] API menjawab `500`, bukan `400`, untuk byte nol di teks, serta untuk `q=%00` dan `q=%FF` di `GET /items`. Validator teks sekarang menolak karakter yang ditolak Postgres
+- [x] UTF-8 rusak di body JSON diterima `201` dan tersimpan sebagai karakter pengganti. Sekarang ditolak `400`
+- [x] Metode HTTP yang salah menjawab `404`. Sekarang menjawab `405 METHOD_NOT_ALLOWED` dengan header `Allow`, dan kontraknya sudah diperbarui
+
+### Frontend
+
+- [x] Struktur `dl` di kartu dasbor toko dan penitip salah, karena `dt` dan `dd` terbungkus dua lapis `div`
+- [x] Kontras `--muted-foreground` di atas `#f3f4f6` hanya 4,39:1. Nilainya sekarang `#656d7a`, dengan kontras 4,74:1
+- [x] Layar kasir tidak punya `h1`
+- [x] Frontend belum mengirim header keamanan. Sekarang semua halaman mengirim `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, dan `Content-Security-Policy`. CSP sengaja tanpa `script-src`, supaya wallet asli tidak terblokir
+- [x] Halaman `404` masih bawaan Next.js berbahasa Inggris
+- [ ] Saat API tidak terjangkau ketika halaman dimuat ulang, pengguna dilempar ke `/login`, walaupun tokennya masih ada. Setelah API pulih, reload mengembalikannya ke layar semula. Layar ini sebaiknya menampilkan tombol coba lagi
+- [x] `/bayar/bukan-uuid` menampilkan "Harus berupa UUID." ke pembeli. Sekarang tautan itu menuju halaman 404
+
+### Uji dan dependency
+
+- [x] Uji "refund menolak wallet selain wallet toko" gagal di database baru. Uji ini sekarang membuat order lunasnya sendiri
+- [x] Di WebKit, 2 sampai 3 uji gagal di pemeriksaan console dengan pesan "due to access control checks". Penyebabnya fetch yang terputus karena uji pindah halaman, bukan CORS, karena API mencatat `context canceled` di waktu yang sama. Uji sekarang menunggu permintaan selesai. WebKit yang dipakai masih build 2370, sedangkan Playwright 1.65 meminta 2388
+- [ ] Firefox tidak bisa dijalankan, karena Windows menolak `firefox.exe` versi tes dan Firefox biasa tidak terpasang
+- [x] Koleksi Postman belum punya assertion. Tiap request sekarang memeriksa status terhadap kontrak, tidak ada `5xx`, dan ada `X-Request-Id`
+- [x] `NewJWKSVerifier` belum tersentuh `go test`. Sekarang ada uji kunci ES256 dan RS256, serta token palsu
+- [ ] `npm audit` frontend menemukan 18 celah moderate, 10 di antaranya di dependency produksi lewat `@solana/web3.js` dan wallet adapter. Sebagian belum punya perbaikan
+- [ ] `npm audit` folder `api` menemukan 4 high dan 2 moderate di alat pengembangan `openapi-to-postmanv2`
+- [ ] `govulncheck` mencatat GO-2026-5932 di `golang.org/x/crypto`. Kode tidak memanggilnya, dan perbaikannya baru ada di versi pseudo
 
 ## Deploy
 
 Bagian ini butuh akun pemilik proyek.
 
 - [ ] Proyek Supabase, Google OAuth, dan migrasi
-- [ ] Layanan Render, environment, dan cron `/healthz`
+- [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
 - [ ] Repo dibuat publik sebelum submit Devpost
+- [x] Pernyataan template di README
+- [ ] Pernyataan AI di README, serta pernyataan AI dan template di Devpost

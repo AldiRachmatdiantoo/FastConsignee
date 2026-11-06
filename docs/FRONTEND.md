@@ -18,9 +18,11 @@ Dokumen kerja frontend. Pilot memakainya untuk memutuskan arah, dan co-pilot mem
 - Penggunaan AI dan template pihak ketiga ditulis di README dan Devpost, sesuai aturan MLH.
 - Biaya harus nol. Kalau sebuah pilihan butuh biaya atau akun baru, pilot yang memutuskan.
 
-## Keputusan yang menunggu pilot
+## Keputusan
 
-| No | Keputusan | Usulan co-pilot | Alasan |
+Saat eksekusi F-02 sampai F-06, usulan co-pilot di tabel ini dipakai sebagai nilai bawaan. Pilot masih bisa mengganti semuanya.
+
+| No | Keputusan | Yang dipakai | Alasan |
 | --- | --- | --- | --- |
 | 1 | Landing page atau F-02 Kasir dulu? | F-02 Kasir dulu | Video demo bergantung pada alur kasir, dan landing page belum ada di PRD. |
 | 2 | Bahasa landing page | Inggris, aplikasinya tetap Indonesia | Juri MLH membaca Inggris, dan PRD memosisikan produk untuk pasar global. |
@@ -36,43 +38,53 @@ Dokumen kerja frontend. Pilot memakainya untuk memutuskan arah, dan co-pilot mem
 
 Keputusan 6 sudah diambil: tema amber dipasang sebelum F-02, dan sekarang sudah terpasang di aplikasi.
 
+Keputusan 3 baru terpasang sebagian. Video demo belum ada, jadi tombol utama hero sementara mengarah ke *See how it works*, dan "Masuk" tertulis *Staff sign in*. Setelah video terbit, tujuan tombolnya diganti di `frontend/public/landing.html`.
+
 ## Status sekarang
 
-F-01 selesai kecuali login Google. Sudah ada Next.js, klien API dari kontrak, login lokal, penjaga peran, layar wallet, tema amber, dan job `frontend` di CI.
+Semua layar di peta layar sudah ada, dan landing page sudah tampil di `/`. Sisanya butuh akun, SOL Devnet, atau HP milik pilot.
 
 Hasil uji terakhir:
 
-- 39 test Vitest, lint, typecheck, dan build lolos.
-- Uji browser 17 dari 17 lolos, termasuk tanda tangan ed25519 asli yang diterima API Go.
-- Layar login dan wallet muat di lebar 375 px.
+- 130 test Vitest, lint, typecheck, dan build lolos.
+- 16 uji Playwright lolos di Edge dan WebKit terhadap API Go dan Postgres lokal, dengan node Solana dan wallet tiruan.
+- axe bersih di 12 layar.
+- Alur demo lolos 3 kali berturut-turut, dari kasir sampai potongan refund di dasbor penitip.
+- Semua layar muat di lebar 375 px.
+- `/` tampil lewat rewrite di `next dev` dan `next start`.
+- Pilot memeriksa web di lokal dan menyatakan oke pada 6 November 2026.
 
 Yang belum:
 
-- Uji dengan Phantom sungguhan, dijadwalkan di F-05.
+- Pembayaran sungguhan di Devnet. Uji di atas memakai node tiruan yang memeriksa tanda tangan dan mengubah saldo, tetapi bukan jaringan asli.
+- Phantom di HP, yang butuh API di alamat HTTPS publik.
+- Alur demo 5 kali di Devnet (NFR-10).
 - Login Google, menunggu proyek Supabase.
-- `/kasir` dan `/dasbor` masih placeholder.
+- Firefox belum diuji langsung. Browser tanpa scroll-driven animation memakai jalur yang sama dengan reduced motion, dan jalur itu lolos di Edge.
+- Form barang belum punya pilihan sertifikat. `item-form.ts` sudah membawa nilainya, tetapi layarnya belum menampilkan kotak centang, dan pengiriman NFT sertifikat di backend juga belum jadi.
 
 ## Peta layar
 
-Nama route yang bertanda usulan belum dibuat dan masih bisa diganti pilot.
-
 | Route | Pengguna | Isi | Endpoint | Item |
 | --- | --- | --- | --- | --- |
-| `/` | Publik | Landing page. Saat ini hanya pengalihan. | Tidak ada | F-06 |
-| `/login` | Publik | Login lokal, nanti Google | `GET /me` | F-01, selesai |
+| `/` | Publik | Landing page statis | Tidak ada | F-06, selesai |
+| `/login` | Publik | Login lokal, nanti Google. Tampilannya mengikuti template landing page | `GET /me` | F-01, selesai |
 | `/wallet` | Pemilik toko, penitip | Penautan wallet | `POST /wallet/nonce`, `POST /wallet/link` | F-01, selesai |
-| `/kasir` | Kasir, pemilik toko | Katalog, keranjang, rincian pembagian, QR, status | `GET /items`, `POST /orders/preview`, `POST /orders`, `GET /orders/{id}/status` | F-02 |
-| `/bayar/[orderId]` (usulan) | Publik | Layar bayar, tombol wallet, bukti pembayaran | `GET /public/orders/{id}`, `POST /solana-pay/orders/{id}` | F-03 |
-| `/dasbor` | Pemilik toko | Ringkasan toko | `GET /dashboard/store/summary` | F-04 |
-| `/dasbor` | Penitip | Penjualan, potongan, stok | `GET /dashboard/consignor/sales`, `/deductions`, `/stock` | F-04 |
-| `/refund` (usulan) | Pemilik toko | Daftar order dan refund satu barang | `GET /orders`, `POST /orders/{id}/refunds`, `GET /refunds`, `POST /refunds/{id}/signature` | F-04 |
-| `/barang` (usulan) | Pemilik toko | Kelola barang | `/items` | F-04 |
-| `/penitip` (usulan) | Pemilik toko | Kelola penitip | `/consignors` | F-04 |
+| `/kasir` | Kasir, pemilik toko | Katalog, keranjang, rincian pembagian, QR, status | `GET /items`, `POST /orders/preview`, `POST /orders`, `GET /orders/{id}/status` | F-02, selesai |
+| `/bayar/[orderId]` | Publik | Layar bayar, tombol wallet, bukti pembayaran | `GET /public/orders/{id}`, `POST /solana-pay/orders/{id}` | F-03, kecuali uji Devnet |
+| `/dasbor` | Pemilik toko | Ringkasan toko, 7 hari terakhir, transaksi | `GET /dashboard/store/summary`, `GET /orders` | F-04, selesai |
+| `/dasbor` | Penitip | Penjualan, potongan, stok | `GET /dashboard/consignor/sales`, `/deductions`, `/stock` | F-04, selesai |
+| `/refund` | Pemilik toko | Daftar order dan refund satu barang | `GET /orders`, `POST /orders/{id}/refunds`, `GET /refunds`, `POST /refunds/{id}/signature` | F-04, selesai |
+| `/barang` | Pemilik toko | Kelola barang, dengan saringan aktif dan nonaktif | `/items` | F-04, selesai |
+| `/penitip` | Pemilik toko | Kelola penitip | `/consignors` | F-04, selesai |
 
-Catatan untuk F-02 dan F-03:
+Catatan layar:
 
 - Status order memakai polling `GET /orders/{id}/status`, karena kontrak tidak punya push. Polling tiap 2 detik sama dengan jeda worker dan masih di bawah batas 120 permintaan per menit per akun.
-- QR butuh satu pustaka baru, yang dipilih saat F-02 dimulai.
+- Layar bayar memakai jeda 3 detik, karena endpoint publik dibatasi 30 permintaan per menit per order.
+- QR memakai `qrcode.react` dengan lisensi ISC.
+- Keputusan 8 terpasang: saldo tiap pihak dibaca dari Devnet lewat alamat `recipients`, sebelum dan sesudah pembayaran.
+- `GET /items` hanya memberi barang aktif secara bawaan, jadi `/barang` punya saringan supaya barang nonaktif bisa diaktifkan lagi.
 - Wallet di HP tidak bisa menghubungi `localhost`, jadi QR sungguhan baru bisa diuji setelah API punya alamat HTTPS publik.
 - `/bayar` berada di luar grup `(app)`, karena pembeli tidak login.
 
@@ -81,9 +93,11 @@ Catatan untuk F-02 dan F-03:
 ```
 frontend/src/
   app/         route, dibuat tipis
-  features/    satu folder per fitur: auth, wallet, lalu kasir, bayar, dasbor
+  features/    satu folder per fitur: auth, wallet, kasir, bayar, dasbor, refund, barang, penitip
   components/  komponen bersama
-  lib/api/     klien dan tipe dari kontrak
+  lib/         format, hook, klien dan tipe dari kontrak
+frontend/public/landing.html  landing page statis
+frontend/e2e/                 uji Playwright
 ```
 
 Aturannya:
@@ -100,6 +114,32 @@ Aturannya:
 ## Desain aplikasi
 
 Aplikasi memakai [tema amber](#tema-amber). Warnanya ada di [globals.css](../frontend/src/app/globals.css), dan komponen dasarnya di [ui.tsx](../frontend/src/components/ui.tsx). Font-nya Inter untuk teks, serta JetBrains Mono untuk alamat wallet dan angka teknis.
+
+## Dasbor dan menu samping
+
+Tampilannya mengikuti [Datta Able](https://preview.themewagon.com/DattaAble/dashboard/index.html) dari CodedThemes, dengan warna, font, dan sudut dari landing page. Datta Able hanya jadi referensi tampilan, jadi kodenya ditulis sendiri dan tidak ada file atau gambar yang disalin.
+
+| Bagian di referensi | Dasbor toko | Dasbor penitip |
+| --- | --- | --- |
+| Menu samping dan bilah atas | Semua layar setelah login | Semua layar setelah login |
+| Daily, Monthly, Yearly Sales | Penjualan hari ini, bulan ini, dan total | Bagian hari ini, bulan ini, dan total |
+| Kartu media sosial | Komisi, jumlah transaksi, bagian penitip | Barang terjual, stok, potongan |
+| Rating | 7 hari terakhir | 7 hari terakhir |
+| Recent Users | Transaksi terkonfirmasi | Penjualan |
+
+Yang tidak ikut, karena fiturnya tidak ada dan tombol kosong hanya menyesatkan:
+
+- Pencarian, notifikasi, pengaturan, dan ganti tema di bilah atas.
+- Tombol Approve dan Reject. Tempatnya dipakai tombol Explorer.
+
+Aturan angka:
+
+- Semua angka berasal dari API. Kalau pembandingnya nol, layar menulis "Belum ada pembanding", bukan persen buatan.
+- Total penjualan dan bagian penitip belum dikurangi refund, karena `GET /dashboard/store/summary` menjumlah semua order `confirmed`.
+- Dasbor toko memakai 5 panggilan API. Versi pertama memakai 11 panggilan dan kena `429` saat dibuka berulang, jadi angka harian dihitung dari `GET /orders`.
+- Penitip belum punya endpoint ringkasan, jadi angkanya dijumlah dari daftar lengkap, sampai 1.000 data. Kalau lebih, layar memberi tahu.
+
+Menu samping tampil mulai 1280 px. Di bawah itu menu terbuka lewat tombol, supaya layar kasir di tablet tetap punya lebar penuh. Kasir tidak punya menu samping, karena hanya punya satu layar.
 
 ## Tema amber
 
@@ -146,7 +186,7 @@ Nilai di bawah sama persis dengan yang diberikan pilot, dan yang terpasang di [g
   --shadow-offset-x: 0px;
   --shadow-offset-y: 4px;
   --sidebar-primary: #f59e0b;
-  --muted-foreground: #6b7280;
+  --muted-foreground: #656d7a;
   --accent-foreground: #92400e;
   --popover-foreground: #262626;
   --primary-foreground: #000000;
@@ -281,15 +321,17 @@ Dua aturan yang mudah terlewat:
 
 ### Penyesuaian kontras
 
-Batas aman teks adalah 4,5:1, dan batas penanda fokus adalah 3:1. Sebagian besar nilai tema lolos. Lima nilai ini perlu diganti, dan nilai aslinya masih terpasang sampai keputusan 11 diambil.
+Batas aman teks adalah 4,5:1, dan batas penanda fokus adalah 3:1. Sebagian besar nilai tema lolos. Lima nilai ini sudah diganti di `globals.css`.
 
-| Nilai | Mode | Asli | Kontras asli | Usulan | Kontras usulan |
+| Nilai | Mode | Asli | Kontras asli | Terpasang | Kontras terpasang |
 | --- | --- | --- | --- | --- | --- |
 | `--destructive` | Terang | `#ef4444` | 3,76:1 di atas putih, 3,29:1 di atas latar error | `#b91c1c` | 6,47:1 dan 5,45:1 |
 | `--destructive` | Gelap | `#ef4444` | 4,02:1 di atas kartu | `#f87171` | 5,47:1 |
 | `--destructive-foreground` | Gelap | `#ffffff` | 2,77:1 di atas `#f87171` | `#000000` | 7,59:1 |
 | `--ring` | Terang | `#f59e0b` | 2,15:1 di atas putih | `#b45309` | 5,02:1 |
 | `--sidebar-primary-foreground` | Keduanya | `#ffffff` | 2,15:1 di atas amber | `#000000` | 9,78:1 |
+
+Token `--success` ditambahkan untuk status berhasil, sesuai keputusan 12. Nilainya `#166534` di mode terang dengan kontras 7,13:1 di atas putih, dan `#4ade80` di mode gelap dengan kontras 8,68:1.
 
 ### Tema di landing page
 
@@ -311,7 +353,8 @@ Catatan pemasangannya:
 
 - `--color-5` memakai `#4b5563`, karena `#6b7280` hanya 4,39:1 di atas `--color-3`.
 - Radius besar template tetap dipakai, karena bentuk lembarannya adalah ciri desain halaman itu. Radius `0.375rem` hanya berlaku di aplikasi.
-- Font diganti dari Host Grotesk ke Inter. Ukuran judul besar dan wordmark footer dihitung dari jumlah karakter, jadi keduanya diperiksa ulang setelah font diganti.
+- Font diganti dari Host Grotesk ke Inter, yang dikirim dari `public/landing/inter-latin.woff2`. Ukuran wordmark footer dihitung dari jumlah karakter, jadi rumusnya memakai faktor 0,525 dan lebar kontainernya sendiri.
+- Teks kartu kedua di `how-it-works` memakai `--color-1`, karena `--color-5` hanya sekitar 3,5:1 di atas amber.
 
 ## Testing
 
@@ -333,7 +376,7 @@ npm run typecheck
 npm run build
 ```
 
-Tiap layar baru juga diuji di browser terhadap API Go sungguhan. Playwright masuk ke repositori saat F-05.
+Uji browser memakai Playwright dan berjalan dengan `npm run e2e`. Caranya ada di [frontend/README.md](../frontend/README.md). Uji ini memakai API Go dan Postgres sungguhan, dengan node Solana dan wallet tiruan, jadi tidak berjalan di CI dan tidak menggantikan uji di Devnet.
 
 ## Landing page
 
@@ -362,17 +405,17 @@ Komentar pembuka file, `<meta name="generator">`, dan tautan "Design: 8B" di foo
 File `index.html` dipakai apa adanya sebagai halaman statis, bukan ditulis ulang ke React. Script template mengatur DOM secara langsung, jadi menulis ulang 135 KB ke komponen hanya menambah risiko tanpa manfaat bagi pengunjung.
 
 1. Salin `index.html` ke `frontend/public/landing.html`, lalu edit di sana.
-2. Salin LICENSE dan CREDITS.md ke `frontend/public/landing/`.
+2. Simpan LICENSE dan CREDITS.md di `frontend/public/landing/`. LICENSE diberi akhiran `.txt` supaya terbuka sebagai teks, dan CREDITS.md ditulis ulang untuk foto dan font yang baru.
 3. Tambahkan rewrite `/` ke `/landing.html` di `next.config.ts`.
 4. Hapus `src/app/page.tsx`, karena isinya hanya pengalihan.
 
-Pengguna yang sudah login tetap sampai ke layarnya lewat tombol Masuk, karena `/login` sudah mengalihkan mereka. Rewrite ini belum dicoba, jadi langkah 3 diuji lebih dulu saat eksekusi.
+Pengguna yang sudah login tetap sampai ke layarnya lewat tombol Masuk, karena `/login` sudah mengalihkan mereka. Rewrite ini sudah diuji di `next dev` dan `next start`.
 
-`index.gsap.html` tidak dipakai, karena ukurannya lebih besar dan butuh script dari CDN. Folder `app-landing-page-template/` tidak ikut di-commit.
+`index.gsap.html` tidak dipakai, karena ukurannya lebih besar dan butuh script dari CDN. Folder `app-landing-page-template/` tidak ikut di-commit, jadi perubahan berikutnya langsung diedit di `frontend/public/landing.html`.
 
 ### Pemetaan bagian
 
-Tiga bagian punya jumlah item yang terkunci di CSS. Mengubah jumlahnya butuh perubahan CSS, jadi isinya disesuaikan dengan batas itu.
+Tiga bagian punya jumlah item yang terkunci di CSS, jadi isinya disesuaikan dengan batas itu. Semua baris di bawah sudah terpasang.
 
 | Bagian template | Batas | Isi FastConsignee | Sumber fakta |
 | --- | --- | --- | --- |
@@ -381,12 +424,12 @@ Tiga bagian punya jumlah item yang terkunci di CSS. Mengubah jumlahnya butuh per
 | `voice-to-text` | 3 baris | Satu pembayaran masuk, lalu terbagi menjadi bagian penitip dan komisi toko | FR-04, FR-09 |
 | `calls` | 5 fitur | Pilih barang, lihat rincian, tampilkan QR, pembeli setuju sekali, semua pihak terbayar. HP di layar menyusun langkah yang sama. | K-1 sampai K-5 |
 | `caption-styles` | 8 baris | Komisi per barang, penanggung diskon, potongan refund, kurs terkunci, stok tertahan, batas waktu QR, batas penitip per keranjang, wallet bertanda tangan | T-5, K-6, T-3, B-2, K-5, K-4, K-2, P-6 |
-| `in-person` | Tidak ada | Jenis penitip: pengrajin, barang bekas, makanan rumahan | Latar belakang PRD |
+| `in-person` | Tidak ada | Tiga jenis penitip: pengrajin, barang bekas, makanan rumahan. Grid tanpa animasi diubah menjadi 3 kolom. | Latar belakang PRD |
 | `testimonials` | Tidak ada | Kasus nyata | Keputusan 4 |
 | `how-it-works` | 3 kartu | Toko menautkan wallet, kasir membuat QR, pembeli membayar sekali | User flow PRD |
 | `faq` | Tidak ada | Devnet, kebutuhan wallet, pembayaran gagal, refund, status di Indonesia | Risiko PRD |
 | `call-to-action` | Tidak ada | Ajakan utama | Keputusan 3 |
-| `contact` | Tidak ada | Dihapus atau diganti | Keputusan 5 |
+| `contact` | Tidak ada | Dihapus beserta formulirnya. Tautan GitHub ada di footer. | Keputusan 5 |
 | `footer` | Tidak ada | Wordmark FastConsignee dengan `--len:13`, tahun, dan "Design: 8B". Tautan Privacy, Terms, dan Emergency calling dihapus. | Panduan template |
 
 ### Batas isi
@@ -401,8 +444,31 @@ Landing page hanya memuat hal yang benar hari ini:
 
 ### Cara uji
 
+Semua poin ini lolos, kecuali Firefox yang belum diuji langsung. Tiga poin pertama dan poin keempat otomatis di `e2e/landing.spec.ts`.
+
 - Tampil benar di lebar 375 dan 1440 px, tanpa error konsol.
 - Tetap terbaca penuh dengan reduced motion dan di Firefox.
-- Kata Linea hanya tersisa di nama class, kalau ada, dan atribut `data-8b-placeholder` sudah habis.
+- Kata Linea hanya tersisa di komentar pembuka dan kredit, dan atribut `data-8b-placeholder` sudah habis.
 - `/` menampilkan landing page, dan tombol Masuk sampai ke `/login`.
 - `npm run build` lolos.
+
+### Halaman login
+
+`/login` memakai gaya template yang sama, supaya orang yang klik *Staff sign in* tidak berpindah ke tampilan lain. Halaman ini tetap komponen React, dan gayanya ada di `src/features/auth/login.css`.
+
+| Bagian | Asal di template |
+| --- | --- |
+| Foto, bayangan, garis lengkung, dan chip | Hero |
+| Bilah atas | Navigasi |
+| Kartu masuk | Form kontak |
+
+Yang berbeda dari landing page:
+
+- Teksnya berbahasa Indonesia, karena pemakainya staf toko.
+- Garis dan chip berhenti sendiri sebelum 5 detik, supaya tidak mengganggu orang yang sedang login. Landing page tetap bergerak terus.
+- Chip disembunyikan di lebar 1024 sampai 1311 px, karena tertutup kartu masuk. Di lebar ini foto digeser ke kiri, supaya wajah di foto tidak terpotong.
+- Tautan ke `/` memakai `<a>` biasa, karena `/` adalah file statis lewat rewrite.
+
+Tombol *Masuk dengan Google* sudah ada, tetapi nonaktif sampai F-01 selesai. Daftar akun seed hanya tampil di mode lokal.
+
+Sudah diperiksa di lebar 320, 375, 820, 1024, 1100, 1280, 1440, dan 1920 px. Dua lebar utama, reduced motion, dan tautan kembali ke `/` otomatis di `e2e/landing.spec.ts`. Halaman ini juga lolos di `next start`.
