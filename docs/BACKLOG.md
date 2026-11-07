@@ -10,16 +10,29 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | --- | --- | --- | --- |
 | 1 | Cek kasir di lebar 320 px, ulang Playwright penuh | Tidak butuh akun | Tidak ada |
 | 2 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
-| 3 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 4 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 5 | Wallet Devnet berisi saldo | SOL Devnet gratis dari faucet web, yang memakai CAPTCHA | Pembayaran nyata, NFT nyata |
-| 6 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
-| 7 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
-| 8 | Repo publik, pernyataan di Devpost, lalu submit | Akun pemilik proyek | Tidak ada |
+| 3 | Check-in lomba di MLH | Akun pemilik proyek | Tidak ada |
+| 4 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
+| 5 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
+| 6 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
+| 7 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
+| 8 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
+| 9 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
 
 Saldo Devnet hanya membuka uji pembayaran dan NFT. Login, deploy, uji di HP, video, dan submit tetap harus dikerjakan terpisah. Wallet yang butuh saldo adalah wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat.
 
 Satu item menunggu pihak luar, yaitu GO-2026-5932 di `golang.org/x/crypto`.
+
+### Jadwal lomba
+
+Sumbernya [halaman event MLH](https://events.mlh.com/events/15200-solana-hackathon), dicek 7 November 2026. Lomba sudah berjalan, dan pengumpulan memakai [halaman submit MLH](https://www.mlh.com/events/solana-hackathon/submissions/new), bukan Devpost.
+
+| Acara | ET | WIB |
+| --- | --- | --- |
+| Hacking mulai | Jumat 12:00 | Sabtu 7 November 00:00 |
+| Initial submission | Minggu 10:00 | Minggu 8 November 22:00 |
+| Hacking selesai dan final submission | Minggu 11:45 | Minggu 8 November 23:45 |
+
+Halaman submit MLH menulis batas 13:00 EST, atau Senin 01:00 WIB, jadi berbeda dari jadwal di atas. Panduan lokal menulis 21:00 dan 22:45 WIB. Yang dipakai tetap batas paling awal, yaitu Minggu 21:00 WIB.
 
 ## Aturan selesai
 
@@ -316,8 +329,10 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit
-- [ ] Repo dibuat publik sebelum submit Devpost
+- [ ] Check-in lomba di [halaman MLH](https://events.mlh.io/events/15200-solana-hackathon/register). Statusnya belum dicek karena butuh login
+- [ ] Repo dibuat publik sebelum submit
 - [x] Pernyataan template di README
 - [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
-- [ ] Pernyataan AI dan template di Devpost
-- [ ] Submit di Devpost dengan tautan repo dan video demo
+- [ ] Pernyataan AI dan template di halaman submit MLH
+- [ ] Initial submission di halaman MLH dengan tautan repo dan video demo
+- [ ] Final submission di halaman MLH

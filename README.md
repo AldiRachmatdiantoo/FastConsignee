@@ -1,7 +1,7 @@
 # PRD FastConsignee
 
 Nov 6, 2026
-FastConsignee adalah kasir untuk toko konsinyasi: pembeli membayar sekali, lalu bagian tiap penitip dan komisi toko terkirim dalam satu transaksi Solana. Versi hackathon berjalan di Devnet dan harus terkumpul di Devpost sebelum Nov 8, 2026, pukul 21:00 WIB.
+FastConsignee adalah kasir untuk toko konsinyasi: pembeli membayar sekali, lalu bagian tiap penitip dan komisi toko terkirim dalam satu transaksi Solana. Versi hackathon berjalan di Devnet dan harus terkumpul di halaman submit MLH sebelum Nov 8, 2026, pukul 21:00 WIB.
 
 ## Latar belakang
 
@@ -612,7 +612,7 @@ Jadwal ini hanya checkpoint, jadi pekerjaan boleh selesai lebih cepat. Batas ama
 | Sabtu malam | Supabase Auth, peran, penautan wallet, dasbor penitip |
 | Minggu pagi | Refund dan potongan, cache, rate limit, test lanjutan |
 | Minggu siang | Uji demo 5 kali, README, rekam video |
-| Minggu sore | Submit ke Devpost |
+| Minggu sore | Submit di halaman MLH |
 
 - **Kalau uji Transaction Request belum lolos sampai Sabtu pagi:** pindah ke tombol wallet adapter.
 - **Kalau waktunya mepet:** potong load test, cache, dan diskon lebih dulu.
@@ -723,7 +723,7 @@ Pertanyaan pertama perlu diputuskan sebelum kode backend dipakai untuk pengumpul
 
 - [ ] Apakah kode yang dibuat sebelum opening boleh dipakai? Contest Terms MLH untuk Fall 2025 sampai Spring 2026 menyatakan semua pekerjaan harus dilakukan selama acara, dan pekerjaan sebelum acara bisa menggugurkan proyek. Aturan khusus acara ini belum terbaca, jadi kode backend disimpan di branch lokal dan belum di-push.
 - [x] Jam berapa batas resminya? Laman MLH menulis pengumpulan awal Minggu 22:00 WIB dan final Minggu 23:45 WIB. Acara dimulai Sabtu 00:00 WIB.
-- [x] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan Devpost. Template ada di bagian Kredit, dan penggunaan AI ada di bagian Penggunaan AI. Isinya masih perlu disalin ke Devpost saat submit.
+- [x] Bagaimana mencantumkan penggunaan AI? Panduan aturan MLH mewajibkan penggunaan AI dan framework ditulis rinci di README dan halaman submit. Template ada di bagian Kredit, dan penggunaan AI ada di bagian Penggunaan AI. Isinya masih perlu disalin ke halaman submit MLH saat submit.
 - [x] Dikerjakan solo atau tim? Solo.
 - [x] Pembayaran memakai SOL atau USDC? SOL di Devnet.
 - [ ] Apakah satu proyek boleh ikut Best Beginner Hack dan DeFi Track sekaligus?

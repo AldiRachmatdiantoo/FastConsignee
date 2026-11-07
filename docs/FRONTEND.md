@@ -15,7 +15,7 @@ Dokumen kerja frontend. Pilot memakainya untuk memutuskan arah, dan co-pilot mem
 - Co-pilot boleh mengusulkan apa saja, tetapi baru mengerjakan setelah pilot bilang jalan.
 - Satu item selesai kalau testing-nya lolos. Setelah itu backlog langsung diperbarui.
 - Commit hanya atas nama pilot, tanpa baris atribusi AI.
-- Penggunaan AI dan template pihak ketiga ditulis di README dan Devpost, sesuai aturan MLH.
+- Penggunaan AI dan template pihak ketiga ditulis di README dan halaman submit, sesuai aturan MLH.
 - Biaya harus nol. Kalau sebuah pilihan butuh biaya atau akun baru, pilot yang memutuskan.
 
 ## Keputusan
