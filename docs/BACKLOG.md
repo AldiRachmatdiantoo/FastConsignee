@@ -329,7 +329,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit
-- [ ] Check-in lomba di [halaman MLH](https://events.mlh.io/events/15200-solana-hackathon/register). Statusnya belum dicek karena butuh login
+- [ ] Check-in lomba di [halaman MLH](https://events.mlh.io/events/15200-solana-hackathon/register). Statusnya belum dicek karena butuh login. Halaman lomba tidak menulis check-in wajib, tetapi tahap ini ada di antara Register dan Submit Project, jadi dianggap wajib
 - [ ] Repo dibuat publik sebelum submit
 - [x] Pernyataan template di README
 - [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
