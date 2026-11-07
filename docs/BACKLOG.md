@@ -2,6 +2,25 @@
 
 Pekerjaan dicicil per fitur, dan backend dikerjakan lebih dulu. Satu item baru selesai kalau testing-nya lolos. Sumber kebutuhannya ada di [PRD](../README.md), dan kontraknya ada di [api/openapi.yaml](../api/openapi.yaml).
 
+## Sisa pekerjaan
+
+Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rincian tiap item ada di bagiannya masing-masing. Deploy didahulukan karena paling banyak membuka item lain.
+
+| Urutan | Pekerjaan | Butuh | Item yang ikut terbuka |
+| --- | --- | --- | --- |
+| 1 | Cek kasir di lebar 320 px, ulang Playwright penuh | Tidak butuh akun | Tidak ada |
+| 2 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
+| 3 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
+| 4 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
+| 5 | Wallet Devnet berisi saldo | SOL Devnet gratis dari faucet web, yang memakai CAPTCHA | Pembayaran nyata, NFT nyata |
+| 6 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
+| 7 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
+| 8 | Repo publik, pernyataan di Devpost, lalu submit | Akun pemilik proyek | Tidak ada |
+
+Saldo Devnet hanya membuka uji pembayaran dan NFT. Login, deploy, uji di HP, video, dan submit tetap harus dikerjakan terpisah. Wallet yang butuh saldo adalah wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat.
+
+Satu item menunggu pihak luar, yaitu GO-2026-5932 di `golang.org/x/crypto`.
+
 ## Aturan selesai
 
 - Kode mengikuti layer handler, service, dan repository di dalam folder fiturnya.
@@ -283,16 +302,22 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 - [x] `NewJWKSVerifier` belum tersentuh `go test`. Sekarang ada uji kunci ES256 dan RS256, serta token palsu
 - [x] `npm audit` frontend menemukan 18 celah moderate. Sekarang 0, setelah `jayson` dan `minimatch` dinaikkan lewat `overrides`
 - [x] `npm audit` folder `api` menemukan 4 high dan 2 moderate. Sekarang 0, karena `openapi-to-postmanv2` diganti generator sendiri di `api/scripts/postman.mjs`. Isi koleksinya sama, kecuali petunjuk pilihan nilai yang sekarang berbahasa Indonesia, teks kontak di deskripsi yang hilang, dan variabel baru `certificate_id`
+- [ ] Ulang Playwright penuh, 18 uji, di Edge dan WebKit setelah mockup HP diganti
 - [ ] `govulncheck` mencatat GO-2026-5932 di `golang.org/x/crypto`. Kode tidak memanggilnya, dan perbaikannya baru ada di versi pseudo
 
 ## Deploy
 
 Bagian ini butuh akun pemilik proyek.
 
+- [ ] Merge mockup HP ke `main`
 - [ ] Proyek Supabase, Google OAuth, dan migrasi
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
+- [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
+- [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
+- [ ] Video demo 1 sampai 2 menit
 - [ ] Repo dibuat publik sebelum submit Devpost
 - [x] Pernyataan template di README
 - [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
 - [ ] Pernyataan AI dan template di Devpost
+- [ ] Submit di Devpost dengan tautan repo dan video demo
