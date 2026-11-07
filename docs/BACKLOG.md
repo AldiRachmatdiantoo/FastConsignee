@@ -10,13 +10,12 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | --- | --- | --- | --- |
 | 1 | Cek kasir di lebar 320 px, ulang Playwright penuh | Tidak butuh akun | Tidak ada |
 | 2 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
-| 3 | Check-in lomba di MLH | Akun pemilik proyek | Tidak ada |
-| 4 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 5 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 6 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
-| 7 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
-| 8 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
-| 9 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
+| 3 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
+| 4 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
+| 5 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
+| 6 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
+| 7 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
+| 8 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
 
 Saldo Devnet hanya membuka uji pembayaran dan NFT. Login, deploy, uji di HP, video, dan submit tetap harus dikerjakan terpisah. Wallet yang butuh saldo adalah wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat.
 
@@ -329,7 +328,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit
-- [ ] Check-in lomba di [halaman MLH](https://events.mlh.io/events/15200-solana-hackathon/register). Statusnya belum dicek karena butuh login. Halaman lomba tidak menulis check-in wajib, tetapi tahap ini ada di antara Register dan Submit Project, jadi dianggap wajib
+- [x] Check-in lomba di halaman MLH. Register dan Check In sudah tercentang pada 7 November 2026, dan tahap berikutnya Submit Project
 - [ ] Repo dibuat publik sebelum submit
 - [x] Pernyataan template di README
 - [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
