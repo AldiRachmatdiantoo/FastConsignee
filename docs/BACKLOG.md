@@ -327,7 +327,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Proyek Vercel
 - [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
-- [ ] Video demo 1 sampai 2 menit
+- [ ] Video demo 1 sampai 2 menit. Syarat ini baru tertulis di panduan lokal, dan halaman resmi MLH yang terbuka tanpa login tidak menyebutnya. Kepastiannya ada di form submit, yang butuh login
 - [x] Check-in lomba di halaman MLH. Register dan Check In sudah tercentang pada 7 November 2026, dan tahap berikutnya Submit Project
 - [ ] Repo dibuat publik sebelum submit
 - [x] Pernyataan template di README
