@@ -39,7 +39,6 @@ test("HP di landing page memakai layar asli dan satu status di tiap layar", asyn
   }
 });
 
-// Efek yang mengikuti scroll sebagian dihitung di thread utama, dan di HP layar sentuh gerakannya tertinggal dari jari sehingga terlihat bergetar.
 // Animasi ikut scroll menyala di HP dan desktop. Animasi yang menggeser elemen hanya memakai translate, scale, rotate,
 // atau opacity, dan tiap properti hanya punya satu animasi per elemen, supaya GPU menjalankannya seiring jari dan HP tidak bergetar.
 test("landing page beranimasi di layar sentuh dan desktop dengan animasi yang bisa dijalankan GPU", async ({ browser }) => {
@@ -49,6 +48,15 @@ test("landing page beranimasi di layar sentuh dan desktop dengan animasi yang bi
     await page.goto("/");
     test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
     await expect(page.locator("html")).toHaveAttribute("data-8b-live", "");
+    // Judul dipecah per baris dan diberi animasi reveal saat mendekati layar, jadi semua judul didatangi dulu.
+    await page.evaluate(async () => {
+      for (const element of document.querySelectorAll("[data-8b-split]")) {
+        element.scrollIntoView({ block: "center" });
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
+      scrollTo(0, 0);
+    });
+    await expect(page.locator('[data-8b-motion~="captionIn"] .line__in').first()).toBeAttached();
     const report = await page.evaluate(() => {
       const moving = new Set(["translate", "scale", "rotate", "transform", "opacity"]);
       const meta = new Set(["offset", "computedOffset", "easing", "composite"]);
@@ -56,7 +64,16 @@ test("landing page beranimasi di layar sentuh dan desktop dengan animasi yang bi
       const problems: string[] = [];
       let count = 0;
       for (const animation of document.getAnimations()) {
-        if (animation.timeline === document.timeline || !(animation.effect instanceof KeyframeEffect)) {
+        if (!(animation.effect instanceof KeyframeEffect)) {
+          continue;
+        }
+        // Safari menjalankan animasi waktu ber-easing linear() atau steps() di thread utama, jadi reveal yang terpicu saat scroll ikut tersendat.
+        // CSS animation menaruh animation-timing-function di tiap keyframe, bukan di timing efeknya.
+        if (animation.timeline === document.timeline) {
+          const easings = [animation.effect.getTiming().easing, ...animation.effect.getKeyframes().map((frame) => frame.easing)];
+          if (easings.some((easing) => /linear\(|steps\(/.test(easing ?? ""))) {
+            problems.push(`${(animation as CSSAnimation).animationName} memakai easing linear() atau steps() pada animasi waktu`);
+          }
           continue;
         }
         count++;
@@ -88,6 +105,82 @@ test("landing page beranimasi di layar sentuh dan desktop dengan animasi yang bi
   }
 });
 
+// Di Safari iPhone, elemen sticky di dalam induk yang memotong overflow bergetar saat toolbar mengecil atau membesar.
+// Clip boleh ada di elemen sticky itu sendiri atau di dalamnya, tidak di induknya.
+test("elemen sticky di landing tidak berada di dalam induk yang memotong overflow", async ({ browser }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1024, height: 768 }]) {
+    const context = await browser.newContext({ viewport, hasTouch: true, isMobile: viewport.width < 768 });
+    const page = await context.newPage();
+    await page.goto("/");
+    test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
+    await expect(page.locator("html")).toHaveAttribute("data-8b-live", "");
+    const report = await page.evaluate(() => {
+      const clipped: string[] = [];
+      let sticky = 0;
+      for (const element of document.querySelectorAll("body *")) {
+        if (getComputedStyle(element).position !== "sticky") {
+          continue;
+        }
+        sticky++;
+        for (let node = element.parentElement; node && node !== document.body; node = node.parentElement) {
+          const style = getComputedStyle(node);
+          if (style.overflowX !== "visible" || style.overflowY !== "visible") {
+            clipped.push(`${element.className} di dalam ${node.id || node.className}`);
+          }
+        }
+      }
+      return { sticky, clipped };
+    });
+    expect(report.sticky).toBeGreaterThanOrEqual(4);
+    expect(report.clipped, `lebar ${viewport.width} px`).toEqual([]);
+    await context.close();
+  }
+});
+
+// Kartu contoh aturan memudar di atas layar HP saat masuk, jadi saat di-scroll balik ia mengecil ke HP sambil memudar, tidak hilang mendadak.
+test("kartu Every rupiah muncul dan hilang perlahan saat di-scroll", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  await page.goto("/");
+  test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
+  await expect(page.locator("#tune")).toHaveAttribute("data-handoff", "");
+  const opacityAt = async (share: number) => {
+    await page.evaluate((share) => {
+      const tune = document.getElementById("tune")!;
+      scrollTo(0, tune.getBoundingClientRect().top + scrollY - innerHeight * (1 - share));
+    }, share);
+    await page.waitForTimeout(150);
+    return page.evaluate(() => Number(getComputedStyle(document.querySelector("#tune .tune__stage")!).opacity));
+  };
+  for (const pass of ["turun", "naik"]) {
+    const opacity = new Map<number, number>();
+    for (const share of pass === "turun" ? [0, 0.1, 0.4] : [0.4, 0.1, 0]) {
+      opacity.set(share, await opacityAt(share));
+    }
+    expect(opacity.get(0), `saat ${pass}`).toBeLessThanOrEqual(0.01);
+    expect(opacity.get(0.1), `saat ${pass}`).toBeGreaterThan(0.2);
+    expect(opacity.get(0.1), `saat ${pass}`).toBeLessThan(0.8);
+    expect(opacity.get(0.4), `saat ${pass}`).toBe(1);
+  }
+  await context.close();
+});
+
+test("label suara di HP tidak tertimpa gelombang", async ({ browser }) => {
+  for (const width of [320, 390]) {
+    const context = await browser.newContext({ viewport: { width, height: 800 }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    const gap = await page.evaluate(() => {
+      const label = document.querySelector("#listen .listen__panel--voice .listen__label")!.getBoundingClientRect();
+      const wave = document.querySelector("#listen .listen__panel--voice .listen__wave")!.getBoundingClientRect();
+      return wave.left - label.right;
+    });
+    expect(gap, `lebar ${width} px`).toBeGreaterThanOrEqual(4);
+    await context.close();
+  }
+});
+
 test("mockup HP di bagian kasir tidak menutupi teks dan muat di layar HP", async ({ browser }) => {
   for (const viewport of [{ width: 390, height: 844 }, { width: 360, height: 640 }]) {
     const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true });
@@ -101,7 +194,7 @@ test("mockup HP di bagian kasir tidak menutupi teks dan muat di layar HP", async
       const phone = document.querySelector("#calls .phone")!.getBoundingClientRect();
       const list = getComputedStyle(document.querySelector("#calls .calls__list")!);
       return {
-        band: band.content !== "none" && band.backgroundImage.includes("gradient") && parseFloat(band.width) >= innerWidth,
+        band: band.content !== "none" && band.backgroundImage.includes("gradient") && parseFloat(band.width) >= document.documentElement.clientWidth - 1,
         phoneHeight: phone.height,
         phoneBottom: phone.bottom,
         listPadding: parseFloat(list.paddingBottom),
@@ -139,6 +232,37 @@ test("halaman login muat di layar dan bisa kembali ke landing page", async ({ br
 
     await page.getByRole("link", { name: "Kembali ke beranda" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Every sale, split instantly." })).toBeVisible();
+  }
+});
+
+// Foto latar yang membesar saat halaman login dibuka tidak boleh membuat halaman sempat bisa di-scroll,
+// karena scrollbar muncul sebentar lalu hilang dan seluruh isi halaman bergeser.
+test("halaman login tidak sempat bisa di-scroll saat animasi pembuka", async ({ browser }) => {
+  for (const viewport of [{ width: 1920, height: 990 }, { width: 1366, height: 768 }]) {
+    const context = await browser.newContext({ viewport });
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const samples: number[] = [];
+      Object.assign(window, { scrollSamples: samples });
+      const start = performance.now();
+      const tick = () => {
+        const root = document.documentElement;
+        if (root) {
+          samples.push(root.scrollHeight - root.clientHeight);
+        }
+        if (performance.now() - start < 1500) {
+          requestAnimationFrame(tick);
+        }
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+    await page.waitForTimeout(1600);
+    const samples = await page.evaluate(() => (window as unknown as { scrollSamples: number[] }).scrollSamples);
+    expect(samples.length).toBeGreaterThan(10);
+    expect(Math.max(...samples), `${viewport.width} x ${viewport.height}`).toBeLessThanOrEqual(0);
+    await context.close();
   }
 });
 

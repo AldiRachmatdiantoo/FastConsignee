@@ -13,7 +13,9 @@
   display: flex;
   flex-direction: column;
   min-height: max(100svh, 40rem);
-  overflow-x: clip;
+  /* Foto yang membesar saat halaman dibuka tidak boleh melewati tepi bawah, karena scrollbar akan muncul sebentar lalu hilang
+     dan seluruh halaman bergeser. Isi tetap aman karena tinggi .login mengikuti isinya. */
+  overflow: clip;
   background: var(--login-ink);
   color: var(--login-white);
 }
