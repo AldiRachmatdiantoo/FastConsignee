@@ -27,7 +27,7 @@ export class ApiError extends Error {
 // ApiUnavailableError berarti jawaban API tidak sampai, misalnya server mati.
 export class ApiUnavailableError extends Error {
   constructor() {
-    super("API tidak bisa dihubungi. Coba lagi sebentar lagi.");
+    super("The API cannot be reached. Try again shortly.");
     this.name = "ApiUnavailableError";
   }
 }

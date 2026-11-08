@@ -39,14 +39,14 @@ function LinkWallet({ connectFailed, resetConnect }: LinkWalletProps) {
   const { me } = session;
   const address = publicKey?.toBase58() ?? null;
   const linked = me.wallet?.address ?? null;
-  const message = error ?? (connectFailed ? "Wallet tidak bisa dihubungkan. Buka wallet, lalu coba lagi." : null);
+  const message = error ?? (connectFailed ? "The wallet could not connect. Open the wallet, then try again." : null);
 
   async function submit() {
     if (!address) {
       return;
     }
     if (!signMessage) {
-      setError("Wallet ini belum bisa menandatangani pesan. Pakai Phantom.");
+      setError("This wallet cannot sign messages. Use Phantom.");
       return;
     }
     setBusy(true);
@@ -63,36 +63,36 @@ function LinkWallet({ connectFailed, resetConnect }: LinkWalletProps) {
 
   return (
     <section className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold tracking-tight">Tautkan wallet</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Link wallet</h1>
       <p className="mt-2 text-muted-foreground">
         {me.role === "store_owner"
-          ? "Wallet ini menerima komisi toko dan membayar refund."
-          : "Wallet ini menerima bagian penjualanmu."}{" "}
-        Menandatangani pesan tidak memakai saldo.
+          ? "This wallet receives the shop commission and pays refunds."
+          : "This wallet receives your share of each sale."}{" "}
+        Signing the message costs no balance.
       </p>
 
       <div className="mt-6 grid gap-4 rounded-xl border border-border bg-card p-5">
         {linked ? (
           <Notice tone="success">
-            Wallet tertaut: <span className="font-mono">{shortAddress(linked)}</span>
+            Linked wallet: <span className="font-mono">{shortAddress(linked)}</span>
           </Notice>
         ) : null}
         {message ? <Notice tone="danger">{message}</Notice> : null}
 
         {address ? (
           <div>
-            <p className="text-sm text-muted-foreground">Wallet terhubung</p>
+            <p className="text-sm text-muted-foreground">Wallet connected</p>
             <p className="mt-1 font-mono text-sm break-all">{address}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {linked === address ? (
-                <Button onClick={() => router.replace(homePath(me))}>Lanjut ke dasbor</Button>
+                <Button onClick={() => router.replace(homePath(me))}>Continue to dashboard</Button>
               ) : (
                 <Button onClick={() => void submit()} disabled={busy}>
-                  {busy ? "Menunggu wallet..." : "Tandatangani dan tautkan"}
+                  {busy ? "Waiting for wallet..." : "Sign and link"}
                 </Button>
               )}
               <Button variant="secondary" onClick={() => void disconnect()} disabled={busy}>
-                Ganti wallet
+                Switch wallet
               </Button>
             </div>
           </div>

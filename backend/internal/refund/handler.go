@@ -50,7 +50,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	var v api.Validator
 	if req.OrderLineID == nil {
-		v.Add("order_line_id", "Wajib diisi.")
+		v.Add("order_line_id", "Required.")
 	}
 	if req.Reason != nil {
 		v.Text("reason", *req.Reason, 0, 500)

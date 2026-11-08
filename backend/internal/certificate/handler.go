@@ -48,15 +48,15 @@ func (h *Handler) Metadata(w http.ResponseWriter, r *http.Request) {
 	}
 	attributes := []attribute{{"Barang", d.Item}, {"Toko", d.Store}}
 	if d.ConfirmedAt != nil {
-		attributes = append(attributes, attribute{"Tanggal pembelian", d.ConfirmedAt.UTC().Format(time.DateOnly)})
+		attributes = append(attributes, attribute{"Purchase date", d.ConfirmedAt.UTC().Format(time.DateOnly)})
 	}
 	if d.Signature != nil {
-		attributes = append(attributes, attribute{"Bukti pembayaran", *d.Signature})
+		attributes = append(attributes, attribute{"Payment proof", *d.Signature})
 	}
 	api.JSON(w, http.StatusOK, metadataResponse{
 		Name:        solana.CertificateName(d.Item),
 		Symbol:      solana.CertificateSymbol,
-		Description: fmt.Sprintf("Sertifikat keaslian %s dari %s.", d.Item, d.Store),
+		Description: fmt.Sprintf("Certificate of authenticity for %s from %s.", d.Item, d.Store),
 		Image:       h.iconURL,
 		Attributes:  attributes,
 	})

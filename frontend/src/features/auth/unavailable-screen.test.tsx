@@ -7,14 +7,14 @@ describe("UnavailableScreen", () => {
   it("menampilkan pesan dan mencoba lagi sekali per klik", async () => {
     let finish = () => {};
     const onRetry = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
-    render(<UnavailableScreen message="API tidak bisa dihubungi." onRetry={onRetry} />);
+    render(<UnavailableScreen message="The API cannot be reached." onRetry={onRetry} />);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("API tidak bisa dihubungi.");
-    await userEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("The API cannot be reached.");
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Mencoba..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Trying..." })).toBeDisabled();
     finish();
-    expect(await screen.findByRole("button", { name: "Coba lagi" })).toBeEnabled();
+    expect(await screen.findByRole("button", { name: "Try again" })).toBeEnabled();
   });
 });

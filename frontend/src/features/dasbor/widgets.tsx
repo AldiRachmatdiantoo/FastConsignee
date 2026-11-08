@@ -14,12 +14,12 @@ export function Meter({ percent }: { percent: number }) {
 
 function deltaText(value: Change, baseline: string): string {
   if (value.direction === "flat") {
-    return `Sama dengan ${baseline}`;
+    return `Same as ${baseline}`;
   }
   if (value.percent === null) {
-    return `Belum ada pembanding dari ${baseline}`;
+    return `No comparison with ${baseline}`;
   }
-  return `${value.direction === "up" ? "Naik" : "Turun"} ${value.percent}% dari ${baseline}`;
+  return `${value.direction === "up" ? "Up" : "Down"} ${value.percent}% from ${baseline}`;
 }
 
 type StatCardProps = {
@@ -98,7 +98,7 @@ export function DailyBars({ hero, heroLabel, days }: DailyBarsProps) {
   const highest = Math.max(...days.map(({ value }) => value));
   return (
     <Card className="grid grid-cols-1 content-start gap-4">
-      <h2 className="font-semibold">7 hari terakhir</h2>
+      <h2 className="font-semibold">Last 7 days</h2>
       <div>
         <p className="text-3xl font-medium tracking-tight break-words">{hero}</p>
         <p className="text-sm text-muted-foreground">{heroLabel}</p>

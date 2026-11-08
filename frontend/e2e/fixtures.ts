@@ -184,7 +184,7 @@ export async function openActor(browser: Browser, keypair = Keypair.generate()):
 export async function login(page: Page, name: string) {
   await page.goto("/login");
   await page.getByRole("button", { name: new RegExp(name) }).click();
-  await expect(page.getByRole("button", { name: "Keluar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
   await settled(page);
 }
 
@@ -192,8 +192,8 @@ export async function login(page: Page, name: string) {
 export async function linkWallet(page: Page) {
   await page.goto("/wallet");
   await page.getByRole("button", { name: "Test Wallet" }).click();
-  await page.getByRole("button", { name: "Tandatangani dan tautkan" }).click();
-  await expect(page.getByText("Wallet tertaut:")).toBeVisible();
+  await page.getByRole("button", { name: "Sign and link" }).click();
+  await expect(page.getByText("Linked wallet:")).toBeVisible();
   await settled(page);
 }
 
@@ -201,15 +201,15 @@ export async function linkWallet(page: Page) {
 export async function paidOrder(browser: Browser, item: string) {
   const cashier = await openActor(browser);
   const buyer = await openActor(browser);
-  await login(cashier.page, "Kasir Demo");
+  await login(cashier.page, "Demo Cashier");
   await cashier.page.getByRole("button", { name: new RegExp(item) }).click();
-  await cashier.page.getByRole("button", { name: "Buat QR pembayaran" }).click();
-  const href = await cashier.page.getByRole("link", { name: "Buka layar bayar di browser" }).getAttribute("href");
+  await cashier.page.getByRole("button", { name: "Create payment QR" }).click();
+  const href = await cashier.page.getByRole("link", { name: "Open the pay screen in a browser" }).getAttribute("href");
   await buyer.page.goto(href ?? "");
-  await buyer.page.getByRole("button", { name: "Bayar dengan wallet" }).click();
+  await buyer.page.getByRole("button", { name: "Pay with wallet" }).click();
   await buyer.page.getByRole("button", { name: "Test Wallet" }).click();
-  await buyer.page.getByRole("button", { name: "Bayar sekali" }).click();
-  await expect(buyer.page.getByText("Pembayaran terkonfirmasi. Terima kasih.")).toBeVisible({ timeout: 30_000 });
+  await buyer.page.getByRole("button", { name: "Pay once" }).click();
+  await expect(buyer.page.getByText("Payment confirmed. Thank you.")).toBeVisible({ timeout: 30_000 });
   await cashier.context.close();
   await buyer.context.close();
 }

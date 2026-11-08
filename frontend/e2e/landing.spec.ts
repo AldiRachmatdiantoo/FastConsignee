@@ -30,12 +30,12 @@ test("HP di landing page memakai layar asli dan satu status di tiap layar", asyn
   await expect(phone).toHaveAttribute("role", "img");
   await expect(phone.locator("[data-step]")).toHaveCount(4);
   const text = (await phone.textContent()) ?? "";
-  expect(text).toContain("Buat QR pembayaran");
-  expect(text).toContain("Bayar sekali");
-  expect(text).not.toMatch(/Demo shop|Waiting for payment|Approved once/);
+  expect(text).toContain("Create payment QR");
+  expect(text).toContain("Pay once");
+  expect(text).not.toMatch(/Demo shop|Approved once/);
   for (const screen of await phone.locator(".phone__page").all()) {
     const lines = (await screen.textContent()) ?? "";
-    expect(lines.includes("Menunggu pembayaran") && lines.includes("terkonfirmasi")).toBe(false);
+    expect(lines.includes("Waiting for payment") && lines.includes("Payment confirmed")).toBe(false);
   }
 });
 
@@ -260,14 +260,14 @@ test("halaman login muat di layar dan bisa kembali ke landing page", async ({ br
     const { page, errors } = await openActor(browser);
     await page.setViewportSize(size);
     await page.goto("/login");
-    await expect(page.getByRole("heading", { level: 1, name: "Setiap penjualan, langsung terbagi." })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Every sale, split instantly." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
     expect(errors).toEqual([]);
 
-    await page.getByRole("link", { name: "Kembali ke beranda" }).click();
+    await page.getByRole("link", { name: "Back to home" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Every sale, split instantly." })).toBeVisible();
   }
 });
@@ -301,7 +301,7 @@ test("halaman login tidak sempat bisa di-scroll saat animasi pembuka", async ({ 
     });
     type Sampling = { scrollSampling: { samples: number[]; done: boolean } };
     await page.goto("/login");
-    await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
     await page.waitForFunction(() => (window as unknown as Sampling).scrollSampling.done);
     const samples = await page.evaluate(() => (window as unknown as Sampling).scrollSampling.samples);
     expect(samples.length).toBeGreaterThan(10);
@@ -314,7 +314,7 @@ test("latar di sekitar halaman login di HP gelap, bukan putih", async ({ browser
   const context = await browser.newContext({ viewport: { width: 390, height: 780 }, isMobile: true, hasTouch: true });
   const page = await context.newPage();
   await page.goto("/login");
-  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
   const result = await page.evaluate(() => {
     const login = document.querySelector(".login") as HTMLElement;
     return {
@@ -337,7 +337,7 @@ test("halaman login di HP kembali ke atas saat di-refresh", async ({ browser }) 
   const context = await browser.newContext({ viewport: { width: 390, height: 560 }, isMobile: true, hasTouch: true });
   const page = await context.newPage();
   await page.goto("/login");
-  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   expect(maxScroll).toBeGreaterThan(0);
   // Heading sudah tampil dari HTML server sebelum React aktif, jadi tunggu halaman tenang dulu supaya scroll tidak didahului hydration.
@@ -347,7 +347,7 @@ test("halaman login di HP kembali ke atas saat di-refresh", async ({ browser }) 
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
   await page.reload();
-  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => scrollY)).toBe(0);
   await expect(page.locator(".login__nav")).toBeInViewport();
@@ -358,8 +358,8 @@ test("isi halaman login tetap terbaca tanpa animasi", async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.goto("/login");
-  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Kasir Demo/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Demo Cashier/ })).toBeVisible();
   const animations = await page.evaluate(() => document.getAnimations().length);
   expect(animations).toBe(0);
   await context.close();
@@ -381,9 +381,9 @@ test("alamat yang salah memberi halaman 404 berbahasa Indonesia", async ({ page 
   for (const path of ["/tidak-ada", "/bayar/bukan-uuid"]) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(404);
-    await expect(page.getByRole("heading", { name: "Halaman tidak ditemukan" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
   }
-  await page.getByRole("link", { name: "Kembali ke beranda" }).click();
+  await page.getByRole("link", { name: "Back to home" }).click();
   await expect(page).toHaveURL(/\/$/);
 });
 

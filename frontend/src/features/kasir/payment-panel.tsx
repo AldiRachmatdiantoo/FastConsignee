@@ -18,8 +18,8 @@ type FailureCode = components["schemas"]["FailureCode"];
 const POLL_MS = 2000;
 
 const FAILURE_MESSAGES: Record<FailureCode, string> = {
-  TRANSACTION_FAILED: "Transaksi gagal di jaringan, jadi tidak ada saldo yang berubah.",
-  VALIDATION_MISMATCH: "Isi transaksi tidak cocok dengan order. Hubungi pemilik toko sebelum menyerahkan barang.",
+  TRANSACTION_FAILED: "The transaction failed on the network, so no balance changed.",
+  VALIDATION_MISMATCH: "The transaction does not match the order. Contact the store owner before handing over the goods.",
 };
 
 type PaymentPanelProps = {
@@ -50,7 +50,7 @@ export function PaymentPanel({ order, onRetry, onDone }: PaymentPanelProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card className="text-center">
-        <h2 className="text-lg font-semibold">Pembayaran</h2>
+        <h2 className="text-lg font-semibold">Payment</h2>
         <p className="mt-2 text-3xl font-bold">{formatRupiah(order.total_idr)}</p>
         <p className="font-mono text-sm text-muted-foreground">{formatSol(order.total_lamports)}</p>
 
@@ -59,9 +59,9 @@ export function PaymentPanel({ order, onRetry, onDone }: PaymentPanelProps) {
             <div className="mt-4">
               <PaymentQr value={order.payment.solana_pay_url} />
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Pindai dengan Phantom yang diatur ke Devnet.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Scan with Phantom set to Devnet.</p>
             <p role="status" className="mt-2 font-semibold">
-              Menunggu pembayaran · {formatCountdown(secondsUntil(status.expires_at, now))}
+              Waiting for payment · {formatCountdown(secondsUntil(status.expires_at, now))}
             </p>
             <a
               href={`/bayar/${order.id}`}
@@ -69,39 +69,39 @@ export function PaymentPanel({ order, onRetry, onDone }: PaymentPanelProps) {
               rel="noreferrer"
               className="mt-2 inline-block text-sm font-semibold text-accent-foreground underline underline-offset-4"
             >
-              Buka layar bayar di browser
+              Open the pay screen in a browser
             </a>
           </>
         ) : null}
 
         {status.status === "confirmed" ? (
           <div className="mt-4 grid gap-3">
-            <Notice tone="success">Pembayaran terkonfirmasi. Barang boleh diserahkan.</Notice>
+            <Notice tone="success">Payment confirmed. The goods can be handed over.</Notice>
             {status.explorer_url ? <ExplorerLink href={status.explorer_url} /> : null}
-            <Button onClick={onDone}>Transaksi baru</Button>
+            <Button onClick={onDone}>New transaction</Button>
           </div>
         ) : null}
 
         {status.status === "expired" ? (
           <div className="mt-4 grid gap-3">
-            <Notice tone="danger">QR kedaluwarsa, dan stok sudah dilepas lagi.</Notice>
-            <Button onClick={onRetry}>Buat QR baru</Button>
+            <Notice tone="danger">The QR expired, and the stock was released.</Notice>
+            <Button onClick={onRetry}>Create a new QR</Button>
           </div>
         ) : null}
 
         {status.status === "failed" ? (
           <div className="mt-4 grid gap-3">
             <Notice tone="danger">
-              {status.failure_code ? FAILURE_MESSAGES[status.failure_code] : "Pembayaran gagal."}
+              {status.failure_code ? FAILURE_MESSAGES[status.failure_code] : "Payment failed."}
             </Notice>
-            <Button onClick={onRetry}>Coba lagi</Button>
+            <Button onClick={onRetry}>Try again</Button>
           </div>
         ) : null}
       </Card>
 
       <Card className="grid content-start gap-5">
         <div>
-          <h2 className="text-lg font-semibold">Rincian pembagian</h2>
+          <h2 className="text-lg font-semibold">Split breakdown</h2>
           <SplitTable recipients={order.recipients} />
         </div>
         <BalancePanel recipients={order.recipients} confirmed={status.status === "confirmed"} />

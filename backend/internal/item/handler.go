@@ -67,7 +67,7 @@ func parseFilter(r *http.Request) (Filter, error) {
 	if s := q.Get("consignor_id"); s != "" {
 		id, err := uuid.Parse(s)
 		if err != nil {
-			v.Add("consignor_id", "Harus berupa UUID.")
+			v.Add("consignor_id", "Must be a UUID.")
 		}
 		f.ConsignorID = &id
 	}
@@ -75,7 +75,7 @@ func parseFilter(r *http.Request) (Filter, error) {
 	if s := q.Get("active"); s != "" {
 		b, err := strconv.ParseBool(s)
 		if err != nil {
-			v.Add("active", "Harus true atau false.")
+			v.Add("active", "Must be true or false.")
 		}
 		active = b
 	}
@@ -135,25 +135,25 @@ type createRequest struct {
 func (c createRequest) validate() error {
 	var v api.Validator
 	if c.Name == nil {
-		v.Add("name", "Wajib diisi.")
+		v.Add("name", "Required.")
 	} else {
 		v.Text("name", *c.Name, 1, 200)
 	}
 	if c.PriceIDR == nil {
-		v.Add("price_idr", "Wajib diisi.")
+		v.Add("price_idr", "Required.")
 	} else {
 		v.Range("price_idr", *c.PriceIDR, 1, maxPriceIDR)
 	}
 	if c.CommissionBps == nil {
-		v.Add("commission_bps", "Wajib diisi.")
+		v.Add("commission_bps", "Required.")
 	} else {
 		v.Range("commission_bps", int64(*c.CommissionBps), 0, maxBps)
 	}
 	if c.ConsignorID == nil {
-		v.Add("consignor_id", "Wajib diisi.")
+		v.Add("consignor_id", "Required.")
 	}
 	if c.StockOnHand == nil {
-		v.Add("stock_on_hand", "Wajib diisi.")
+		v.Add("stock_on_hand", "Required.")
 	} else {
 		v.Range("stock_on_hand", int64(*c.StockOnHand), 0, maxStock)
 	}
@@ -215,7 +215,7 @@ func (u updateRequest) validate() error {
 		empty = false
 	}
 	if empty {
-		v.Add("body", "Kirim minimal satu kolom.")
+		v.Add("body", "Send at least one field.")
 	}
 	return v.Err()
 }

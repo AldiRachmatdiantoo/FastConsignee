@@ -33,7 +33,7 @@ describe("readBalances", () => {
     await expect(readBalances(["baru"])).resolves.toEqual({ baru: BigInt(0) });
   });
 
-  it("gagal kalau RPC menjawab error", async () => {
+  it("gagal kalau RPC responded error", async () => {
     answer({ error: { message: "Too many requests" } }, 429);
 
     await expect(readBalances(["a"])).rejects.toThrow("Too many requests");

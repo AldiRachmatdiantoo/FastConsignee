@@ -20,10 +20,10 @@ export function UnavailableScreen({ message, onRetry }: Props) {
 
   return (
     <main className="mx-auto grid min-h-dvh max-w-lg content-center gap-3 px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Belum tersambung</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Not connected yet</h1>
       <Notice tone="danger">{message}</Notice>
       <Button className="justify-self-start" disabled={busy} onClick={() => void retry()}>
-        {busy ? "Mencoba..." : "Coba lagi"}
+        {busy ? "Trying..." : "Try again"}
       </Button>
     </main>
   );

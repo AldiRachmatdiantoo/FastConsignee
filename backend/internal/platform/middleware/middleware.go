@@ -170,5 +170,5 @@ func RateHeaders(w http.ResponseWriter, d Decision) {
 // Reject menulis jawaban 429 dengan bentuk error yang diberikan.
 func Reject(w http.ResponseWriter, r *http.Request, d Decision) {
 	w.Header().Set("Retry-After", strconv.Itoa(max(d.RetryAfterSeconds, 1)))
-	api.Error(w, r, apperr.New(apperr.RateLimited, "Terlalu banyak permintaan. Coba lagi sebentar lagi."))
+	api.Error(w, r, apperr.New(apperr.RateLimited, "Too many requests. Try again shortly."))
 }

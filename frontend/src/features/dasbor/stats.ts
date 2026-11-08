@@ -16,9 +16,9 @@ export function monthPeriod(now: Date, offset = 0): Period {
 
 function dayLabel(date: Date, daysAgo: number): string {
   if (daysAgo === 0) {
-    return "Hari ini";
+    return "Today";
   }
-  return daysAgo === 1 ? "Kemarin" : formatDay(date);
+  return daysAgo === 1 ? "Yesterday" : formatDay(date);
 }
 
 // lastDays mengembalikan hari ini lebih dulu, lalu hari-hari sebelumnya.

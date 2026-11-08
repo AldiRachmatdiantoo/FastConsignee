@@ -70,7 +70,7 @@ describe("login Google", () => {
     signInWithOAuth.mockResolvedValue({ error: new Error("ditolak") });
     const google = await loadGoogle();
 
-    await expect(google.signInWithGoogle()).resolves.toBe("Login Google gagal. Coba lagi.");
+    await expect(google.signInWithGoogle()).resolves.toBe("Google sign-in failed. Try again.");
   });
 
   it("mengirim token awal dan token yang diperbarui", async () => {

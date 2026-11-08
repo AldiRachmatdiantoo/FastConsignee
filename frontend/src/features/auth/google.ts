@@ -6,7 +6,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const STORAGE_KEY = "fastconsignee.supabase";
 const PENDING_KEY = "fastconsignee.google";
-const FAILED = "Login Google gagal. Coba lagi.";
+const FAILED = "Google sign-in failed. Try again.";
 
 export const googleEnabled = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
@@ -123,7 +123,7 @@ export async function signInWithGoogle(): Promise<string | null> {
     });
     return error ? FAILED : null;
   } catch {
-    return "Login Google gagal dimuat. Muat ulang halaman ini.";
+    return "Google sign-in failed to load. Reload this page.";
   }
 }
 

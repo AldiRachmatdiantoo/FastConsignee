@@ -69,7 +69,7 @@ func (s *Service) load(ctx context.Context, p auth.Principal, in Input) (*order.
 		return nil, order.Line{}, err
 	}
 	if o == nil {
-		return nil, order.Line{}, apperr.New(apperr.NotFound, "Order tidak ditemukan.")
+		return nil, order.Line{}, apperr.New(apperr.NotFound, "Order not found.")
 	}
 	for _, l := range o.Lines {
 		if l.ID == in.LineID {
@@ -152,7 +152,7 @@ func (s *Service) Create(ctx context.Context, p auth.Principal, key string, in I
 		return Draft{}, false, err
 	}
 	if wallet == nil {
-		return Draft{}, false, apperr.New(apperr.WalletNotLinked, "Toko belum menautkan wallet.")
+		return Draft{}, false, apperr.New(apperr.WalletNotLinked, "The store has not linked a wallet.")
 	}
 	reference, err := solana.NewReference()
 	if err != nil {

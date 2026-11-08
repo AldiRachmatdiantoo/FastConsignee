@@ -1,6 +1,6 @@
 const rupiah = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
-const dateTime = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" });
-const dayName = new Intl.DateTimeFormat("id-ID", { weekday: "short", day: "numeric", month: "short" });
+const dateTime = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
+const dayName = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
 const LAMPORTS_PER_SOL = BigInt(1_000_000_000);
 const ZERO = BigInt(0);
 

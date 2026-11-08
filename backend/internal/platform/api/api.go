@@ -90,10 +90,10 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 func classify(r *http.Request, err error) *apperr.Error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		slog.Warn("permintaan terhenti", "error", err, "request_id", RequestID(r.Context()))
-		return apperr.New(apperr.ServiceUnavailable, "Permintaan terhenti. Coba lagi.")
+		return apperr.New(apperr.ServiceUnavailable, "The request was interrupted. Try again.")
 	}
 	slog.Error("kesalahan server", "error", err, "path", r.URL.Path, "request_id", RequestID(r.Context()))
-	return apperr.New(apperr.Internal, "Terjadi kesalahan di server.")
+	return apperr.New(apperr.Internal, "Something went wrong on the server.")
 }
 
 // Decode membaca body JSON dan menolak kolom yang tidak dikenal.
@@ -150,7 +150,7 @@ func decodeMessage(err error) string {
 func PathUUID(r *http.Request, name string) (uuid.UUID, error) {
 	id, err := uuid.Parse(r.PathValue(name))
 	if err != nil {
-		return uuid.Nil, apperr.Validation(apperr.FieldError{Field: name, Message: "Harus berupa UUID."})
+		return uuid.Nil, apperr.Validation(apperr.FieldError{Field: name, Message: "Must be a UUID."})
 	}
 	return id, nil
 }

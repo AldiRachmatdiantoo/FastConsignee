@@ -41,9 +41,9 @@ describe("createApiClient", () => {
 
 describe("unwrap", () => {
   it("mengembalikan isi jawaban", async () => {
-    const fetcher = vi.fn(async () => json({ name: "Kasir Demo" }, 200));
+    const fetcher = vi.fn(async () => json({ name: "Demo Cashier" }, 200));
     const me = await unwrap(client(fetcher as unknown as typeof fetch).GET("/api/v1/me"));
-    expect(me.name).toBe("Kasir Demo");
+    expect(me.name).toBe("Demo Cashier");
   });
 
   it("mengubah Problem menjadi ApiError dengan kode dari API", async () => {

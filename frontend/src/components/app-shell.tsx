@@ -12,12 +12,12 @@ import { Button } from "./ui";
 type NavLink = ReturnType<typeof navLinks>[number];
 
 const NAV_META: Record<string, { group: string; icon: ComponentType<{ className?: string }> }> = {
-  "/dasbor": { group: "Ringkasan", icon: DashboardIcon },
-  "/kasir": { group: "Penjualan", icon: CartIcon },
-  "/refund": { group: "Penjualan", icon: RefundIcon },
-  "/barang": { group: "Kelola", icon: BoxIcon },
-  "/penitip": { group: "Kelola", icon: UsersIcon },
-  "/wallet": { group: "Akun", icon: WalletIcon },
+  "/dasbor": { group: "Overview", icon: DashboardIcon },
+  "/kasir": { group: "Sales", icon: CartIcon },
+  "/refund": { group: "Sales", icon: RefundIcon },
+  "/barang": { group: "Manage", icon: BoxIcon },
+  "/penitip": { group: "Manage", icon: UsersIcon },
+  "/wallet": { group: "Account", icon: WalletIcon },
 };
 
 function groupLinks(links: NavLink[]) {
@@ -90,7 +90,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           {open ? (
             <button
               type="button"
-              aria-label="Tutup menu"
+              aria-label="Close menu"
               tabIndex={-1}
               onClick={() => setOpen(false)}
               className="fixed inset-0 z-30 bg-black/50 xl:hidden"
@@ -107,7 +107,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
               <button
                 ref={closeButton}
                 type="button"
-                aria-label="Tutup menu"
+                aria-label="Close menu"
                 onClick={() => {
                   setOpen(false);
                   menuButton.current?.focus();
@@ -159,7 +159,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
               <button
                 ref={menuButton}
                 type="button"
-                aria-label="Buka menu"
+                aria-label="Open menu"
                 aria-expanded={open}
                 aria-controls="app-menu"
                 onClick={() => setOpen(true)}
@@ -192,7 +192,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
                 <p className="text-muted-foreground">{roleLabel(me.role)}</p>
               </div>
               <Button variant="secondary" onClick={signOut}>
-                Keluar
+                Sign out
               </Button>
             </div>
           </div>
@@ -201,7 +201,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-3 pb-8 md:px-8">{children}</main>
 
         <footer className="mx-auto w-full max-w-7xl px-4 pb-6 text-sm text-muted-foreground md:px-8">
-          FastConsignee berjalan di Solana Devnet, jadi tidak ada uang sungguhan.
+          FastConsignee runs on Solana Devnet, so no real money is involved.
         </footer>
       </div>
     </div>

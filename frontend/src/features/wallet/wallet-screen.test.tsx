@@ -53,9 +53,9 @@ describe("WalletScreen", () => {
     me = {
       id: "1",
       email: "pemilik@fastconsignee.test",
-      name: "Pemilik Demo",
+      name: "Demo Owner",
       role: "store_owner",
-      store: { id: "2", name: "Toko" },
+      store: { id: "2", name: "Shop" },
       consignor_id: null,
       wallet: null,
       wallet_required: true,
@@ -66,7 +66,7 @@ describe("WalletScreen", () => {
   it("mengarahkan ke Phantom kalau browser belum punya wallet", () => {
     wallet.wallets = [{ adapter: { name: "Lain" }, readyState: WalletReadyState.NotDetected }];
     render(<WalletScreen />);
-    expect(screen.getByRole("link", { name: "Pasang Phantom" })).toHaveAttribute("href", "https://phantom.com/download");
+    expect(screen.getByRole("link", { name: "Install Phantom" })).toHaveAttribute("href", "https://phantom.com/download");
   });
 
   it("memilih wallet yang terpasang", async () => {
@@ -79,7 +79,7 @@ describe("WalletScreen", () => {
   it("menjelaskan kegunaan wallet sesuai peran", () => {
     me.role = "consignor";
     render(<WalletScreen />);
-    expect(screen.getByText(/menerima bagian penjualanmu/)).toBeInTheDocument();
+    expect(screen.getByText(/receives your share of each sale/)).toBeInTheDocument();
   });
 
   it("menautkan wallet lalu memuat ulang profil", async () => {
@@ -87,7 +87,7 @@ describe("WalletScreen", () => {
     vi.mocked(linkWallet).mockResolvedValue({ address, linked_at: "2026-11-07T00:00:00Z" });
     render(<WalletScreen />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Tandatangani dan tautkan" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sign and link" }));
 
     expect(linkWallet).toHaveBeenCalledWith(expect.objectContaining({ address, signMessage }));
     await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
@@ -100,11 +100,11 @@ describe("WalletScreen", () => {
     );
     render(<WalletScreen />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Tandatangani dan tautkan" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sign and link" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("sudah tertaut ke pihak lain");
+    expect(await screen.findByRole("alert")).toHaveTextContent("already linked to someone else");
     expect(refresh).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Tandatangani dan tautkan" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign and link" })).toBeEnabled();
   });
 
   it("memberi tahu kalau wallet tidak mendukung tanda tangan pesan", async () => {
@@ -112,9 +112,9 @@ describe("WalletScreen", () => {
     wallet.signMessage = undefined;
     render(<WalletScreen />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Tandatangani dan tautkan" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sign and link" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("belum bisa menandatangani");
+    expect(await screen.findByRole("alert")).toHaveTextContent("cannot sign messages");
     expect(linkWallet).not.toHaveBeenCalled();
   });
 
@@ -123,8 +123,8 @@ describe("WalletScreen", () => {
     me.wallet = { address, linked_at: "2026-11-07T00:00:00Z" };
     render(<WalletScreen />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Wallet tertaut");
-    await userEvent.click(screen.getByRole("button", { name: "Lanjut ke dasbor" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Linked wallet");
+    await userEvent.click(screen.getByRole("button", { name: "Continue to dashboard" }));
     expect(replace).toHaveBeenCalledWith("/dasbor");
   });
 
@@ -132,6 +132,6 @@ describe("WalletScreen", () => {
     wallet.publicKey = { toBase58: () => "7Pxwcgh7QWWfjLrvbdKHm5ssob54s8ynyKHJ1tFz8zYk" };
     me.wallet = { address, linked_at: "2026-11-07T00:00:00Z" };
     render(<WalletScreen />);
-    expect(screen.getByRole("button", { name: "Tandatangani dan tautkan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign and link" })).toBeInTheDocument();
   });
 });

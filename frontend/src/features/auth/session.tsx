@@ -66,7 +66,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () =>
       createApiClient({
         getToken: tokens.get,
-        onUnauthorized: () => clear("Sesi berakhir. Silakan masuk lagi."),
+        onUnauthorized: () => clear("Your session ended. Please sign in again."),
       }),
     [tokens, clear],
   );
@@ -136,7 +136,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email }),
       }).catch(() => null);
       if (!response?.ok) {
-        clear("Login lokal belum aktif. Cek LOCAL_JWT_SECRET di .env.local.");
+        clear("Local sign-in is not active. Check LOCAL_JWT_SECRET in .env.local.");
         return;
       }
       const body = (await response.json()) as { token: string };
@@ -157,7 +157,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 export function useSession(): SessionContextValue {
   const value = useContext(SessionContext);
   if (!value) {
-    throw new Error("useSession harus dipakai di dalam SessionProvider");
+    throw new Error("useSession must be used inside SessionProvider");
   }
   return value;
 }

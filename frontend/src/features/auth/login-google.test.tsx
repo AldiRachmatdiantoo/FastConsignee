@@ -17,19 +17,19 @@ describe("tombol Google", () => {
     vi.mocked(signInWithGoogle).mockResolvedValue(null);
     render(<LoginScreen />);
 
-    expect(screen.queryByText("Login Google belum tersambung.")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Masuk dengan Google" }));
+    expect(screen.queryByText("Google sign-in is not connected yet.")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
 
     expect(signInWithGoogle).toHaveBeenCalledTimes(1);
   });
 
   it("menampilkan pesan kalau login Google gagal", async () => {
-    vi.mocked(signInWithGoogle).mockResolvedValue("Login Google gagal. Coba lagi.");
+    vi.mocked(signInWithGoogle).mockResolvedValue("Google sign-in failed. Try again.");
     render(<LoginScreen />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Masuk dengan Google" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Login Google gagal. Coba lagi.");
-    expect(screen.getByRole("button", { name: "Masuk dengan Google" })).toBeEnabled();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Google sign-in failed. Try again.");
+    expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeEnabled();
   });
 });

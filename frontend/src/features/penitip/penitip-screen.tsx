@@ -13,9 +13,9 @@ type Consignor = components["schemas"]["Consignor"];
 type WalletStatus = components["schemas"]["WalletStatus"];
 
 const WALLET_LABELS: Record<WalletStatus, string> = {
-  unlinked: "Belum ada wallet",
-  unverified: "Belum ditandatangani penitip",
-  verified: "Terverifikasi",
+  unlinked: "No wallet yet",
+  unverified: "Not signed by the consignor yet",
+  verified: "Verified",
 };
 
 export function PenitipScreen() {
@@ -31,8 +31,8 @@ export function PenitipScreen() {
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <PageTitle title="Penitip" text="Penitip login dengan email ini, lalu menautkan wallet-nya sendiri." />
-        <Button onClick={() => setEditing("new")}>Tambah penitip</Button>
+        <PageTitle title="Consignor" text="The consignor signs in with this email, then links their own wallet." />
+        <Button onClick={() => setEditing("new")}>Add consignor</Button>
       </div>
 
       {editing ? (
@@ -50,7 +50,7 @@ export function PenitipScreen() {
       <Card>
         {message ? <Notice tone="danger">{message}</Notice> : null}
         {status === "loading" ? <ListSkeleton rows={4} lines={3} action /> : null}
-        {status === "ready" && items.length === 0 ? <EmptyState>Belum ada penitip.</EmptyState> : null}
+        {status === "ready" && items.length === 0 ? <EmptyState>No consignors yet.</EmptyState> : null}
         <ul className="divide-y divide-border text-sm empty:hidden">
           {items.map((consignor) => (
             <li key={consignor.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -64,8 +64,8 @@ export function PenitipScreen() {
                   ) : null}
                 </p>
               </div>
-              <Button variant="secondary" aria-label={`Ubah ${consignor.name}`} onClick={() => setEditing(consignor)}>
-                Ubah
+              <Button variant="secondary" aria-label={`Edit ${consignor.name}`} onClick={() => setEditing(consignor)}>
+                Edit
               </Button>
             </li>
           ))}
@@ -118,15 +118,15 @@ function ConsignorEditor({ consignor, onClose, onSaved }: ConsignorEditorProps) 
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold">{consignor ? `Ubah ${consignor.name}` : "Penitip baru"}</h2>
+      <h2 className="text-lg font-semibold">{consignor ? `Edit ${consignor.name}` : "New consignor"}</h2>
       <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
-        <TextField label="Nama" required value={name} onChange={(event) => setName(event.target.value)} />
+        <TextField label="Name" required value={name} onChange={(event) => setName(event.target.value)} />
         {consignor ? null : (
           <>
             <TextField label="Email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
             <div className="sm:col-span-2">
               <TextField
-                label="Alamat wallet (tidak wajib)"
+                label="Wallet address (optional)"
                 value={wallet}
                 onChange={(event) => setWallet(event.target.value)}
               />
@@ -140,10 +140,10 @@ function ConsignorEditor({ consignor, onClose, onSaved }: ConsignorEditorProps) 
         ) : null}
         <div className="flex gap-2 sm:col-span-2">
           <Button type="submit" disabled={busy}>
-            {busy ? "Menyimpan..." : "Simpan"}
+            {busy ? "Saving..." : "Save"}
           </Button>
           <Button variant="secondary" disabled={busy} onClick={onClose}>
-            Batal
+            Cancel
           </Button>
         </div>
       </form>

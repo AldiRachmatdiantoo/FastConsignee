@@ -10,12 +10,12 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrai
 
 export const metadata: Metadata = {
   title: "FastConsignee",
-  description: "Kasir konsinyasi dengan pembagian dana dalam satu transaksi Solana.",
+  description: "A consignment cashier that splits every payment in one Solana transaction.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id" className={`${inter.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <body className="min-h-dvh antialiased">
         <SessionProvider>{children}</SessionProvider>
       </body>

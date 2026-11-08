@@ -41,7 +41,7 @@ function createCalls() {
 
 async function openOrder(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: /Rp/ }));
-  return screen.findByRole("button", { name: "Refund satu Dompet Pandan" });
+  return screen.findByRole("button", { name: "Refund one Dompet Pandan" });
 }
 
 describe("RefundScreen", () => {
@@ -74,7 +74,7 @@ describe("RefundScreen", () => {
 
     const button = await openOrder(user);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Ini bukan wallet toko.");
+    expect(screen.getByRole("alert")).toHaveTextContent("This is not the shop wallet.");
     expect(button).toBeDisabled();
   });
 
@@ -86,7 +86,7 @@ describe("RefundScreen", () => {
 
     await user.click(await openOrder(user));
 
-    expect(await screen.findByText("Refund Dompet Pandan: Menunggu konfirmasi")).toBeVisible();
+    expect(await screen.findByText("Refund Dompet Pandan: Waiting for confirmation")).toBeVisible();
     const [, create] = createCalls()[0] as [string, { params: { header: Record<string, string> }; body: unknown }];
     expect(create.params.header["Idempotency-Key"]).toBeTruthy();
     expect(create.body).toEqual({ order_line_id: "l1" });
@@ -104,15 +104,15 @@ describe("RefundScreen", () => {
 
     await user.click(await openOrder(user));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Tanda tangan dibatalkan atau gagal di wallet.");
-    await user.click(screen.getByRole("button", { name: "Tandatangani lagi" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("The signature was cancelled or failed in the wallet.");
+    await user.click(screen.getByRole("button", { name: "Sign again" }));
 
     await waitFor(() => expect(sendTransaction).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText("Refund Dompet Pandan: Menunggu konfirmasi")).toBeVisible();
+    expect(await screen.findByText("Refund Dompet Pandan: Waiting for confirmation")).toBeVisible();
     expect(createCalls()).toHaveLength(1);
   });
 
-  it("mematikan tombol kalau semua unit sudah di-refund", async () => {
+  it("mematikan tombol kalau semua units refunded", async () => {
     connect(storeWallet);
     get.mockImplementation((path: string) => {
       if (path === "/api/v1/orders") {

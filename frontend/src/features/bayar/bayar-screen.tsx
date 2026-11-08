@@ -16,7 +16,7 @@ type PublicOrder = components["schemas"]["PublicOrder"];
 const POLL_MS = 3000;
 
 function WalletUnavailable() {
-  return <Notice tone="danger">Wallet tidak bisa dimuat. Muat ulang halaman, atau pindai QR di bawah.</Notice>;
+  return <Notice tone="danger">The wallet could not load. Reload the page, or scan the QR below.</Notice>;
 }
 
 // Berkas wallet hanya dimuat saat pembeli memilih wallet, karena pembeli yang memindai QR tidak butuh web3.js.
@@ -85,15 +85,15 @@ function OrderView({ orderId }: { orderId: string }) {
           </span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Kurs terkunci {formatRupiah(order.rate.idr_per_sol)} per SOL. Ini jaringan Devnet, jadi tidak memakai uang sungguhan.
+          Locked rate {formatRupiah(order.rate.idr_per_sol)} per SOL. This is Devnet, so no real money is used.
         </p>
       </Card>
 
       {order.status === "pending" ? <PendingPayment order={order} /> : null}
       {order.status === "confirmed" ? <Receipt order={order} /> : null}
-      {order.status === "expired" ? <Notice tone="danger">QR sudah kedaluwarsa. Minta kasir membuat QR baru.</Notice> : null}
+      {order.status === "expired" ? <Notice tone="danger">This QR has expired. Ask the cashier for a new one.</Notice> : null}
       {order.status === "failed" ? (
-        <Notice tone="danger">Pembayaran gagal, dan saldo tidak berubah. Minta kasir membuat QR baru untuk mencoba lagi.</Notice>
+        <Notice tone="danger">The payment failed, and no balance changed. Ask the cashier for a new QR to try again.</Notice>
       ) : null}
     </>
   );
@@ -108,7 +108,7 @@ function PendingPayment({ order }: { order: PublicOrder }) {
     return (
       <Card>
         <p role="status" className="font-semibold">
-          Transaksi terkirim. Menunggu konfirmasi jaringan...
+          Transaction sent. Waiting for network confirmation...
         </p>
       </Card>
     );
@@ -117,16 +117,16 @@ function PendingPayment({ order }: { order: PublicOrder }) {
   return (
     <Card className="grid gap-4">
       <p role="status" className="text-center font-semibold">
-        Bayar dalam {formatCountdown(secondsUntil(order.expires_at, now))}
+        Pay within {formatCountdown(secondsUntil(order.expires_at, now))}
       </p>
       {walletOpen ? (
         <WalletPayment orderId={order.id} onSent={() => setSent(true)} />
       ) : (
-        <Button onClick={() => setWalletOpen(true)}>Bayar dengan wallet</Button>
+        <Button onClick={() => setWalletOpen(true)}>Pay with wallet</Button>
       )}
 
       <div className="border-t border-border pt-4 text-center">
-        <p className="text-sm text-muted-foreground">Atau pindai dengan Phantom di HP</p>
+        <p className="text-sm text-muted-foreground">Or scan with Phantom on your phone</p>
         <div className="mt-3">
           <PaymentQr value={order.solana_pay_url} />
         </div>
@@ -139,18 +139,18 @@ type LineCertificate = PublicOrder["lines"][number]["certificate"];
 
 function CertificateRow({ name, certificate }: { name: string; certificate: LineCertificate }) {
   if (certificate?.explorer_url) {
-    return <ExplorerLink href={certificate.explorer_url}>Sertifikat {name}</ExplorerLink>;
+    return <ExplorerLink href={certificate.explorer_url}>Certificate {name}</ExplorerLink>;
   }
   if (certificate?.status === "failed") {
-    return <p className="text-sm text-muted-foreground">Sertifikat {name} gagal dikirim. Hubungi toko.</p>;
+    return <p className="text-sm text-muted-foreground">Certificate {name} could not be sent. Contact the shop.</p>;
   }
-  return <p className="text-sm text-muted-foreground">Sertifikat {name} sedang dikirim ke wallet kamu.</p>;
+  return <p className="text-sm text-muted-foreground">Certificate {name} is on its way to your wallet.</p>;
 }
 
 function Receipt({ order }: { order: PublicOrder }) {
   return (
     <Card className="grid gap-3">
-      <Notice tone="success">Pembayaran terkonfirmasi. Terima kasih.</Notice>
+      <Notice tone="success">Payment confirmed. Thank you.</Notice>
       {order.confirmed_at ? <p className="text-sm text-muted-foreground">{formatDateTime(order.confirmed_at)}</p> : null}
       {order.explorer_url ? <ExplorerLink href={order.explorer_url} /> : null}
       {order.lines

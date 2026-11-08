@@ -52,7 +52,7 @@ func NewService(repo *Repository, tx database.TxRunner, rates RateProvider, clie
 }
 
 func notFound() error {
-	return apperr.New(apperr.NotFound, "Order tidak ditemukan.")
+	return apperr.New(apperr.NotFound, "Order not found.")
 }
 
 func unavailable(err error) error {
@@ -77,7 +77,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 	}
 	for _, id := range ids {
 		if _, ok := items[id]; !ok {
-			return Plan{}, apperr.New(apperr.NotFound, "Barang tidak ditemukan.").WithDetails(map[string]any{"item_id": id})
+			return Plan{}, apperr.New(apperr.NotFound, "Item not found.").WithDetails(map[string]any{"item_id": id})
 		}
 	}
 	reserved, err := s.repo.reserved(ctx, ids)
@@ -101,7 +101,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 		}
 	}
 	if len(consignors) > MaxConsignors {
-		return Plan{}, apperr.New(apperr.TooManyConsignors, "Satu order memuat paling banyak 5 penitip.").
+		return Plan{}, apperr.New(apperr.TooManyConsignors, "One order can include at most 5 consignors.").
 			WithDetails(map[string]any{"consignors": len(consignors), "maximum": MaxConsignors})
 	}
 	for _, l := range cart.Lines {
@@ -112,7 +112,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 		}
 		amounts, err := ComputeLine(it.PriceIDR, l.Quantity, it.CommissionBps, discount, bearer)
 		if err != nil {
-			return Plan{}, apperr.New(apperr.DiscountTooLarge, "Diskon melebihi bagian penanggungnya.").
+			return Plan{}, apperr.New(apperr.DiscountTooLarge, "The discount is larger than the share of whoever bears it.").
 				WithDetails(map[string]any{"item_id": it.ID})
 		}
 		p.Lines = append(p.Lines, Line{
@@ -125,7 +125,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 		commission += amounts.Commission
 	}
 	if p.Totals.SubtotalIDR == p.Totals.DiscountIDR {
-		return Plan{}, apperr.New(apperr.DiscountTooLarge, "Total order harus lebih dari 0.")
+		return Plan{}, apperr.New(apperr.DiscountTooLarge, "The order total must be more than 0.")
 	}
 	missing := []map[string]any{}
 	for _, c := range consignors {
@@ -134,7 +134,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 		}
 	}
 	if len(missing) > 0 {
-		return Plan{}, apperr.New(apperr.RecipientWalletMissing, "Penitip belum punya wallet.").
+		return Plan{}, apperr.New(apperr.RecipientWalletMissing, "A consignor has no wallet yet.").
 			WithDetails(map[string]any{"consignors": missing})
 	}
 	store, err := s.repo.store(ctx, storeID)
@@ -142,7 +142,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 		return Plan{}, err
 	}
 	if store.Wallet == nil {
-		return Plan{}, apperr.New(apperr.StoreWalletNotLinked, "Toko belum menautkan wallet.")
+		return Plan{}, apperr.New(apperr.StoreWalletNotLinked, "The store has not linked a wallet.")
 	}
 	if rate == nil {
 		current, err := s.rates.Current(ctx)
@@ -171,7 +171,7 @@ func (s *Service) plan(ctx context.Context, storeID uuid.UUID, cart Cart, rate *
 	}
 	p.Split, err = BuildSplit(inputs, StoreShare{Name: store.Name, Wallet: *store.Wallet, ShareIDR: commission}, rate.IDRPerSOL)
 	if errors.Is(err, ErrAmountTooLarge) {
-		return Plan{}, apperr.Validation(apperr.FieldError{Field: "lines", Message: "Total order terlalu besar."})
+		return Plan{}, apperr.Validation(apperr.FieldError{Field: "lines", Message: "The order total is too large."})
 	}
 	if err != nil {
 		return Plan{}, err
@@ -201,7 +201,7 @@ func checkStock(cart Cart, items map[uuid.UUID]cartItem, reserved map[uuid.UUID]
 	if len(short) == 0 {
 		return nil
 	}
-	return apperr.New(apperr.InsufficientStock, "Stok beberapa barang tidak cukup.").WithDetails(map[string]any{"items": short})
+	return apperr.New(apperr.InsufficientStock, "Some items do not have enough stock.").WithDetails(map[string]any{"items": short})
 }
 
 // checkRent menolak transfer ke wallet kosong yang lebih kecil dari minimum rent, karena jaringan
@@ -220,7 +220,7 @@ func (s *Service) checkRent(ctx context.Context, split Split) error {
 			return unavailable(err)
 		}
 		if balance == 0 {
-			return apperr.New(apperr.BelowRentMinimum, "Bagian penerima terlalu kecil untuk wallet yang masih kosong.").
+			return apperr.New(apperr.BelowRentMinimum, "A recipient's share is too small for an empty wallet.").
 				WithDetails(map[string]any{
 					"wallet_address":   r.Wallet,
 					"amount_lamports":  strconv.FormatInt(r.AmountLamports, 10),
@@ -324,7 +324,7 @@ func (s *Service) Create(ctx context.Context, p auth.Principal, key string, cart
 		created, err := s.Get(ctx, p, id)
 		return created, false, err
 	}
-	return Order{}, false, apperr.New(apperr.ServiceUnavailable, "Keranjang terus berubah. Coba lagi.")
+	return Order{}, false, apperr.New(apperr.ServiceUnavailable, "The cart keeps changing. Try again.")
 }
 
 func (s *Service) commit(ctx context.Context, p auth.Principal, key, hash string, cart Cart, planned Plan) (uuid.UUID, error) {

@@ -3,13 +3,13 @@ import { ApiError, ApiUnavailableError, type Problem } from "./client";
 import { errorMessage } from "./messages";
 
 function problem(overrides: Partial<Problem>): ApiError {
-  return new ApiError({ type: "about:blank", title: "Gagal", status: 400, code: "NOT_FOUND", request_id: "r", ...overrides });
+  return new ApiError({ type: "about:blank", title: "Failed", status: 400, code: "NOT_FOUND", request_id: "r", ...overrides });
 }
 
 describe("errorMessage", () => {
   it("memilih kalimat dari code, bukan dari detail", () => {
     expect(errorMessage(problem({ code: "INSUFFICIENT_STOCK", detail: "stock too low" }))).toBe(
-      "Stok tidak cukup. Kurangi jumlah barang.",
+      "Not enough stock. Reduce the quantity.",
     );
   });
 
@@ -28,11 +28,11 @@ describe("errorMessage", () => {
     expect(errorMessage(problem({ code: "INTERNAL_ERROR", detail: "Ada masalah di server." }))).toBe("Ada masalah di server.");
   });
 
-  it("menjelaskan saat API tidak bisa dihubungi", () => {
-    expect(errorMessage(new ApiUnavailableError())).toContain("API tidak bisa dihubungi");
+  it("menjelaskan saat The API cannot be reached", () => {
+    expect(errorMessage(new ApiUnavailableError())).toContain("The API cannot be reached");
   });
 
   it("tetap punya kalimat untuk kegagalan lain", () => {
-    expect(errorMessage(new Error("boom"))).toBe("Terjadi kesalahan. Coba lagi.");
+    expect(errorMessage(new Error("boom"))).toBe("Something went wrong. Try again.");
   });
 });

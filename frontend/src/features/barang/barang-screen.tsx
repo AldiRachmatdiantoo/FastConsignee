@@ -39,8 +39,8 @@ export function BarangScreen() {
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <PageTitle title="Barang" text="Harga dan komisi baru berlaku untuk penjualan berikutnya." />
-        <Button onClick={() => setEditing("new")}>Tambah barang</Button>
+        <PageTitle title="Items" text="New prices and commissions apply from the next sale." />
+        <Button onClick={() => setEditing("new")}>Add item</Button>
       </div>
 
       {editing ? (
@@ -58,19 +58,19 @@ export function BarangScreen() {
       <Card>
         <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
           <TextField
-            label="Cari barang"
+            label="Search items"
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nama barang"
+            placeholder="Item name"
           />
           <SelectField
-            label="Tampilkan"
+            label="Show"
             value={active ? "active" : "inactive"}
             onChange={(event) => setActive(event.target.value === "active")}
           >
-            <option value="active">Barang aktif</option>
-            <option value="inactive">Barang nonaktif</option>
+            <option value="active">Active items</option>
+            <option value="inactive">Inactive items</option>
           </SelectField>
         </div>
         {message ? (
@@ -79,7 +79,7 @@ export function BarangScreen() {
           </div>
         ) : null}
         {status === "loading" ? <ListSkeleton rows={5} lines={3} action className="mt-2" /> : null}
-        {status === "ready" && items.length === 0 ? <EmptyState>Barang tidak ditemukan.</EmptyState> : null}
+        {status === "ready" && items.length === 0 ? <EmptyState>No items found.</EmptyState> : null}
         <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
           {items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -89,14 +89,14 @@ export function BarangScreen() {
                   {item.active ? "" : " (nonaktif)"}
                 </p>
                 <p className="text-muted-foreground">
-                  {item.consignor.name} · {formatRupiah(item.price_idr)} · komisi {formatPercent(item.commission_bps)}
+                  {item.consignor.name} · {formatRupiah(item.price_idr)} · commission {formatPercent(item.commission_bps)}
                 </p>
                 <p className="text-muted-foreground">
-                  Stok {item.stock_on_hand}, tertahan {item.stock_reserved}, tersedia {item.stock_available}
+                  Stock {item.stock_on_hand}, held {item.stock_reserved}, available {item.stock_available}
                 </p>
               </div>
-              <Button variant="secondary" aria-label={`Ubah ${item.name}`} onClick={() => setEditing(item)}>
-                Ubah
+              <Button variant="secondary" aria-label={`Edit ${item.name}`} onClick={() => setEditing(item)}>
+                Edit
               </Button>
             </li>
           ))}
@@ -150,19 +150,19 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold">{item ? `Ubah ${item.name}` : "Barang baru"}</h2>
+      <h2 className="text-lg font-semibold">{item ? `Edit ${item.name}` : "New item"}</h2>
       <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
-        <TextField label="Nama" required value={form.name} onChange={(event) => update({ name: event.target.value })} />
+        <TextField label="Name" required value={form.name} onChange={(event) => update({ name: event.target.value })} />
         {item ? (
-          <TextField label="Penitip" value={item.consignor.name} disabled />
+          <TextField label="Consignor" value={item.consignor.name} disabled />
         ) : (
           <SelectField
-            label="Penitip"
+            label="Consignor"
             required
             value={form.consignorId}
             onChange={(event) => update({ consignorId: event.target.value })}
           >
-            <option value="">Pilih penitip</option>
+            <option value="">Choose a consignor</option>
             {state.status === "ready"
               ? state.data.data.map((consignor) => (
                   <option key={consignor.id} value={consignor.id}>
@@ -173,7 +173,7 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
           </SelectField>
         )}
         <TextField
-          label="Harga (Rp)"
+          label="Price (Rp)"
           type="number"
           min={1}
           required
@@ -181,7 +181,7 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
           onChange={(event) => update({ price: event.target.value })}
         />
         <TextField
-          label="Komisi toko (%)"
+          label="Shop commission (%)"
           type="number"
           min={0}
           max={100}
@@ -191,7 +191,7 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
           onChange={(event) => update({ commission: event.target.value })}
         />
         <TextField
-          label="Stok"
+          label="Stock"
           type="number"
           min={0}
           required
@@ -204,12 +204,12 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
             checked={form.certificate}
             onChange={(event) => update({ certificate: event.target.checked })}
           />
-          Kirim sertifikat NFT ke pembeli
+          Send an NFT certificate to the buyer
         </label>
         {item ? (
           <label className="flex min-h-11 items-center gap-2 self-end text-sm font-medium">
             <input type="checkbox" checked={form.active} onChange={(event) => update({ active: event.target.checked })} />
-            Aktif di katalog
+            Active in catalog
           </label>
         ) : null}
         {error ? (
@@ -219,10 +219,10 @@ function ItemEditor({ item, onClose, onSaved }: ItemEditorProps) {
         ) : null}
         <div className="flex gap-2 sm:col-span-2">
           <Button type="submit" disabled={busy}>
-            {busy ? "Menyimpan..." : "Simpan"}
+            {busy ? "Saving..." : "Save"}
           </Button>
           <Button variant="secondary" disabled={busy} onClick={onClose}>
-            Batal
+            Cancel
           </Button>
         </div>
       </form>

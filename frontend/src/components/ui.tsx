@@ -35,7 +35,7 @@ export function Notice({ tone, children }: { tone: keyof typeof NOTICE_STYLES; c
 export function Loading() {
   return (
     <p role="status" className="grid min-h-dvh place-items-center text-muted-foreground">
-      Memuat...
+      Loading...
     </p>
   );
 }
@@ -43,7 +43,7 @@ export function Loading() {
 export function InlineLoading() {
   return (
     <p role="status" className="py-6 text-center text-sm text-muted-foreground">
-      Memuat...
+      Loading...
     </p>
   );
 }
@@ -68,7 +68,7 @@ export function SkeletonBlock({ className }: { className: string }) {
 export function LoadingBlock({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
     <div role="status" className={className}>
-      <span className="sr-only">Memuat...</span>
+      <span className="sr-only">Loading...</span>
       {children}
     </div>
   );
@@ -129,7 +129,7 @@ export function PageTitle({ title, text }: { title: string; text?: string }) {
   );
 }
 
-export function ExplorerLink({ href, children = "Lihat di Solana Explorer" }: { href: string; children?: ReactNode }) {
+export function ExplorerLink({ href, children = "View on Solana Explorer" }: { href: string; children?: ReactNode }) {
   return (
     <a
       href={href}
@@ -153,7 +153,7 @@ export function LoadMore({ visible, busy, onClick }: { visible: boolean; busy: b
   return (
     <div className="mt-4 text-center">
       <Button variant="secondary" disabled={busy} onClick={onClick}>
-        {busy ? "Memuat..." : "Muat lagi"}
+        {busy ? "Loading..." : "Load more"}
       </Button>
     </div>
   );

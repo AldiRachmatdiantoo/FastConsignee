@@ -10,9 +10,9 @@ import { useSession } from "./session";
 import "./login.css";
 
 const POINTS = [
-  "Berjalan di Solana Devnet",
-  "Satu transaksi untuk semua bagian",
-  "Setiap penjualan bisa dicek di Explorer",
+  "Running on Solana Devnet",
+  "One transaction for every share",
+  "Every sale verifiable on Explorer",
 ];
 
 function Caption({ amber = false, children }: { amber?: boolean; children: string }) {
@@ -51,10 +51,10 @@ function Scene() {
           <ellipse className="login__flow login__flow--b" pathLength={1} />
         </svg>
         <div className="login__chip login__chip--1">
-          <Caption>Pembeli bayar sekali</Caption>
+          <Caption>The buyer pays once</Caption>
         </div>
         <div className="login__chip login__chip--2">
-          <Caption amber>Bagian penitip terkirim</Caption>
+          <Caption amber>Consignor share sent</Caption>
         </div>
       </div>
     </>
@@ -102,7 +102,7 @@ export function LoginScreen() {
       <Scene />
 
       {/* Tautan biasa, karena `/` adalah file statis lewat rewrite dan tidak bisa dibuka lewat navigasi klien. */}
-      <nav className="login__nav" aria-label="Utama">
+      <nav className="login__nav" aria-label="Main">
         <div className="login__bar">
           <a className="login__brand" href="/">
             <svg className="login__mark" viewBox="0 0 40 28" aria-hidden="true">
@@ -115,18 +115,17 @@ export function LoginScreen() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M19 12H5M11 6l-6 6 6 6" />
             </svg>
-            <span className="login__back-text">Kembali ke beranda</span>
+            <span className="login__back-text">Back to home</span>
           </a>
         </div>
       </nav>
 
       <div className="login__body">
         <section className="login__intro">
-          <h1 className="login__title">Setiap penjualan, langsung terbagi.</h1>
+          <h1 className="login__title">Every sale, split instantly.</h1>
           <div className="login__lower">
             <p className="login__lead">
-              Kasir untuk toko konsinyasi. Pembeli bayar sekali, lalu bagian penitip dan komisi toko keluar dalam satu
-              transaksi Solana.
+              A cashier for consignment shops. The buyer pays once, and each consignor’s share and the shop’s commission go out in one Solana transaction.
             </p>
             <ul className="login__points">
               {POINTS.map((point) => (
@@ -143,7 +142,7 @@ export function LoginScreen() {
 
         <section className="login__card" aria-labelledby="login-heading">
           <h2 className="login__heading" id="login-heading">
-            Masuk
+            Sign in
           </h2>
           {"error" in session && session.error ? <Notice tone="danger">{session.error}</Notice> : null}
           <div className="login__group">
@@ -153,14 +152,14 @@ export function LoginScreen() {
               disabled={!googleEnabled || pending !== null}
               onClick={() => void chooseGoogle()}
             >
-              {pending === "google" ? "Membuka Google..." : "Masuk dengan Google"}
+              {pending === "google" ? "Opening Google..." : "Sign in with Google"}
             </button>
-            {googleEnabled ? null : <p className="login__hint">Login Google belum tersambung.</p>}
+            {googleEnabled ? null : <p className="login__hint">Google sign-in is not connected yet.</p>}
             {googleError ? <Notice tone="danger">{googleError}</Notice> : null}
           </div>
           {localLogin ? (
             <div className="login__local">
-              <p className="login__hint">Mode lokal. Pilih akun seed untuk masuk.</p>
+              <p className="login__hint">Local mode. Pick a seed account to sign in.</p>
               <ul className="login__accounts">
                 {LOCAL_ACCOUNTS.map((account) => (
                   <li key={account.email}>
@@ -171,7 +170,7 @@ export function LoginScreen() {
                       onClick={() => void choose(account.email)}
                     >
                       <span className="login__account-name">{account.name}</span>
-                      <span className="login__account-role">{pending === account.email ? "Masuk..." : account.role}</span>
+                      <span className="login__account-role">{pending === account.email ? "Signing in..." : account.role}</span>
                     </button>
                   </li>
                 ))}

@@ -4,10 +4,10 @@ import { addBlock, addToCart, removeFromCart, setDiscount, setQuantity, toCartRe
 function item(id: string, consignor = "c1", stock = 3): Item {
   return {
     id,
-    name: `Barang ${id}`,
+    name: `Items ${id}`,
     price_idr: 10000,
     commission_bps: 2000,
-    consignor: { id: consignor, name: `Penitip ${consignor}` },
+    consignor: { id: consignor, name: `Consignor ${consignor}` },
     stock_on_hand: stock,
     stock_reserved: 0,
     stock_available: stock,

@@ -59,10 +59,10 @@ describe("ConsignorDashboard", () => {
     render(<ConsignorDashboard />);
 
     expect(await screen.findByText("Dompet Pandan × 2")).toBeVisible();
-    const sales = section("Penjualan");
+    const sales = section("Sales");
     expect(sales.getByRole("link", { name: "Explorer" })).toHaveAttribute("href", "https://explorer.test/tx");
-    expect(sales.getByText("1 unit sudah di-refund")).toBeVisible();
-    expect(sales.getByText(/Dipotong Rp\s?5\.000 untuk refund lama/)).toBeVisible();
+    expect(sales.getByText("1 units refunded")).toBeVisible();
+    expect(sales.getByText(/Deducted Rp\s?5\.000 for an earlier refund/)).toBeVisible();
   });
 
   it("menampilkan potongan yang belum lunas", async () => {
@@ -70,9 +70,9 @@ describe("ConsignorDashboard", () => {
     render(<ConsignorDashboard />);
 
     expect(await screen.findByText("Tas Rotan Bundar")).toBeVisible();
-    const deductions = section("Potongan refund");
-    expect(deductions.getByText(/Sisa Rp\s?5\.000/)).toBeVisible();
-    expect(deductions.getByText(/Belum lunas/)).toHaveTextContent(/Rp\s?5\.000/);
+    const deductions = section("Refund deductions");
+    expect(deductions.getByText(/Remaining Rp\s?5\.000/)).toBeVisible();
+    expect(deductions.getByText(/Unpaid/)).toHaveTextContent(/Rp\s?5\.000/);
   });
 
   it("menandai stok titipan yang nonaktif", async () => {
@@ -80,8 +80,8 @@ describe("ConsignorDashboard", () => {
     render(<ConsignorDashboard />);
 
     expect(await screen.findByText("Keranjang Bambu")).toBeVisible();
-    expect(screen.getByText(/· nonaktif/)).toBeVisible();
-    expect(screen.getByText("Stok 4")).toBeVisible();
+    expect(screen.getByText(/· inactive/)).toBeVisible();
+    expect(screen.getByText("Stock 4")).toBeVisible();
   });
 
   it("meringkas bagian, barang terjual, stok, dan potongan", async () => {
@@ -89,33 +89,33 @@ describe("ConsignorDashboard", () => {
     respond([{ ...sale, sold_at: today }], [deduction], [{ ...stock, active: true }], 5000);
     render(<ConsignorDashboard />);
 
-    await screen.findByRole("heading", { name: "Bagian hari ini" });
+    await screen.findByRole("heading", { name: "Today's share" });
     const tile = (heading: string) => within(screen.getByRole("heading", { name: heading }).closest("section") as HTMLElement);
 
-    expect(tile("Bagian hari ini").getByText(/Rp\s?72\.000/)).toBeVisible();
-    expect(tile("Bagian hari ini").getByText("Belum ada pembanding dari kemarin")).toBeVisible();
-    expect(tile("Total bagian").getByText("80%")).toBeVisible();
-    expect(tile("Barang terjual").getByText("2 unit", { selector: "p" })).toBeVisible();
-    expect(tile("Barang terjual").getByText("1 unit di-refund")).toBeVisible();
-    expect(tile("Stok tersisa").getByText("4 unit")).toBeVisible();
-    expect(tile("Potongan belum lunas").getByText(/Rp\s?5\.000/)).toBeVisible();
+    expect(tile("Today's share").getByText(/Rp\s?72\.000/)).toBeVisible();
+    expect(tile("Today's share").getByText("No comparison with yesterday")).toBeVisible();
+    expect(tile("Total share").getByText("80%")).toBeVisible();
+    expect(tile("Items sold").getByText("2 pcs", { selector: "p" })).toBeVisible();
+    expect(tile("Items sold").getByText("1 units refunded")).toBeVisible();
+    expect(tile("Stock left").getByText("4 pcs")).toBeVisible();
+    expect(tile("Unpaid deductions").getByText(/Rp\s?5\.000/)).toBeVisible();
   });
 
   it("tidak menghitung stok barang nonaktif", async () => {
     respond([], [], [stock]);
     render(<ConsignorDashboard />);
 
-    await screen.findByRole("heading", { name: "Stok tersisa" });
-    const tile = within(screen.getByRole("heading", { name: "Stok tersisa" }).closest("section") as HTMLElement);
-    expect(tile.getByText("0 unit")).toBeVisible();
+    await screen.findByRole("heading", { name: "Stock left" });
+    const tile = within(screen.getByRole("heading", { name: "Stock left" }).closest("section") as HTMLElement);
+    expect(tile.getByText("0 pcs")).toBeVisible();
   });
 
   it("memberi keterangan saat belum ada data", async () => {
     respond([], [], []);
     render(<ConsignorDashboard />);
 
-    expect(await screen.findByText("Belum ada barang yang terjual.")).toBeVisible();
-    expect(screen.getByText("Tidak ada potongan.")).toBeVisible();
-    expect(screen.getByText("Belum ada barang titipan.")).toBeVisible();
+    expect(await screen.findByText("No items sold yet.")).toBeVisible();
+    expect(screen.getByText("No deductions.")).toBeVisible();
+    expect(screen.getByText("No consigned items yet.")).toBeVisible();
   });
 });

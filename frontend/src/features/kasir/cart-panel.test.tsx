@@ -24,7 +24,7 @@ const preview = {
   total_lamports: "1000000000",
   recipients: [
     { wallet_address: "w1", name: "Sari Anyaman", recipient_type: "consignor", amount_idr: 36000, amount_lamports: "800000000", deduction_idr: 0 },
-    { wallet_address: "w2", name: "Toko", recipient_type: "store", amount_idr: 9000, amount_lamports: "200000000", deduction_idr: 0 },
+    { wallet_address: "w2", name: "Shop", recipient_type: "store", amount_idr: 9000, amount_lamports: "200000000", deduction_idr: 0 },
   ],
 };
 
@@ -49,20 +49,20 @@ describe("CartPanel", () => {
     post.mockImplementation(() => ok(preview));
     render(<CartPanel cart={cart()} onChange={vi.fn()} onOrder={vi.fn()} />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Menghitung pembagian...");
-    expect(screen.getByRole("button", { name: "Buat QR pembayaran" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Calculating the split...");
+    expect(screen.getByRole("button", { name: "Create payment QR" })).toBeDisabled();
 
-    expect(await screen.findByText("Bagian penitip")).toBeVisible();
-    expect(screen.getByText("Komisi toko")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Buat QR pembayaran" })).toBeEnabled();
+    expect(await screen.findByText("Consignor share")).toBeVisible();
+    expect(screen.getByText("Shop commission")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Create payment QR" })).toBeEnabled();
   });
 
   it("menahan QR kalau pratinjau ditolak", async () => {
     post.mockImplementation(() => problem("INSUFFICIENT_STOCK"));
     render(<CartPanel cart={cart()} onChange={vi.fn()} onOrder={vi.fn()} />);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Stok tidak cukup. Kurangi jumlah barang.");
-    expect(screen.getByRole("button", { name: "Buat QR pembayaran" })).toBeDisabled();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Not enough stock. Reduce the quantity.");
+    expect(screen.getByRole("button", { name: "Create payment QR" })).toBeDisabled();
   });
 
   it("memakai Idempotency-Key yang sama saat mencoba lagi", async () => {
@@ -79,10 +79,10 @@ describe("CartPanel", () => {
     const user = userEvent.setup();
     render(<CartPanel cart={cart()} onChange={vi.fn()} onOrder={onOrder} />);
 
-    await screen.findByText("Bagian penitip");
-    await user.click(screen.getByRole("button", { name: "Buat QR pembayaran" }));
+    await screen.findByText("Consignor share");
+    await user.click(screen.getByRole("button", { name: "Create payment QR" }));
     await screen.findByRole("alert");
-    await user.click(screen.getByRole("button", { name: "Buat QR pembayaran" }));
+    await user.click(screen.getByRole("button", { name: "Create payment QR" }));
 
     await waitFor(() => expect(onOrder).toHaveBeenCalledWith(order));
     const [first, second] = orderCalls();
@@ -94,13 +94,13 @@ describe("CartPanel", () => {
     const user = userEvent.setup();
     const { rerender } = render(<CartPanel cart={cart()} onChange={vi.fn()} onOrder={vi.fn()} />);
 
-    await screen.findByText("Bagian penitip");
-    await user.click(screen.getByRole("button", { name: "Buat QR pembayaran" }));
+    await screen.findByText("Consignor share");
+    await user.click(screen.getByRole("button", { name: "Create payment QR" }));
     await screen.findByRole("alert");
 
     rerender(<CartPanel cart={cart(2)} onChange={vi.fn()} onOrder={vi.fn()} />);
-    await screen.findByText("Bagian penitip");
-    await user.click(screen.getByRole("button", { name: "Buat QR pembayaran" }));
+    await screen.findByText("Consignor share");
+    await user.click(screen.getByRole("button", { name: "Create payment QR" }));
 
     await waitFor(() => expect(orderCalls()).toHaveLength(2));
     const [first, second] = orderCalls();
@@ -110,8 +110,8 @@ describe("CartPanel", () => {
   it("tidak boleh menambah melebihi stok tersedia", async () => {
     post.mockImplementation(() => ok(preview));
     render(<CartPanel cart={cart(3)} onChange={vi.fn()} onOrder={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "Tambah Dompet Pandan" })).toBeDisabled();
-    await screen.findByText("Bagian penitip");
+    expect(screen.getByRole("button", { name: "Increase Dompet Pandan" })).toBeDisabled();
+    await screen.findByText("Consignor share");
   });
 
   it("menyimpan diskon beserta pihak yang menanggungnya", async () => {
@@ -120,10 +120,10 @@ describe("CartPanel", () => {
     const user = userEvent.setup();
     render(<CartPanel cart={cart()} onChange={onChange} onOrder={vi.fn()} />);
 
-    await user.click(screen.getByRole("button", { name: "Beri diskon" }));
-    await user.selectOptions(screen.getByLabelText("Ditanggung"), "consignor");
+    await user.click(screen.getByRole("button", { name: "Add discount" }));
+    await user.selectOptions(screen.getByLabelText("Borne by"), "consignor");
 
     expect(onChange).toHaveBeenLastCalledWith([{ item, quantity: 1, discount: { amount_idr: 0, borne_by: "consignor" } }]);
-    await screen.findByText("Bagian penitip");
+    await screen.findByText("Consignor share");
   });
 });

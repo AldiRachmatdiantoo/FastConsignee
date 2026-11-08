@@ -20,7 +20,7 @@ export async function readBalances(addresses: string[]): Promise<Record<string, 
   });
   const body = (await response.json()) as AccountsResponse;
   if (!body.result) {
-    throw new Error(body.error?.message ?? `RPC menjawab ${response.status}`);
+    throw new Error(body.error?.message ?? `RPC responded ${response.status}`);
   }
   const { value } = body.result;
   return Object.fromEntries(addresses.map((address, index) => [address, BigInt(value[index]?.lamports ?? 0)]));

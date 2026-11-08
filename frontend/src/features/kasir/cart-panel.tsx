@@ -85,8 +85,8 @@ export function CartPanel({ cart, onChange, onOrder }: CartPanelProps) {
 
   return (
     <Card className="lg:sticky lg:top-6 lg:self-start">
-      <h2 className="text-lg font-semibold">Keranjang</h2>
-      {empty ? <EmptyState>Pilih barang dari katalog.</EmptyState> : null}
+      <h2 className="text-lg font-semibold">Cart</h2>
+      {empty ? <EmptyState>Pick items from the catalog.</EmptyState> : null}
 
       <ul className="mt-2 divide-y divide-border">
         {cart.map((entry) => (
@@ -96,7 +96,7 @@ export function CartPanel({ cart, onChange, onOrder }: CartPanelProps) {
 
       {!empty && !current ? (
         <p role="status" className="mt-4 text-sm text-muted-foreground">
-          Menghitung pembagian...
+          Calculating the split...
         </p>
       ) : null}
       {!empty && current?.error ? (
@@ -107,11 +107,11 @@ export function CartPanel({ cart, onChange, onOrder }: CartPanelProps) {
 
       {!empty && current?.data ? (
         <div className="mt-4 border-t border-border pt-4">
-          <h3 className="font-semibold">Rincian pembagian</h3>
+          <h3 className="font-semibold">Split breakdown</h3>
           <SplitTable recipients={current.data.recipients} />
           {current.data.discount_idr > 0 ? (
             <p className="mt-2 flex justify-between text-sm text-muted-foreground">
-              <span>Diskon</span>
+              <span>Discount</span>
               <span>-{formatRupiah(current.data.discount_idr)}</span>
             </p>
           ) : null}
@@ -133,7 +133,7 @@ export function CartPanel({ cart, onChange, onOrder }: CartPanelProps) {
 
       {!empty ? (
         <Button className="mt-4 w-full" disabled={!current?.data || busy} onClick={() => void createOrder()}>
-          {busy ? "Membuat QR..." : "Buat QR pembayaran"}
+          {busy ? "Creating QR..." : "Create payment QR"}
         </Button>
       ) : null}
     </Card>
@@ -155,7 +155,7 @@ function CartRow({ entry, cart, onChange }: { entry: CartEntry; cart: Cart; onCh
         </div>
         <button
           type="button"
-          aria-label={`Hapus ${item.name}`}
+          aria-label={`Remove ${item.name}`}
           onClick={() => onChange(removeFromCart(cart, item.id))}
           className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
         >
@@ -166,17 +166,17 @@ function CartRow({ entry, cart, onChange }: { entry: CartEntry; cart: Cart; onCh
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            aria-label={`Kurangi ${item.name}`}
+            aria-label={`Decrease ${item.name}`}
             onClick={() => onChange(setQuantity(cart, item.id, quantity - 1))}
           >
             −
           </Button>
-          <span aria-label={`Jumlah ${item.name}`} className="min-w-8 text-center font-semibold">
+          <span aria-label={`Quantity ${item.name}`} className="min-w-8 text-center font-semibold">
             {quantity}
           </span>
           <Button
             variant="secondary"
-            aria-label={`Tambah ${item.name}`}
+            aria-label={`Increase ${item.name}`}
             disabled={quantity >= item.stock_available}
             onClick={() => onChange(setQuantity(cart, item.id, quantity + 1))}
           >
@@ -194,13 +194,13 @@ function CartRow({ entry, cart, onChange }: { entry: CartEntry; cart: Cart; onCh
           }}
           className="min-h-11 rounded-lg px-2 text-sm font-medium text-accent-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
         >
-          {open ? "Hapus diskon" : "Beri diskon"}
+          {open ? "Remove discount" : "Add discount"}
         </button>
       </div>
       {open ? (
         <div className="mt-2 grid grid-cols-2 gap-2">
           <TextField
-            label="Diskon (Rp)"
+            label="Discount (Rp)"
             type="number"
             min={0}
             inputMode="numeric"
@@ -215,7 +215,7 @@ function CartRow({ entry, cart, onChange }: { entry: CartEntry; cart: Cart; onCh
             }
           />
           <SelectField
-            label="Ditanggung"
+            label="Borne by"
             value={discount?.borne_by ?? "store"}
             onChange={(event) =>
               onChange(
@@ -226,8 +226,8 @@ function CartRow({ entry, cart, onChange }: { entry: CartEntry; cart: Cart; onCh
               )
             }
           >
-            <option value="store">Toko</option>
-            <option value="consignor">Penitip</option>
+            <option value="store">Shop</option>
+            <option value="consignor">Consignor</option>
           </SelectField>
         </div>
       ) : null}

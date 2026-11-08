@@ -36,7 +36,7 @@ func writeFailure(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 	slog.Error("Solana Pay gagal", "path", r.URL.Path, "request_id", api.RequestID(r.Context()), "error", err)
-	WriteError(w, http.StatusInternalServerError, "Terjadi kesalahan di server.")
+	WriteError(w, http.StatusInternalServerError, "Something went wrong on the server.")
 }
 
 // Service memegang aturan layar bayar dan Solana Pay.
@@ -59,7 +59,7 @@ func (s *Service) metadata(ctx context.Context, id uuid.UUID) (metadata, error) 
 		return metadata{}, err
 	}
 	if m == nil {
-		return metadata{}, &Failure{http.StatusNotFound, "Order tidak ditemukan."}
+		return metadata{}, &Failure{http.StatusNotFound, "Order not found."}
 	}
 	if m.Icon == nil {
 		m.Icon = &s.iconURL
@@ -74,15 +74,15 @@ func (s *Service) transaction(ctx context.Context, id uuid.UUID, account string)
 		return "", "", err
 	}
 	if o == nil {
-		return "", "", &Failure{http.StatusNotFound, "Order tidak ditemukan."}
+		return "", "", &Failure{http.StatusNotFound, "Order not found."}
 	}
 	switch {
 	case o.Status == order.StatusConfirmed:
-		return "", "", &Failure{http.StatusConflict, "Order ini sudah dibayar."}
+		return "", "", &Failure{http.StatusConflict, "This order is already paid."}
 	case o.Status == order.StatusFailed:
-		return "", "", &Failure{http.StatusConflict, "Order ini gagal. Minta kasir membuat order baru."}
+		return "", "", &Failure{http.StatusConflict, "This order failed. Ask the cashier for a new one."}
 	case o.Status == order.StatusExpired || !s.now().Before(o.ExpiresAt):
-		return "", "", &Failure{http.StatusGone, "Order ini sudah kedaluwarsa."}
+		return "", "", &Failure{http.StatusGone, "This order has expired."}
 	}
 	transfers := make([]solana.Transfer, 0, len(o.Split.Recipients))
 	for _, r := range o.Split.Recipients {
@@ -99,7 +99,7 @@ func (s *Service) transaction(ctx context.Context, id uuid.UUID, account string)
 	if err != nil {
 		return "", "", fmt.Errorf("susun transaksi: %w", err)
 	}
-	return encoded, "Pembayaran di " + o.StoreName, nil
+	return encoded, "Payment at " + o.StoreName, nil
 }
 
 // Handler berisi endpoint publik pembayaran.
@@ -152,7 +152,7 @@ func (h *Handler) PublicOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if o == nil {
-		api.Error(w, r, apperr.New(apperr.NotFound, "Order tidak ditemukan."))
+		api.Error(w, r, apperr.New(apperr.NotFound, "Order not found."))
 		return
 	}
 	lines := make([]publicLine, 0, len(o.Lines))
@@ -208,11 +208,11 @@ func (h *Handler) Transaction(w http.ResponseWriter, r *http.Request) {
 		Account string `json:"account"`
 	}
 	if err := api.DecodeLoose(w, r, &req); err != nil {
-		WriteError(w, http.StatusBadRequest, "Isi permintaan tidak valid.")
+		WriteError(w, http.StatusBadRequest, "Invalid request body.")
 		return
 	}
 	if !solana.ValidAddress(req.Account) {
-		WriteError(w, http.StatusBadRequest, "Alamat wallet tidak valid.")
+		WriteError(w, http.StatusBadRequest, "Invalid wallet address.")
 		return
 	}
 	encoded, message, err := h.service.transaction(r.Context(), id, req.Account)

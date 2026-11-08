@@ -14,7 +14,7 @@ function me(role: Me["role"]): Me {
   return {
     id: "1",
     email: "a@fastconsignee.test",
-    name: "Pemilik Demo",
+    name: "Demo Owner",
     role,
     store: { id: "2", name: "Toko Titip Nusantara" },
     consignor_id: null,
@@ -42,10 +42,10 @@ describe("AppShell", () => {
     show("store_owner");
 
     const menu = within(screen.getByRole("navigation", { name: "Menu", hidden: true }));
-    expect(menu.getByText("Penjualan")).toBeInTheDocument();
-    expect(menu.getByText("Kelola")).toBeInTheDocument();
-    expect(menu.getByRole("link", { name: "Barang", hidden: true })).toHaveAttribute("aria-current", "page");
-    expect(menu.getByRole("link", { name: "Kasir", hidden: true })).not.toHaveAttribute("aria-current");
+    expect(menu.getByText("Sales")).toBeInTheDocument();
+    expect(menu.getByText("Manage")).toBeInTheDocument();
+    expect(menu.getByRole("link", { name: "Items", hidden: true })).toHaveAttribute("aria-current", "page");
+    expect(menu.getByRole("link", { name: "Cashier", hidden: true })).not.toHaveAttribute("aria-current");
     expect(screen.getByText("Isi layar")).toBeVisible();
   });
 
@@ -54,7 +54,7 @@ describe("AppShell", () => {
     show("cashier");
 
     expect(screen.queryByRole("navigation", { name: "Menu", hidden: true })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Buka menu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     expect(screen.getByText("Toko Titip Nusantara")).toBeVisible();
   });
 
@@ -62,18 +62,18 @@ describe("AppShell", () => {
     show("consignor");
 
     const menu = within(screen.getByRole("navigation", { name: "Menu", hidden: true }));
-    expect(menu.getAllByRole("link", { hidden: true }).map((link) => link.textContent)).toEqual(["Dasbor", "Wallet"]);
+    expect(menu.getAllByRole("link", { hidden: true }).map((link) => link.textContent)).toEqual(["Dashboard", "Wallet"]);
   });
 
   it("membuka menu lalu menutupnya dengan Escape", async () => {
     const user = userEvent.setup();
     show("store_owner");
-    const open = screen.getByRole("button", { name: "Buka menu" });
+    const open = screen.getByRole("button", { name: "Open menu" });
     expect(open).toHaveAttribute("aria-expanded", "false");
 
     await user.click(open);
     expect(open).toHaveAttribute("aria-expanded", "true");
-    expect(document.activeElement).toHaveAccessibleName("Tutup menu");
+    expect(document.activeElement).toHaveAccessibleName("Close menu");
 
     await user.keyboard("{Escape}");
     expect(open).toHaveAttribute("aria-expanded", "false");
@@ -83,10 +83,10 @@ describe("AppShell", () => {
   it("menutup menu setelah memilih layar", async () => {
     const user = userEvent.setup();
     show("store_owner");
-    const open = screen.getByRole("button", { name: "Buka menu" });
+    const open = screen.getByRole("button", { name: "Open menu" });
 
     await user.click(open);
-    await user.click(screen.getByRole("link", { name: "Barang", hidden: true }));
+    await user.click(screen.getByRole("link", { name: "Items", hidden: true }));
     expect(open).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -94,7 +94,7 @@ describe("AppShell", () => {
     const user = userEvent.setup();
     show("consignor");
 
-    await user.click(screen.getByRole("button", { name: "Keluar" }));
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
     expect(signOut).toHaveBeenCalledOnce();
   });
 });

@@ -23,7 +23,7 @@ export function KasirScreen() {
   if (order) {
     return (
       <>
-        <h1 className="sr-only">Kasir</h1>
+        <h1 className="sr-only">Cashier</h1>
         <PaymentPanel
           order={order}
           onRetry={backToCart}
@@ -38,7 +38,7 @@ export function KasirScreen() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <h1 className="sr-only">Kasir</h1>
+      <h1 className="sr-only">Cashier</h1>
       <Catalog key={round} cart={cart} onAdd={(item) => setCart((current) => addToCart(current, item))} />
       <CartPanel cart={cart} onChange={setCart} onOrder={setOrder} />
     </div>

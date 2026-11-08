@@ -14,7 +14,7 @@ const stop = vi.fn();
 const fetchMock = vi.fn();
 let pushToken: (token: string | null) => void = () => {};
 
-const me = { id: "u1", role: "cashier", email: "kasir@toko.id", name: "Kasir", store: { id: "s1", name: "Toko" } };
+const me = { id: "u1", role: "cashier", email: "kasir@toko.id", name: "Cashier", store: { id: "s1", name: "Shop" } };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });

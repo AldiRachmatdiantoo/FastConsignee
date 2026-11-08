@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
   const email = (body as { email?: unknown } | null)?.email;
   if (typeof email !== "string" || !isLocalAccount(email)) {
-    return NextResponse.json({ error: "Akun lokal tidak dikenal." }, { status: 400 });
+    return NextResponse.json({ error: "Unknown local account." }, { status: 400 });
   }
   const token = await signLocalToken({ email, secret, issuer });
   return NextResponse.json({ token });

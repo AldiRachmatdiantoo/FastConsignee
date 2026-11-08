@@ -1,4 +1,71 @@
-# PRD FastConsignee
+# FastConsignee
+
+A point of sale for consignment shops, built on Solana. The buyer pays once, and every consignor's share and the shop's commission go out in the same Solana transaction.
+
+- **Live app:** https://fast-consignee.vercel.app
+- **API:** https://fastconsignee-api.onrender.com
+- **Network:** Solana Devnet, so no real money is involved
+
+## The problem
+
+Many small makers sell through someone else's shop: craftspeople, second-hand sellers, home kitchens. They leave their goods, the shop sells them, and the shop takes a commission. The money lands with the shop first, and consignors wait for a periodic settlement. They only know what sold from the shop's report. Shop owners, in turn, juggle different commission rates, keep many consignors' money apart, and write reports by hand.
+
+## How it works
+
+1. **The store owner adds consignors and items**, each item with its own commission rate. The shop and each consignor link a wallet by signing a message, so a stolen login cannot redirect payouts.
+2. **The cashier builds a cart** with items from up to five consignors and creates a Solana Pay QR. The SOL rate is locked for that order.
+3. **The buyer scans the QR with Phantom and approves once.** One transaction pays every consignor and the shop. Nobody holds the money in between, FastConsignee included. Buyers do not need an account.
+4. **The cashier screen confirms on its own**, with a link to the transaction on Solana Explorer.
+5. **Consignors check their own sales** on their dashboard instead of asking the shop.
+6. **Refunds come from the shop wallet.** The consignor's share of a refund is recorded as a deduction and settled automatically from their next sale.
+
+Example: a bamboo basket sells for Rp 95,000 at a 20% commission. The consignor receives Rp 76,000 and the shop Rp 19,000, in one transaction, converted to SOL at the locked rate.
+
+## Try it
+
+1. Install Phantom, turn on Testnet Mode, and choose Solana Devnet.
+2. Get free Devnet SOL from https://faucet.solana.com.
+3. Staff sign in with Google. Accounts are registered per store, so a new Google account sees an "account not registered" screen.
+4. On a phone, scan the payment QR from Phantom, or open the pay link and tap "Open in the Phantom app".
+
+## Stack
+
+| Area | Choice |
+| --- | --- |
+| Frontend | Next.js and React on Vercel, Tailwind CSS |
+| Backend | Go (`net/http`, `pgx`, `goose`) on Render |
+| Database | Postgres on Supabase |
+| Sign-in | Google OAuth through Supabase Auth, JWT verified by the Go API, roles read from the database |
+| Payments | Solana Pay transaction requests, `@solana/web3.js`, Wallet Adapter, `solana-go` |
+| API contract | OpenAPI 3.1 with RFC 9457 errors, linted with Redocly and Spectral |
+| Cost | Zero, free tiers only |
+
+![FastConsignee architecture](docs/img/arsitektur.png)
+
+Phantom receives the transaction from the Go API and sends it to Solana once the buyer approves. The diagram shows the target architecture. While the project runs at zero cost, the API is a single instance with an in-memory cache.
+
+## Testing
+
+- **Backend:** unit, property, and fuzz tests for the split, commission, rounding, and deductions; repository tests on real Postgres; handler tests with `httptest`; `go test -race` for concurrent confirmations; k6 load tests; `gosec` and `govulncheck`.
+- **Frontend:** Vitest and Testing Library for every screen.
+- **End to end:** Playwright in Edge and WebKit, from the cashier to the dashboards, including phone sizes.
+- **Manual:** paying with Phantom on a phone. The first production payment on Devnet went through on 8 November 2026.
+
+Test results and the work log are in [docs/BACKLOG.md](docs/BACKLOG.md), written in Indonesian.
+
+## Credits
+
+The landing and login pages use the free [Linea template by 8B](https://8b.com/templates/linea/) under the MIT license, with new copy, colors, photos, and fonts. The dashboard layout takes cues from Datta Able by CodedThemes; its code was written from scratch. Photos come from Unsplash. The full list is in [CREDITS.md](frontend/public/landing/CREDITS.md). The product itself, meaning the cashier, the payment split, refunds, and dashboards, was built for this project.
+
+## AI usage
+
+This is a solo project built with help from Claude Code by Anthropic, used to draft the PRD, backlog, and docs, to write and fix backend, frontend, API contract, and test code, and to run the tests and log the results. Product decisions, the stack, design references, and reviewing the results were done by the author. All commits come from the author's account.
+
+---
+
+The original product requirements document follows, in Indonesian.
+
+# Product requirements (Bahasa Indonesia)
 
 Nov 6, 2026
 FastConsignee adalah kasir untuk toko konsinyasi: pembeli membayar sekali, lalu bagian tiap penitip dan komisi toko terkirim dalam satu transaksi Solana. Versi hackathon berjalan di Devnet dan harus terkumpul di halaman submit MLH sebelum Nov 8, 2026, pukul 21:00 WIB.

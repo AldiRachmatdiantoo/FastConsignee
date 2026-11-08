@@ -45,7 +45,7 @@ func (g *Guard) Authenticated(next http.Handler) http.Handler {
 				middleware.Reject(w, r, d)
 				return
 			}
-			api.Error(w, r, apperr.New(apperr.Unauthenticated, "Login diperlukan."))
+			api.Error(w, r, apperr.New(apperr.Unauthenticated, "Sign-in required."))
 			return
 		}
 		d := g.accounts.Allow(id.Subject)
@@ -80,7 +80,7 @@ func RequireWallet(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := MustFromContext(r.Context())
 		if p.WalletRequired() && !p.HasWallet() {
-			api.Error(w, r, apperr.New(apperr.WalletNotLinked, "Tautkan wallet lebih dulu."))
+			api.Error(w, r, apperr.New(apperr.WalletNotLinked, "Link a wallet first."))
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -92,7 +92,7 @@ func RequireRole(roles ...Role) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !slices.Contains(roles, MustFromContext(r.Context()).Role) {
-				api.Error(w, r, apperr.New(apperr.Forbidden, "Peran ini tidak boleh mengakses data tersebut."))
+				api.Error(w, r, apperr.New(apperr.Forbidden, "This role cannot access that data."))
 				return
 			}
 			next.ServeHTTP(w, r)

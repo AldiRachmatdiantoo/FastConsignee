@@ -34,12 +34,12 @@ describe("requestTransaction", () => {
 
   it("punya pesan cadangan kalau jawaban tidak berisi pesan", async () => {
     post.mockResolvedValue({ error: {} });
-    await expect(requestTransaction(api, "o1", "wallet")).rejects.toThrow("Transaksi tidak bisa disusun. Coba lagi.");
+    await expect(requestTransaction(api, "o1", "wallet")).rejects.toThrow("The transaction could not be built. Try again.");
   });
 
-  it("memberi tahu kalau API tidak bisa dihubungi", async () => {
+  it("memberi tahu kalau The API cannot be reached", async () => {
     post.mockRejectedValue(new TypeError("failed to fetch"));
-    await expect(requestTransaction(api, "o1", "wallet")).rejects.toThrow("API tidak bisa dihubungi.");
+    await expect(requestTransaction(api, "o1", "wallet")).rejects.toThrow("The API cannot be reached.");
   });
 });
 
@@ -49,6 +49,6 @@ describe("payErrorMessage", () => {
   });
 
   it("menganggap error lain sebagai penolakan di wallet", () => {
-    expect(payErrorMessage(new Error("User rejected"))).toContain("Saldo tidak berubah");
+    expect(payErrorMessage(new Error("User rejected"))).toContain("No balance changed");
   });
 });

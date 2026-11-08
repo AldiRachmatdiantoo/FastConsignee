@@ -103,7 +103,7 @@ func (r *Repository) details(ctx context.Context, id uuid.UUID) (*details, error
 		JOIN orders o ON o.id = l.order_id
 		WHERE c.id = $1`, id).Scan(&d.Item, &d.Store, &d.Signature, &d.ConfirmedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apperr.New(apperr.NotFound, "Sertifikat tidak ditemukan.")
+		return nil, apperr.New(apperr.NotFound, "Certificate not found.")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("baca sertifikat: %w", err)

@@ -48,7 +48,7 @@ export function BalancePanel({ recipients, confirmed }: { recipients: Recipient[
   usePolling(refresh, REFRESH_MS, confirmed && !settled);
 
   if (failed) {
-    return <p className="text-sm text-muted-foreground">Saldo Devnet tidak bisa dibaca saat ini.</p>;
+    return <p className="text-sm text-muted-foreground">Devnet balances cannot be read right now.</p>;
   }
   if (!before) {
     return null;
@@ -56,7 +56,7 @@ export function BalancePanel({ recipients, confirmed }: { recipients: Recipient[
 
   return (
     <div>
-      <h3 className="font-semibold">Saldo wallet di Devnet</h3>
+      <h3 className="font-semibold">Wallet balances on Devnet</h3>
       <ul className="mt-2 divide-y divide-border text-sm">
         {recipients.map(({ wallet_address: address, name }) => {
           const start = before[address];

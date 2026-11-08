@@ -153,7 +153,7 @@ type createInput struct {
 }
 
 func notFound() error {
-	return apperr.New(apperr.NotFound, "Penitip tidak ditemukan.")
+	return apperr.New(apperr.NotFound, "Consignor not found.")
 }
 
 func (s *Service) get(ctx context.Context, storeID, id uuid.UUID) (Consignor, error) {
@@ -178,16 +178,16 @@ func (s *Service) create(ctx context.Context, storeID uuid.UUID, in createInput)
 				return err
 			}
 			if taken {
-				return apperr.New(apperr.WalletAlreadyLinked, "Wallet ini sudah tertaut ke pihak lain.")
+				return apperr.New(apperr.WalletAlreadyLinked, "This wallet is already linked to someone else.")
 			}
 		}
 		return s.repo.insert(ctx, storeID, id, in)
 	})
 	switch {
 	case database.IsUniqueViolation(err, "users_email_key"):
-		return Consignor{}, apperr.New(apperr.ConsignorEmailTaken, "Email ini sudah terdaftar.")
+		return Consignor{}, apperr.New(apperr.ConsignorEmailTaken, "This email is already registered.")
 	case database.IsUniqueViolation(err, "consignors_wallet_address_key"):
-		return Consignor{}, apperr.New(apperr.WalletAlreadyLinked, "Wallet ini sudah tertaut ke pihak lain.")
+		return Consignor{}, apperr.New(apperr.WalletAlreadyLinked, "This wallet is already linked to someone else.")
 	case err != nil:
 		return Consignor{}, err
 	}

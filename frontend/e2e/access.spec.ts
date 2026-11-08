@@ -9,7 +9,7 @@ test("tanpa sesi diarahkan ke login", async ({ browser }) => {
 
 test("kasir hanya bisa membuka layar kasir", async ({ browser }) => {
   const { page } = await openActor(browser);
-  await login(page, "Kasir Demo");
+  await login(page, "Demo Cashier");
   for (const path of ["/dasbor", "/refund", "/barang", "/penitip", "/wallet"]) {
     await page.goto(path);
     await page.waitForURL("**/kasir");
@@ -25,37 +25,37 @@ test("penitip tidak bisa membuka layar toko", async ({ browser }) => {
     await page.goto(path);
     await page.waitForURL("**/dasbor");
   }
-  await expect(page.getByRole("link", { name: "Barang" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Items" })).toHaveCount(0);
 });
 
 test("refund menolak wallet selain wallet toko", async ({ browser }) => {
   const owner = await openActor(browser);
-  await login(owner.page, "Pemilik Demo");
+  await login(owner.page, "Demo Owner");
   await linkWallet(owner.page);
   await paidOrder(browser, "Kopi Toraja 250 g");
 
   const other = await openActor(browser, Keypair.generate());
-  await login(other.page, "Pemilik Demo");
+  await login(other.page, "Demo Owner");
   await other.page.goto("/refund");
-  await expect(other.page.getByRole("heading", { name: "Order terkonfirmasi" })).toBeVisible();
+  await expect(other.page.getByRole("heading", { name: "Confirmed orders" })).toBeVisible();
   await other.page.locator("button[aria-pressed=false]").first().click();
   await other.page.getByRole("button", { name: "Test Wallet" }).click();
-  await expect(other.page.getByText("Ini bukan wallet toko.")).toBeVisible();
-  await expect(other.page.getByRole("button", { name: /^Refund satu/ }).first()).toBeDisabled();
+  await expect(other.page.getByText("This is not the shop wallet.")).toBeVisible();
+  await expect(other.page.getByRole("button", { name: /^Refund one/ }).first()).toBeDisabled();
 });
 
 test("API putus saat reload tidak mengeluarkan pengguna", async ({ browser }) => {
   const cashier = await openActor(browser);
-  await login(cashier.page, "Kasir Demo");
+  await login(cashier.page, "Demo Cashier");
   const api = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/**`;
 
   await cashier.context.route(api, (route) => route.abort());
   await cashier.page.reload();
-  await expect(cashier.page.getByRole("heading", { name: "Belum tersambung" })).toBeVisible();
+  await expect(cashier.page.getByRole("heading", { name: "Not connected yet" })).toBeVisible();
   await expect(cashier.page).toHaveURL(/\/kasir$/);
 
   await cashier.context.unroute(api);
-  await cashier.page.getByRole("button", { name: "Coba lagi" }).click();
-  await expect(cashier.page.getByRole("button", { name: "Keluar" })).toBeVisible();
+  await cashier.page.getByRole("button", { name: "Try again" }).click();
+  await expect(cashier.page.getByRole("button", { name: "Sign out" })).toBeVisible();
   await expect(cashier.page).toHaveURL(/\/kasir$/);
 });

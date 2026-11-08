@@ -29,7 +29,7 @@ vi.mock("./wallet-payment", () => {
 it("tetap menampilkan QR kalau berkas wallet gagal dimuat", async () => {
   render(<BayarScreen orderId="o1" />);
 
-  await userEvent.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
-  expect(await screen.findByText(/Wallet tidak bisa dimuat/)).toBeVisible();
-  expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
+  await userEvent.click(await screen.findByRole("button", { name: "Pay with wallet" }));
+  expect(await screen.findByText(/The wallet could not load/)).toBeVisible();
+  expect(screen.getByTitle("Solana Pay payment QR")).toBeInTheDocument();
 });

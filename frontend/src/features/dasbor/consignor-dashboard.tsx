@@ -65,12 +65,12 @@ export function ConsignorDashboard() {
 
   return (
     <div className="grid gap-6">
-      <PageTitle title="Dasbor penitip" text="Tiap penjualan bisa kamu periksa sendiri di Solana Explorer." />
+      <PageTitle title="Consignor dashboard" text="You can check every sale yourself on Solana Explorer." />
 
       {state.status === "error" ? <Notice tone="danger">{state.message}</Notice> : null}
       {state.status === "loading" ? <TilesSkeleton /> : null}
       {state.status === "ready" && !state.data.complete ? (
-        <Notice tone="info">Ringkasan ini dihitung dari {PAGE_SIZE * MAX_PAGES} data terbaru.</Notice>
+        <Notice tone="info">This summary covers the {PAGE_SIZE * MAX_PAGES} latest records.</Notice>
       ) : null}
       {state.status === "ready" ? <Tiles overview={state.data} /> : null}
 
@@ -126,48 +126,48 @@ function Tiles({ overview }: { overview: Overview }) {
     <>
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Bagian hari ini"
+          title="Today's share"
           value={formatRupiah(shareToday)}
-          delta={{ value: change(shareToday, shareIn(sales, yesterday)), baseline: "kemarin" }}
+          delta={{ value: change(shareToday, shareIn(sales, yesterday)), baseline: "yesterday" }}
           percent={share(shareToday, shareMonth)}
-          meterLabel="Porsi dari bagian bulan ini"
+          meterLabel="Portion of this month's share"
         />
         <StatCard
-          title="Bagian bulan ini"
+          title="This month's share"
           value={formatRupiah(shareMonth)}
-          delta={{ value: change(shareMonth, shareIn(sales, lastMonth)), baseline: "bulan lalu" }}
+          delta={{ value: change(shareMonth, shareIn(sales, lastMonth)), baseline: "last month" }}
           percent={share(shareMonth, totalShare)}
-          meterLabel="Porsi dari semua bagianmu"
+          meterLabel="Portion of all your shares"
         />
         <StatCard
-          title="Total bagian"
+          title="Total share"
           value={formatRupiah(totalShare)}
-          note="Sebelum potongan refund"
+          note="Before refund deductions"
           percent={share(totalShare, totalPrice)}
-          meterLabel="Porsi dari harga jual"
+          meterLabel="Portion of the sale price"
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
           icon={<TagIcon />}
-          title="Barang terjual"
-          value={`${units} unit`}
-          caption={`${refunded} unit di-refund`}
+          title="Items sold"
+          value={`${units} pcs`}
+          caption={`${refunded} units refunded`}
           parts={[
-            { label: "Hari ini", value: `${unitsToday} unit`, percent: share(unitsToday, units) },
-            { label: "Bulan ini", value: `${unitsMonth} unit`, percent: share(unitsMonth, units) },
+            { label: "Today", value: `${unitsToday} pcs`, percent: share(unitsToday, units) },
+            { label: "This month", value: `${unitsMonth} pcs`, percent: share(unitsMonth, units) },
           ]}
         />
         <MetricCard
           icon={<BoxIcon />}
-          title="Stok tersisa"
-          value={`${sumBy(active, (item) => item.stock_available)} unit`}
-          caption="Dari barang yang aktif"
+          title="Stock left"
+          value={`${sumBy(active, (item) => item.stock_available)} pcs`}
+          caption="Across active items"
           parts={[
-            { label: "Barang aktif", value: String(active.length), percent: share(active.length, stock.length) },
+            { label: "Active items", value: String(active.length), percent: share(active.length, stock.length) },
             {
-              label: "Barang nonaktif",
+              label: "Inactive items",
               value: String(stock.length - active.length),
               percent: share(stock.length - active.length, stock.length),
             },
@@ -175,12 +175,12 @@ function Tiles({ overview }: { overview: Overview }) {
         />
         <MetricCard
           icon={<RefundIcon />}
-          title="Potongan belum lunas"
+          title="Unpaid deductions"
           value={formatRupiah(outstanding)}
-          caption="Diambil dari penjualan berikutnya"
+          caption="Taken from the next sales"
           parts={[
-            { label: "Masih berjalan", value: String(open), percent: share(open, deductions.length) },
-            { label: "Sudah lunas", value: String(settled), percent: share(settled, deductions.length) },
+            { label: "Still open", value: String(open), percent: share(open, deductions.length) },
+            { label: "Paid off", value: String(settled), percent: share(settled, deductions.length) },
           ]}
         />
       </div>
@@ -194,7 +194,7 @@ function WeekCard({ overview }: { overview: Overview }) {
   return (
     <DailyBars
       hero={formatRupiah(week)}
-      heroLabel={`Rata-rata ${formatRupiah(Math.round(week / days.length))} per hari`}
+      heroLabel={`Average ${formatRupiah(Math.round(week / days.length))} per day`}
       days={days.map((day) => ({ ...day, text: formatRupiah(day.value) }))}
     />
   );
@@ -210,14 +210,14 @@ function Sales() {
 
   return (
     <Card flush>
-      <h2 className="border-b border-border px-5 py-4 font-semibold">Penjualan</h2>
+      <h2 className="border-b border-border px-5 py-4 font-semibold">Sales</h2>
       {message ? (
         <div className="px-5 pt-3">
           <Notice tone="danger">{message}</Notice>
         </div>
       ) : null}
       {status === "loading" ? <ListSkeleton rows={3} lines={3} icon rowClassName="px-5" /> : null}
-      {status === "ready" && items.length === 0 ? <EmptyState>Belum ada barang yang terjual.</EmptyState> : null}
+      {status === "ready" && items.length === 0 ? <EmptyState>No items sold yet.</EmptyState> : null}
       <ul className="divide-y divide-border text-sm empty:hidden">
         {items.map((sale) => (
           <li key={sale.order_line_id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
@@ -230,13 +230,13 @@ function Sales() {
               </p>
               <p className="text-muted-foreground">{formatDateTime(sale.sold_at)}</p>
               <p className="text-muted-foreground">
-                Harga {formatRupiah(sale.line_total_idr)} · komisi {formatRupiah(sale.commission_idr)}
+                Price {formatRupiah(sale.line_total_idr)} · commission {formatRupiah(sale.commission_idr)}
               </p>
               {sale.refunded_quantity > 0 ? (
-                <p className="text-muted-foreground">{sale.refunded_quantity} unit sudah di-refund</p>
+                <p className="text-muted-foreground">{sale.refunded_quantity} units refunded</p>
               ) : null}
               {sale.order_deduction_idr > 0 ? (
-                <p className="text-muted-foreground">Dipotong {formatRupiah(sale.order_deduction_idr)} untuk refund lama</p>
+                <p className="text-muted-foreground">Deducted {formatRupiah(sale.order_deduction_idr)} for an earlier refund</p>
               ) : null}
             </div>
             <div className="sm:text-right">
@@ -273,14 +273,14 @@ function Deductions() {
   return (
     <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-semibold">Potongan refund</h2>
+        <h2 className="font-semibold">Refund deductions</h2>
         <p className="text-sm text-muted-foreground">
-          Belum lunas <span className="font-semibold text-foreground">{formatRupiah(outstanding)}</span>
+          Unpaid <span className="font-semibold text-foreground">{formatRupiah(outstanding)}</span>
         </p>
       </div>
       {message ? <Notice tone="danger">{message}</Notice> : null}
       {status === "loading" ? <ListSkeleton rows={3} className="mt-2" /> : null}
-      {status === "ready" && items.length === 0 ? <EmptyState>Tidak ada potongan.</EmptyState> : null}
+      {status === "ready" && items.length === 0 ? <EmptyState>No deductions.</EmptyState> : null}
       <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((deduction) => (
           <li key={deduction.id} className="flex items-baseline justify-between gap-3 py-3">
@@ -291,7 +291,7 @@ function Deductions() {
             <div className="text-right">
               <p className="font-semibold">{formatRupiah(deduction.amount_idr)}</p>
               <p className="text-muted-foreground">
-                {deduction.status === "settled" ? "Lunas" : `Sisa ${formatRupiah(deduction.remaining_idr)}`}
+                {deduction.status === "settled" ? "Paid" : `Remaining ${formatRupiah(deduction.remaining_idr)}`}
               </p>
             </div>
           </li>
@@ -312,10 +312,10 @@ function StockList() {
 
   return (
     <Card>
-      <h2 className="font-semibold">Stok titipan</h2>
+      <h2 className="font-semibold">Consigned stock</h2>
       {message ? <Notice tone="danger">{message}</Notice> : null}
       {status === "loading" ? <ListSkeleton rows={3} className="mt-2" /> : null}
-      {status === "ready" && items.length === 0 ? <EmptyState>Belum ada barang titipan.</EmptyState> : null}
+      {status === "ready" && items.length === 0 ? <EmptyState>No consigned items yet.</EmptyState> : null}
       <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((stock) => (
           <li key={stock.item_id} className="flex items-baseline justify-between gap-3 py-3">
@@ -323,10 +323,10 @@ function StockList() {
               <p className="font-semibold">{stock.item_name}</p>
               <p className="text-muted-foreground">
                 {formatRupiah(stock.price_idr)}
-                {stock.active ? "" : " · nonaktif"}
+                {stock.active ? "" : " · inactive"}
               </p>
             </div>
-            <p className="font-semibold whitespace-nowrap">Stok {stock.stock_available}</p>
+            <p className="font-semibold whitespace-nowrap">Stock {stock.stock_available}</p>
           </li>
         ))}
       </ul>

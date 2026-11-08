@@ -73,12 +73,12 @@ export function StoreDashboard() {
 
   return (
     <div className="grid gap-6">
-      <PageTitle title="Dasbor toko" text="Ringkasan ini bisa terlambat sampai 30 detik." />
+      <PageTitle title="Store dashboard" text="This summary can lag by up to 30 seconds." />
 
       {state.status === "error" ? <Notice tone="danger">{state.message}</Notice> : null}
       {state.status === "loading" ? <TilesSkeleton /> : null}
       {state.status === "ready" && !state.data.complete ? (
-        <Notice tone="info">Angka harian dihitung dari {PAGE_SIZE * MAX_PAGES} transaksi terbaru.</Notice>
+        <Notice tone="info">Daily figures cover the {PAGE_SIZE * MAX_PAGES} latest transactions.</Notice>
       ) : null}
       {state.status === "ready" ? <Tiles overview={state.data} /> : null}
 
@@ -101,42 +101,42 @@ function Tiles({ overview }: { overview: Overview }) {
     <>
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Penjualan hari ini"
+          title="Sales today"
           value={formatRupiah(today.sales)}
-          delta={{ value: change(today.sales, yesterday.sales), baseline: "kemarin" }}
+          delta={{ value: change(today.sales, yesterday.sales), baseline: "yesterday" }}
           percent={share(today.sales, month.total_sales_idr)}
-          meterLabel="Porsi dari penjualan bulan ini"
+          meterLabel="Portion of this month's sales"
         />
         <StatCard
-          title="Penjualan bulan ini"
+          title="Sales this month"
           value={formatRupiah(month.total_sales_idr)}
-          delta={{ value: change(month.total_sales_idr, lastMonth.total_sales_idr), baseline: "bulan lalu" }}
+          delta={{ value: change(month.total_sales_idr, lastMonth.total_sales_idr), baseline: "last month" }}
           percent={share(month.total_sales_idr, sales)}
-          meterLabel="Porsi dari semua penjualan"
+          meterLabel="Portion of all sales"
         />
         <StatCard
-          title="Total penjualan"
+          title="Total sales"
           value={formatRupiah(sales)}
-          note={`${total.transaction_count} transaksi terkonfirmasi`}
+          note={`${total.transaction_count} confirmed transactions`}
           percent={share(consignors, sales)}
-          meterLabel="Porsi yang menjadi bagian penitip"
+          meterLabel="Portion paid to consignors"
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
           icon={<CoinsIcon />}
-          title="Komisi toko"
+          title="Shop commission"
           value={formatRupiah(total.total_commission_idr)}
-          caption={`${share(total.total_commission_idr, sales)}% dari penjualan`}
+          caption={`${share(total.total_commission_idr, sales)}% of sales`}
           parts={[
             {
-              label: "Hari ini",
+              label: "Today",
               value: formatRupiah(today.commission),
               percent: share(today.commission, total.total_commission_idr),
             },
             {
-              label: "Bulan ini",
+              label: "This month",
               value: formatRupiah(month.total_commission_idr),
               percent: share(month.total_commission_idr, total.total_commission_idr),
             },
@@ -144,17 +144,17 @@ function Tiles({ overview }: { overview: Overview }) {
         />
         <MetricCard
           icon={<ReceiptIcon />}
-          title="Jumlah transaksi"
+          title="Transactions"
           value={String(total.transaction_count)}
-          caption={`Rata-rata ${formatRupiah(Math.round(sales / Math.max(total.transaction_count, 1)))}`}
+          caption={`Average ${formatRupiah(Math.round(sales / Math.max(total.transaction_count, 1)))}`}
           parts={[
             {
-              label: "Hari ini",
+              label: "Today",
               value: String(today.count),
               percent: share(today.count, total.transaction_count),
             },
             {
-              label: "Bulan ini",
+              label: "This month",
               value: String(month.transaction_count),
               percent: share(month.transaction_count, total.transaction_count),
             },
@@ -162,17 +162,17 @@ function Tiles({ overview }: { overview: Overview }) {
         />
         <MetricCard
           icon={<UsersIcon />}
-          title="Bagian penitip"
+          title="Consignor share"
           value={formatRupiah(consignors)}
-          caption="Sebelum potongan refund"
+          caption="Before refund deductions"
           parts={[
             {
-              label: "Hari ini",
+              label: "Today",
               value: formatRupiah(today.sales - today.commission),
               percent: share(today.sales - today.commission, consignors),
             },
             {
-              label: "Bulan ini",
+              label: "This month",
               value: formatRupiah(consignorShare(month)),
               percent: share(consignorShare(month), consignors),
             },
@@ -188,7 +188,7 @@ function WeekCard({ overview }: { overview: Overview }) {
   return (
     <DailyBars
       hero={formatRupiah(week)}
-      heroLabel={`Rata-rata ${formatRupiah(Math.round(week / overview.days.length))} per hari`}
+      heroLabel={`Average ${formatRupiah(Math.round(week / overview.days.length))} per day`}
       days={overview.days.map(({ label, sales }) => ({ label, value: sales, text: formatRupiah(sales) }))}
     />
   );
@@ -204,14 +204,14 @@ function Orders() {
 
   return (
     <Card flush>
-      <h2 className="border-b border-border px-5 py-4 font-semibold">Transaksi terkonfirmasi</h2>
+      <h2 className="border-b border-border px-5 py-4 font-semibold">Confirmed transactions</h2>
       {orders.message ? (
         <div className="px-5 pt-3">
           <Notice tone="danger">{orders.message}</Notice>
         </div>
       ) : null}
       {orders.status === "loading" ? <ListSkeleton rows={3} icon rowClassName="px-5" /> : null}
-      {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada transaksi.</EmptyState> : null}
+      {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>No transactions yet.</EmptyState> : null}
       <ul className="divide-y divide-border text-sm empty:hidden">
         {orders.items.map((order) => (
           <li key={order.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
@@ -221,7 +221,7 @@ function Orders() {
             <div className="min-w-0 flex-1 basis-40">
               <p className="font-semibold">{formatRupiah(order.total_idr)}</p>
               <p className="text-muted-foreground">
-                {order.item_count} barang · komisi {formatRupiah(order.commission_idr)}
+                {order.item_count} items · commission {formatRupiah(order.commission_idr)}
               </p>
             </div>
             <p className="flex items-center gap-2 text-muted-foreground">

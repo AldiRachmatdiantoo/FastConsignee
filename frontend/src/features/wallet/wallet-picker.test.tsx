@@ -39,25 +39,25 @@ describe("WalletPicker tanpa wallet", () => {
   it("di laptop meminta memasang Phantom lalu memuat ulang", () => {
     asDevice(WINDOWS);
     render(<WalletPicker openInPhantom />);
-    expect(screen.getByText("Belum ada wallet di browser ini")).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Buka di aplikasi Phantom" })).not.toBeInTheDocument();
+    expect(screen.getByText("No wallet in this browser yet")).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Open in the Phantom app" })).not.toBeInTheDocument();
   });
 
   it("di HP layar bayar menawarkan membuka halaman ini di aplikasi Phantom", () => {
     asDevice(IPHONE);
     render(<WalletPicker openInPhantom />);
-    expect(screen.queryByText("Belum ada wallet di browser ini")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Buka di aplikasi Phantom" })).toHaveAttribute(
+    expect(screen.queryByText("No wallet in this browser yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open in the Phantom app" })).toHaveAttribute(
       "href",
       phantomBrowseLink(window.location.href, window.location.origin),
     );
-    expect(screen.getByRole("link", { name: "Belum punya Phantom? Pasang dulu" })).toHaveAttribute("href", "https://phantom.com/download");
+    expect(screen.getByRole("link", { name: "No Phantom yet? Install it first" })).toHaveAttribute("href", "https://phantom.com/download");
   });
 
   it("di HP layar yang butuh login mengarahkan ke laptop", () => {
     asDevice(IPHONE);
     render(<WalletPicker />);
-    expect(screen.getByText(/Buka halaman ini di laptop yang memasang Phantom/)).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Buka di aplikasi Phantom" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Open this page on a laptop with Phantom installed/)).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Open in the Phantom app" })).not.toBeInTheDocument();
   });
 });

@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 const cashier = {
   id: "1",
   email: "kasir@fastconsignee.test",
-  name: "Kasir Demo",
+  name: "Demo Cashier",
   role: "cashier",
   store: { id: "2", name: "Toko Titip Nusantara" },
   consignor_id: null,
@@ -54,7 +54,7 @@ describe("LoginScreen", () => {
   it("memasukkan akun lokal lalu membuka layar sesuai peran", async () => {
     stubFetch((url) => (url.endsWith("/api/local-login") ? json({ token: "token-lokal" }) : json(cashier)));
     show();
-    await userEvent.click(await screen.findByRole("button", { name: /Kasir Demo/ }));
+    await userEvent.click(await screen.findByRole("button", { name: /Demo Cashier/ }));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/kasir"));
     expect(sessionStorage.getItem("fastconsignee.token")).toBe("token-lokal");
   });
@@ -72,7 +72,7 @@ describe("LoginScreen", () => {
       json({ title: "Belum login", status: 401, code: "UNAUTHENTICATED", request_id: "req-1" }, 401),
     );
     show();
-    expect(await screen.findByRole("alert")).toHaveTextContent("Sesi berakhir");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Your session ended");
     expect(sessionStorage.getItem("fastconsignee.token")).toBeNull();
     expect(replace).not.toHaveBeenCalled();
   });
@@ -93,7 +93,7 @@ describe("LoginScreen", () => {
   it("memberi tahu kalau login lokal belum dikonfigurasi", async () => {
     stubFetch(() => new Response(null, { status: 404 }));
     show();
-    await userEvent.click(await screen.findByRole("button", { name: /Kasir Demo/ }));
+    await userEvent.click(await screen.findByRole("button", { name: /Demo Cashier/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("LOCAL_JWT_SECRET");
   });
 
@@ -106,26 +106,26 @@ describe("LoginScreen", () => {
       }),
     );
     show();
-    expect(await screen.findByRole("alert")).toHaveTextContent("API tidak bisa dihubungi");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The API cannot be reached");
   });
 
   it("menyembunyikan akun lokal di luar mode lokal", async () => {
     vi.stubEnv("NEXT_PUBLIC_LOCAL_LOGIN", "");
     stubFetch(() => json(cashier));
     show();
-    expect(await screen.findByText("Login Google belum tersambung.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Kasir Demo/ })).not.toBeInTheDocument();
+    expect(await screen.findByText("Google sign-in is not connected yet.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Demo Cashier/ })).not.toBeInTheDocument();
   });
 
   it("menonaktifkan tombol Google selama belum tersambung", async () => {
     stubFetch(() => json(cashier));
     show();
-    expect(await screen.findByRole("button", { name: "Masuk dengan Google" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Sign in with Google" })).toBeDisabled();
   });
 
   it("menyediakan jalan kembali ke landing page", async () => {
     stubFetch(() => json(cashier));
     show();
-    expect(await screen.findByRole("link", { name: "Kembali ke beranda" })).toHaveAttribute("href", "/");
+    expect(await screen.findByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
   });
 });

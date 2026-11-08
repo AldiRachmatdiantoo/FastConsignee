@@ -8,9 +8,9 @@ function me(role: Me["role"], linked: boolean): Me {
   return {
     id: "1",
     email: "a@fastconsignee.test",
-    name: "Akun",
+    name: "Account",
     role,
-    store: { id: "2", name: "Toko" },
+    store: { id: "2", name: "Shop" },
     consignor_id: null,
     wallet: linked ? wallet : null,
     wallet_required: role !== "cashier",
@@ -51,7 +51,7 @@ describe("guardTarget", () => {
 
 describe("roleLabel", () => {
   it("menerjemahkan peran", () => {
-    expect(roleLabel("store_owner")).toBe("Pemilik toko");
+    expect(roleLabel("store_owner")).toBe("Store owner");
   });
 });
 

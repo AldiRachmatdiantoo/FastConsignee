@@ -86,10 +86,10 @@ func New(d Deps) *App {
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		if allowed := allowedMethods(mux, req); len(allowed) > 0 {
 			w.Header().Set("Allow", strings.Join(allowed, ", "))
-			api.Error(w, req, apperr.New(apperr.MethodNotAllowed, "Endpoint ini tidak menerima metode tersebut."))
+			api.Error(w, req, apperr.New(apperr.MethodNotAllowed, "This endpoint does not accept that method."))
 			return
 		}
-		api.Error(w, req, apperr.New(apperr.NotFound, "Endpoint tidak ditemukan."))
+		api.Error(w, req, apperr.New(apperr.NotFound, "Endpoint not found."))
 	})
 
 	r.login("GET /api/v1/me", authHandler.Me)
@@ -167,7 +167,7 @@ func health(db *database.DB) http.HandlerFunc {
 		defer cancel()
 		if err := db.Ping(ctx); err != nil {
 			slog.Error("health check gagal", "error", err)
-			api.Error(w, r, apperr.New(apperr.ServiceUnavailable, "Database tidak bisa dihubungi."))
+			api.Error(w, r, apperr.New(apperr.ServiceUnavailable, "The database cannot be reached."))
 			return
 		}
 		api.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -209,7 +209,7 @@ func (p *publicLimiter) solanaPay(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d := p.check(w, r); !d.Allowed {
 			w.Header().Set("Retry-After", strconv.Itoa(max(d.RetryAfterSeconds, 1)))
-			payment.WriteError(w, http.StatusTooManyRequests, "Terlalu banyak permintaan. Coba lagi sebentar lagi.")
+			payment.WriteError(w, http.StatusTooManyRequests, "Too many requests. Try again shortly.")
 			return
 		}
 		next(w, r)

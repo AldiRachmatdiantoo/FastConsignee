@@ -39,9 +39,9 @@ describe("PaymentPanel", () => {
   it("menampilkan QR, hitung mundur, dan tautan layar bayar", () => {
     render(<PaymentPanel order={order("pending")} onRetry={vi.fn()} onDone={vi.fn()} />);
 
-    expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(/Menunggu pembayaran · [12]:\d\d/);
-    expect(screen.getByRole("link", { name: "Buka layar bayar di browser" })).toHaveAttribute("href", "/bayar/o1");
+    expect(screen.getByTitle("Solana Pay payment QR")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/Waiting for payment · [12]:\d\d/);
+    expect(screen.getByRole("link", { name: "Open the pay screen in a browser" })).toHaveAttribute("href", "/bayar/o1");
   });
 
   it("berubah sendiri saat pembayaran terkonfirmasi", async () => {
@@ -52,11 +52,11 @@ describe("PaymentPanel", () => {
     const user = userEvent.setup();
     render(<PaymentPanel order={order("pending")} onRetry={vi.fn()} onDone={onDone} />);
 
-    expect(await screen.findByText("Pembayaran terkonfirmasi. Barang boleh diserahkan.", {}, { timeout: 3500 })).toBeVisible();
-    expect(screen.queryByTitle("QR pembayaran Solana Pay")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Lihat di Solana Explorer" })).toHaveAttribute("href", "https://explorer.test/tx");
+    expect(await screen.findByText("Payment confirmed. The goods can be handed over.", {}, { timeout: 3500 })).toBeVisible();
+    expect(screen.queryByTitle("Solana Pay payment QR")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View on Solana Explorer" })).toHaveAttribute("href", "https://explorer.test/tx");
 
-    await user.click(screen.getByRole("button", { name: "Transaksi baru" }));
+    await user.click(screen.getByRole("button", { name: "New transaction" }));
     expect(onDone).toHaveBeenCalledOnce();
   });
 
@@ -65,13 +65,13 @@ describe("PaymentPanel", () => {
     const user = userEvent.setup();
     render(<PaymentPanel order={order("expired")} onRetry={onRetry} onDone={vi.fn()} />);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("QR kedaluwarsa, dan stok sudah dilepas lagi.");
-    await user.click(screen.getByRole("button", { name: "Buat QR baru" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("The QR expired, and the stock was released.");
+    await user.click(screen.getByRole("button", { name: "Create a new QR" }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it("melarang menyerahkan barang kalau transaksi tidak cocok dengan order", () => {
     render(<PaymentPanel order={order("failed", "VALIDATION_MISMATCH")} onRetry={vi.fn()} onDone={vi.fn()} />);
-    expect(screen.getByRole("alert")).toHaveTextContent("Hubungi pemilik toko sebelum menyerahkan barang.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Contact the store owner before handing over the goods.");
   });
 });

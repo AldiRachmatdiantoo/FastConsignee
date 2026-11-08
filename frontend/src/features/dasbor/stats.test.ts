@@ -27,8 +27,8 @@ describe("lastDays", () => {
   });
 
   it("memberi nama hari ini dan kemarin", () => {
-    expect(days[0].label).toBe("Hari ini");
-    expect(days[1].label).toBe("Kemarin");
+    expect(days[0].label).toBe("Today");
+    expect(days[1].label).toBe("Yesterday");
     expect(days[2].label).toMatch(/5 Nov/);
   });
 });

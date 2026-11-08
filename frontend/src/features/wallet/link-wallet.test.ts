@@ -30,7 +30,7 @@ function fakeApi(link: () => Response) {
 }
 
 function problem(code: Problem["code"]): ApiError {
-  return new ApiError({ type: "about:blank", title: "Gagal", status: 422, code, request_id: "req-1" });
+  return new ApiError({ type: "about:blank", title: "Failed", status: 422, code, request_id: "req-1" });
 }
 
 describe("linkWallet", () => {
@@ -61,7 +61,7 @@ describe("linkWallet", () => {
 
   it("meneruskan penolakan API sebagai ApiError", async () => {
     const { api } = fakeApi(() =>
-      json({ title: "Gagal", status: 422, code: "SIGNATURE_INVALID", request_id: "req-1" }, 422),
+      json({ title: "Failed", status: 422, code: "SIGNATURE_INVALID", request_id: "req-1" }, 422),
     );
 
     const error = await linkWallet({ api, address, signMessage: async () => signature }).catch((e) => e);
@@ -72,18 +72,18 @@ describe("linkWallet", () => {
 
 describe("linkErrorMessage", () => {
   it("memberi langkah berikutnya untuk tiap kode", () => {
-    expect(linkErrorMessage(problem("NONCE_INVALID"))).toContain("tandatangani lagi");
-    expect(linkErrorMessage(problem("SIGNATURE_INVALID"))).toContain("akun aktif");
-    expect(linkErrorMessage(problem("WALLET_ALREADY_LINKED"))).toContain("wallet lain");
+    expect(linkErrorMessage(problem("NONCE_INVALID"))).toContain("Try signing again");
+    expect(linkErrorMessage(problem("SIGNATURE_INVALID"))).toContain("active wallet account");
+    expect(linkErrorMessage(problem("WALLET_ALREADY_LINKED"))).toContain("another wallet");
   });
 
   it("memakai pesan API untuk kode lain", () => {
-    expect(linkErrorMessage(problem("RATE_LIMITED"))).toBe("Gagal");
+    expect(linkErrorMessage(problem("RATE_LIMITED"))).toBe("Failed");
   });
 
   it("membedakan API mati dari penolakan wallet", () => {
-    expect(linkErrorMessage(new ApiUnavailableError())).toContain("API tidak bisa dihubungi");
-    expect(linkErrorMessage(new Error("User rejected"))).toContain("Saldo tidak berubah");
+    expect(linkErrorMessage(new ApiUnavailableError())).toContain("The API cannot be reached");
+    expect(linkErrorMessage(new Error("User rejected"))).toContain("No balance changed");
   });
 });
 

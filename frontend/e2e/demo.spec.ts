@@ -12,46 +12,46 @@ test("alur demo berjalan dari kasir sampai dasbor penitip", async ({ browser }) 
   const buyer = await openActor(browser);
 
   await test.step("pemilik dan penitip menautkan wallet", async () => {
-    await login(owner.page, "Pemilik Demo");
+    await login(owner.page, "Demo Owner");
     await linkWallet(owner.page);
     await login(consignor.page, "Sari Anyaman");
     await linkWallet(consignor.page);
   });
 
   await test.step("kasir menyusun keranjang dari tiga penitip", async () => {
-    await login(cashier.page, "Kasir Demo");
+    await login(cashier.page, "Demo Cashier");
     for (const name of ITEMS) {
       await cashier.page.getByRole("button", { name: new RegExp(name) }).click();
     }
-    await expect(cashier.page.getByRole("heading", { name: "Rincian pembagian" })).toBeVisible();
-    await expect(cashier.page.getByText("Bagian penitip")).toHaveCount(3);
-    await expect(cashier.page.getByText("Komisi toko")).toHaveCount(1);
+    await expect(cashier.page.getByRole("heading", { name: "Split breakdown" })).toBeVisible();
+    await expect(cashier.page.getByText("Consignor share")).toHaveCount(3);
+    await expect(cashier.page.getByText("Shop commission")).toHaveCount(1);
   });
 
   const total = await test.step("kasir membuat QR", async () => {
     const value = rupiahDigits(await cashier.page.locator("span.text-xl").innerText());
     expect(value).toBe(45000 + 95000 + 85000 + 120000);
-    await cashier.page.getByRole("button", { name: "Buat QR pembayaran" }).click();
-    await expect(cashier.page.locator("svg title", { hasText: "QR pembayaran" })).toHaveCount(1);
-    await expect(cashier.page.getByText(/Menunggu pembayaran/)).toBeVisible();
+    await cashier.page.getByRole("button", { name: "Create payment QR" }).click();
+    await expect(cashier.page.locator("svg title", { hasText: "payment QR" })).toHaveCount(1);
+    await expect(cashier.page.getByText(/Waiting for payment/)).toBeVisible();
     return value;
   });
 
   await test.step("pembeli membayar sekali", async () => {
-    const href = await cashier.page.getByRole("link", { name: "Buka layar bayar di browser" }).getAttribute("href");
+    const href = await cashier.page.getByRole("link", { name: "Open the pay screen in a browser" }).getAttribute("href");
     await buyer.page.goto(href ?? "");
     await expect(buyer.page.getByText("Toko Titip Nusantara")).toBeVisible();
-    await buyer.page.getByRole("button", { name: "Bayar dengan wallet" }).click();
+    await buyer.page.getByRole("button", { name: "Pay with wallet" }).click();
     await buyer.page.getByRole("button", { name: "Test Wallet" }).click();
-    await buyer.page.getByRole("button", { name: "Bayar sekali" }).click();
-    await expect(buyer.page.getByText("Pembayaran terkonfirmasi. Terima kasih.")).toBeVisible({ timeout: 30_000 });
-    await expect(buyer.page.getByRole("link", { name: "Lihat di Solana Explorer" })).toBeVisible();
+    await buyer.page.getByRole("button", { name: "Pay once" }).click();
+    await expect(buyer.page.getByText("Payment confirmed. Thank you.")).toBeVisible({ timeout: 30_000 });
+    await expect(buyer.page.getByRole("link", { name: "View on Solana Explorer" })).toBeVisible();
   });
 
   const signature = await test.step("kasir melihat status dan saldo naik bersamaan", async () => {
-    await expect(cashier.page.getByText("Pembayaran terkonfirmasi. Barang boleh diserahkan.")).toBeVisible({ timeout: 30_000 });
+    await expect(cashier.page.getByText("Payment confirmed. The goods can be handed over.")).toBeVisible({ timeout: 30_000 });
     await expect(cashier.page.locator("span.text-success")).toHaveCount(4);
-    const href = await cashier.page.getByRole("link", { name: "Lihat di Solana Explorer" }).getAttribute("href");
+    const href = await cashier.page.getByRole("link", { name: "View on Solana Explorer" }).getAttribute("href");
     return new URL(href ?? "").pathname.split("/").pop() ?? "";
   });
 
@@ -67,26 +67,26 @@ test("alur demo berjalan dari kasir sampai dasbor penitip", async ({ browser }) 
   await test.step("pemilik me-refund satu barang", async () => {
     await owner.page.goto("/refund");
     await owner.page.locator("button[aria-pressed=false]").first().click();
-    await expect(owner.page.getByText("Wallet terhubung")).toBeVisible();
-    await owner.page.getByRole("button", { name: "Refund satu Dompet Pandan" }).click();
-    await expect(owner.page.getByText("Refund Dompet Pandan: Selesai")).toBeVisible({ timeout: 30_000 });
-    await expect(owner.page.getByText("1 sudah di-refund")).toBeVisible();
-    await expect(owner.page.getByRole("button", { name: "Refund satu Dompet Pandan" })).toBeDisabled();
+    await expect(owner.page.getByText("Wallet connected")).toBeVisible();
+    await owner.page.getByRole("button", { name: "Refund one Dompet Pandan" }).click();
+    await expect(owner.page.getByText("Refund Dompet Pandan: Completed")).toBeVisible({ timeout: 30_000 });
+    await expect(owner.page.getByText("1 refunded")).toBeVisible();
+    await expect(owner.page.getByRole("button", { name: "Refund one Dompet Pandan" })).toBeDisabled();
   });
 
   await test.step("potongan muncul di dasbor penitip", async () => {
     await consignor.page.goto("/dasbor");
-    const deductions = consignor.page.locator("section", { hasText: "Potongan refund" });
+    const deductions = consignor.page.locator("section", { hasText: "Refund deductions" });
     await expect(deductions.getByText("Dompet Pandan").first()).toBeVisible();
-    const sales = consignor.page.locator("section", { hasText: "Penjualan" });
+    const sales = consignor.page.locator("section", { hasText: "Sales" });
     await expect(sales.getByText(/Dompet Pandan × 1/).first()).toBeVisible();
     await expect(sales.getByRole("link", { name: "Explorer" }).first()).toBeVisible();
-    await expect(sales.getByText("1 unit sudah di-refund").first()).toBeVisible();
+    await expect(sales.getByText("1 units refunded").first()).toBeVisible();
   });
 
   await test.step("transaksi tampil di dasbor toko", async () => {
     await owner.page.goto("/dasbor");
-    await expect(owner.page.getByText("Total penjualan")).toBeVisible();
+    await expect(owner.page.getByText("Total sales")).toBeVisible();
     await expect(owner.page.getByRole("link", { name: "Explorer" }).first()).toBeVisible();
   });
 

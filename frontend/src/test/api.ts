@@ -5,7 +5,7 @@ export function ok<T>(data: T) {
 
 export function problem(code: string, status = 409) {
   return Promise.resolve({
-    error: { type: "about:blank", title: "Gagal", status, code, request_id: "r" },
+    error: { type: "about:blank", title: "Failed", status, code, request_id: "r" },
     response: { ok: false } as Response,
   });
 }

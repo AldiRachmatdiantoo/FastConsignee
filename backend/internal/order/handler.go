@@ -65,15 +65,15 @@ func (c cartRequest) cart() (Cart, error) {
 		line := CartLine{}
 		switch {
 		case l.ItemID == nil:
-			v.Add(field("item_id"), "Wajib diisi.")
+			v.Add(field("item_id"), "Required.")
 		case seen[*l.ItemID]:
-			v.Add(field("item_id"), "Satu barang hanya boleh muncul sekali.")
+			v.Add(field("item_id"), "Each item can appear only once.")
 		default:
 			seen[*l.ItemID] = true
 			line.ItemID = *l.ItemID
 		}
 		if l.Quantity == nil {
-			v.Add(field("quantity"), "Wajib diisi.")
+			v.Add(field("quantity"), "Required.")
 		} else {
 			v.Range(field("quantity"), int64(*l.Quantity), 1, maxQuantity)
 			line.Quantity = *l.Quantity
@@ -81,9 +81,9 @@ func (c cartRequest) cart() (Cart, error) {
 		if d := l.Discount; d != nil {
 			switch {
 			case d.AmountIDR == nil:
-				v.Add(field("discount.amount_idr"), "Wajib diisi.")
+				v.Add(field("discount.amount_idr"), "Required.")
 			case d.BorneBy == nil || (*d.BorneBy != BearerStore && *d.BorneBy != BearerConsignor):
-				v.Add(field("discount.borne_by"), "Harus store atau consignor.")
+				v.Add(field("discount.borne_by"), "Must be store or consignor.")
 			default:
 				v.Range(field("discount.amount_idr"), *d.AmountIDR, 1, maxDiscountIDR)
 				line.Discount = &Discount{AmountIDR: *d.AmountIDR, BorneBy: *d.BorneBy}

@@ -1,9 +1,9 @@
 import type { Me } from "@/lib/api/client";
 
 const ROLE_LABELS: Record<Me["role"], string> = {
-  cashier: "Kasir",
-  store_owner: "Pemilik toko",
-  consignor: "Penitip",
+  cashier: "Cashier",
+  store_owner: "Store owner",
+  consignor: "Consignors",
 };
 
 export function roleLabel(role: Me["role"]): string {
@@ -43,20 +43,20 @@ type NavLink = { href: string; label: string };
 // navLinks hanya memuat layar yang boleh dibuka peran itu.
 export function navLinks(me: Me): NavLink[] {
   if (me.role === "cashier") {
-    return [{ href: "/kasir", label: "Kasir" }];
+    return [{ href: "/kasir", label: "Cashier" }];
   }
   if (me.role === "consignor") {
     return [
-      { href: "/dasbor", label: "Dasbor" },
+      { href: "/dasbor", label: "Dashboard" },
       { href: "/wallet", label: "Wallet" },
     ];
   }
   return [
-    { href: "/dasbor", label: "Dasbor" },
-    { href: "/kasir", label: "Kasir" },
+    { href: "/dasbor", label: "Dashboard" },
+    { href: "/kasir", label: "Cashier" },
     { href: "/refund", label: "Refund" },
-    { href: "/barang", label: "Barang" },
-    { href: "/penitip", label: "Penitip" },
+    { href: "/barang", label: "Items" },
+    { href: "/penitip", label: "Consignors" },
     { href: "/wallet", label: "Wallet" },
   ];
 }

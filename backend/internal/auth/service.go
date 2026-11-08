@@ -38,7 +38,7 @@ func (s *Service) Resolve(ctx context.Context, id Identity) (Principal, error) {
 	if p != nil {
 		return *p, nil
 	}
-	notAssigned := apperr.New(apperr.RoleNotAssigned, "Akun ini belum terdaftar di toko mana pun.")
+	notAssigned := apperr.New(apperr.RoleNotAssigned, "This account is not registered at any store.")
 	if !id.EmailVerified || id.Email == "" {
 		return Principal{}, notAssigned
 	}
@@ -96,17 +96,17 @@ func (s *Service) LinkWallet(ctx context.Context, p Principal, address, nonce, s
 			return err
 		}
 		if n == nil || n.ConsumedAt != nil || !at.Before(n.ExpiresAt) || n.Address != address {
-			return apperr.New(apperr.NonceInvalid, "Nonce tidak berlaku. Minta nonce baru.")
+			return apperr.New(apperr.NonceInvalid, "The nonce has expired. Request a new one.")
 		}
 		if !solana.VerifyMessage(address, Message(s.domain, n.Address, n.Value, n.ExpiresAt), signature) {
-			return apperr.New(apperr.SignatureInvalid, "Tanda tangan tidak cocok dengan alamat wallet.")
+			return apperr.New(apperr.SignatureInvalid, "The signature does not match the wallet address.")
 		}
 		owner, err := s.repo.WalletOwner(ctx, address)
 		if err != nil {
 			return err
 		}
 		if owner != nil && !ownedBy(owner, p) {
-			return apperr.New(apperr.WalletAlreadyLinked, "Wallet ini sudah tertaut ke pihak lain.")
+			return apperr.New(apperr.WalletAlreadyLinked, "This wallet is already linked to someone else.")
 		}
 		if p.Role == RoleOwner {
 			err = s.repo.SetStoreWallet(ctx, p.StoreID, address, at)
@@ -119,7 +119,7 @@ func (s *Service) LinkWallet(ctx context.Context, p Principal, address, nonce, s
 		return s.repo.ConsumeNonce(ctx, n.ID, at)
 	})
 	if database.IsUniqueViolation(err) {
-		return "", time.Time{}, apperr.New(apperr.WalletAlreadyLinked, "Wallet ini sudah tertaut ke pihak lain.")
+		return "", time.Time{}, apperr.New(apperr.WalletAlreadyLinked, "This wallet is already linked to someone else.")
 	}
 	if err != nil {
 		return "", time.Time{}, err

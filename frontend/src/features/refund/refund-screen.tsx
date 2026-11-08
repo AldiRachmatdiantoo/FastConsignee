@@ -23,11 +23,11 @@ type RefundStatus = components["schemas"]["RefundStatus"];
 const POLL_MS = 2000;
 
 const STATUS_LABELS: Record<RefundStatus, string> = {
-  awaiting_signature: "Menunggu tanda tangan",
-  confirming: "Menunggu konfirmasi",
-  completed: "Selesai",
-  failed: "Gagal",
-  expired: "Kedaluwarsa",
+  awaiting_signature: "Waiting for signature",
+  confirming: "Waiting for confirmation",
+  completed: "Completed",
+  failed: "Failed",
+  expired: "Expired",
 };
 
 export function RefundScreen() {
@@ -60,16 +60,16 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
     <div className="grid gap-6">
       <PageTitle
         title="Refund"
-        text="Refund dikirim dari wallet toko ke wallet pembeli. Bagian penitip dicatat sebagai potongan di penjualan berikutnya."
+        text="Refunds go from the shop wallet to the buyer's wallet. The consignor's share is recorded as a deduction on their next sale."
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-lg font-semibold">Order terkonfirmasi</h2>
+          <h2 className="text-lg font-semibold">Confirmed orders</h2>
           {orders.message ? <Notice tone="danger">{orders.message}</Notice> : null}
           {/* Daftar order setinggi tiga setengah baris dengan scroll sendiri, jadi rincian dan riwayat di bawahnya tidak bergeser berapa pun jumlah ordernya. */}
           <div className="-mx-1 mt-2 h-60 overflow-y-auto p-1">
             {orders.status === "loading" ? <ListSkeleton rows={3} boxed /> : null}
-            {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada order.</EmptyState> : null}
+            {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>No orders yet.</EmptyState> : null}
             <ul className="grid gap-2 empty:hidden">
               {orders.items.map((order) => (
                 <li key={order.id}>
@@ -105,7 +105,7 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
           />
         ) : (
           <Card>
-            <EmptyState>Pilih order untuk melihat barangnya.</EmptyState>
+            <EmptyState>Pick an order to see its items.</EmptyState>
           </Card>
         )}
       </div>
@@ -140,7 +140,7 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
 
   const address = publicKey?.toBase58() ?? null;
   const rightWallet = address !== null && address === storeWallet;
-  const message = error ?? (connectFailed ? "Wallet tidak bisa dihubungkan. Buka wallet, lalu coba lagi." : null);
+  const message = error ?? (connectFailed ? "The wallet could not connect. Open the wallet, then try again." : null);
 
   const poll = useCallback(async () => {
     if (!tracked) {
@@ -178,7 +178,7 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
       await action();
     } catch (failure) {
       const fromApi = failure instanceof ApiError || failure instanceof ApiUnavailableError;
-      setError(fromApi ? errorMessage(failure) : "Tanda tangan dibatalkan atau gagal di wallet. Saldo tidak berubah.");
+      setError(fromApi ? errorMessage(failure) : "The signature was cancelled or failed in the wallet. No balance changed.");
     } finally {
       setBusy(false);
     }
@@ -203,7 +203,7 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
 
   return (
     <Card className="grid content-start gap-4">
-      <h2 className="text-lg font-semibold">Barang di order ini</h2>
+      <h2 className="text-lg font-semibold">Items in this order</h2>
       {state.status === "loading" ? <InlineLoading /> : null}
       {state.status === "error" ? <Notice tone="danger">{state.message}</Notice> : null}
       {message ? <Notice tone="danger">{message}</Notice> : null}
@@ -217,15 +217,15 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
 
       {address ? (
         <div className="text-sm">
-          <p className="text-muted-foreground">Wallet terhubung</p>
+          <p className="text-muted-foreground">Wallet connected</p>
           <p className="font-mono">{shortAddress(address)}</p>
           {!rightWallet ? (
             <div className="mt-2">
-              <Notice tone="danger">Ini bukan wallet toko. Pakai wallet yang tertaut ke toko.</Notice>
+              <Notice tone="danger">This is not the shop wallet. Use the wallet linked to the shop.</Notice>
             </div>
           ) : null}
           <Button variant="secondary" className="mt-2" disabled={busy} onClick={() => void disconnect()}>
-            Ganti wallet
+            Switch wallet
           </Button>
         </div>
       ) : (
@@ -239,7 +239,7 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
 
       {draft ? (
         <Button disabled={busy || !rightWallet} onClick={() => void run(() => signAndSend(draft))}>
-          {busy ? "Menunggu wallet..." : "Tandatangani lagi"}
+          {busy ? "Waiting for wallet..." : "Sign again"}
         </Button>
       ) : null}
 
@@ -254,13 +254,13 @@ function OrderRefund({ orderId, storeWallet, connectFailed, resetConnect, onRefu
                     {line.item_name} × {line.quantity}
                   </p>
                   <p className="text-muted-foreground">
-                    {line.consignor.name} · {line.refunded_quantity} sudah di-refund
+                    {line.consignor.name} · {line.refunded_quantity} refunded
                   </p>
                 </div>
                 <Button
                   variant="secondary"
                   disabled={busy || remaining <= 0 || !rightWallet || draft !== null}
-                  aria-label={`Refund satu ${line.item_name}`}
+                  aria-label={`Refund one ${line.item_name}`}
                   onClick={() => void run(() => start(line))}
                 >
                   Refund 1 unit
@@ -284,10 +284,10 @@ function RefundHistory() {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold">Riwayat refund</h2>
+      <h2 className="text-lg font-semibold">Refund history</h2>
       {message ? <Notice tone="danger">{message}</Notice> : null}
       {status === "loading" ? <ListSkeleton rows={2} lines={3} className="mt-2" /> : null}
-      {status === "ready" && items.length === 0 ? <EmptyState>Belum ada refund.</EmptyState> : null}
+      {status === "ready" && items.length === 0 ? <EmptyState>No refunds yet.</EmptyState> : null}
       <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((refund) => (
           <li key={refund.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">

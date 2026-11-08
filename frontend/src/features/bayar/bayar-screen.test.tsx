@@ -58,11 +58,11 @@ describe("BayarScreen", () => {
 
     expect(await screen.findByRole("heading", { name: "Toko Titip Nusantara" })).toBeVisible();
     expect(screen.getByText("Devnet")).toBeVisible();
-    expect(screen.getByText(/tidak memakai uang sungguhan/)).toBeVisible();
-    expect(screen.getByTitle("QR pembayaran Solana Pay")).toBeInTheDocument();
+    expect(screen.getByText(/no real money is used/)).toBeVisible();
+    expect(screen.getByTitle("Solana Pay payment QR")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Bayar dengan wallet" }));
-    expect(await screen.findByRole("link", { name: "Pasang Phantom" })).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Pay with wallet" }));
+    expect(await screen.findByRole("link", { name: "Install Phantom" })).toBeVisible();
   });
 
   it("membayar dengan transaksi dari server", async () => {
@@ -74,10 +74,10 @@ describe("BayarScreen", () => {
     const user = userEvent.setup();
     render(<BayarScreen orderId="o1" />);
 
-    await user.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
-    await user.click(await screen.findByRole("button", { name: "Bayar sekali" }));
+    await user.click(await screen.findByRole("button", { name: "Pay with wallet" }));
+    await user.click(await screen.findByRole("button", { name: "Pay once" }));
 
-    expect(await screen.findByText("Transaksi terkirim. Menunggu konfirmasi jaringan...")).toBeVisible();
+    expect(await screen.findByText("Transaction sent. Waiting for network confirmation...")).toBeVisible();
     expect(requestTransaction).toHaveBeenCalledWith(api, "o1", address);
     expect(sendTransaction).toHaveBeenCalledWith(transaction, connection);
   });
@@ -90,11 +90,11 @@ describe("BayarScreen", () => {
     const user = userEvent.setup();
     render(<BayarScreen orderId="o1" />);
 
-    await user.click(await screen.findByRole("button", { name: "Bayar dengan wallet" }));
-    await user.click(await screen.findByRole("button", { name: "Bayar sekali" }));
+    await user.click(await screen.findByRole("button", { name: "Pay with wallet" }));
+    await user.click(await screen.findByRole("button", { name: "Pay once" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Saldo tidak berubah, jadi kamu bisa mencoba lagi.");
-    await waitFor(() => expect(screen.getByRole("button", { name: "Bayar sekali" })).toBeEnabled());
+    expect(await screen.findByRole("alert")).toHaveTextContent("No balance changed, so you can try again.");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Pay once" })).toBeEnabled());
   });
 
   it("menampilkan bukti setelah terkonfirmasi", async () => {
@@ -103,9 +103,9 @@ describe("BayarScreen", () => {
     );
     render(<BayarScreen orderId="o1" />);
 
-    expect(await screen.findByText("Pembayaran terkonfirmasi. Terima kasih.")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Lihat di Solana Explorer" })).toHaveAttribute("href", "https://explorer.test/tx");
-    expect(screen.queryByTitle("QR pembayaran Solana Pay")).not.toBeInTheDocument();
+    expect(await screen.findByText("Payment confirmed. Thank you.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "View on Solana Explorer" })).toHaveAttribute("href", "https://explorer.test/tx");
+    expect(screen.queryByTitle("Solana Pay payment QR")).not.toBeInTheDocument();
   });
 
   it("menampilkan status sertifikat di bukti pembayaran", async () => {
@@ -128,9 +128,9 @@ describe("BayarScreen", () => {
     );
     render(<BayarScreen orderId="o1" />);
 
-    expect(await screen.findByText("Sertifikat Kain Batik sedang dikirim ke wallet kamu.")).toBeVisible();
-    expect(screen.getByText("Sertifikat Tas Rotan gagal dikirim. Hubungi toko.")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Sertifikat Selendang" })).toHaveAttribute(
+    expect(await screen.findByText("Certificate Kain Batik is on its way to your wallet.")).toBeVisible();
+    expect(screen.getByText("Certificate Tas Rotan could not be sent. Contact the shop.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Certificate Selendang" })).toHaveAttribute(
       "href",
       "https://explorer.test/nft",
     );
@@ -147,19 +147,19 @@ describe("BayarScreen", () => {
     );
     render(<BayarScreen orderId="o1" />);
 
-    expect(await screen.findByText("Sertifikat Kain Batik sedang dikirim ke wallet kamu.")).toBeVisible();
-    expect(await screen.findByRole("link", { name: "Sertifikat Kain Batik" }, { timeout: 5000 })).toBeVisible();
+    expect(await screen.findByText("Certificate Kain Batik is on its way to your wallet.")).toBeVisible();
+    expect(await screen.findByRole("link", { name: "Certificate Kain Batik" }, { timeout: 5000 })).toBeVisible();
   }, 10_000);
 
   it("mengarahkan pembeli ke kasir kalau QR kedaluwarsa", async () => {
     get.mockImplementation(() => ok(publicOrder("expired")));
     render(<BayarScreen orderId="o1" />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("Minta kasir membuat QR baru.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ask the cashier for a new one.");
   });
 
   it("memberi tahu kalau order tidak ada", async () => {
     get.mockImplementation(() => problem("NOT_FOUND", 404));
     render(<BayarScreen orderId="o1" />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("Data tidak ditemukan.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Data not found.");
   });
 });

@@ -23,11 +23,11 @@ export function linkErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.code) {
       case "NONCE_INVALID":
-        return "Pesan sudah tidak berlaku. Coba tandatangani lagi.";
+        return "The message has expired. Try signing again.";
       case "SIGNATURE_INVALID":
-        return "Tanda tangan tidak cocok. Pastikan akun aktif di wallet sama dengan alamat di layar.";
+        return "The signature does not match. Make sure the active wallet account matches the address on screen.";
       case "WALLET_ALREADY_LINKED":
-        return "Wallet ini sudah tertaut ke pihak lain. Pilih wallet lain.";
+        return "This wallet is already linked to someone else. Choose another wallet.";
       default:
         return error.message;
     }
@@ -35,7 +35,7 @@ export function linkErrorMessage(error: unknown): string {
   if (error instanceof ApiUnavailableError) {
     return error.message;
   }
-  return "Penandatanganan dibatalkan atau gagal di wallet. Saldo tidak berubah.";
+  return "Signing was cancelled or failed in the wallet. No balance changed.";
 }
 
 export function shortAddress(address: string): string {

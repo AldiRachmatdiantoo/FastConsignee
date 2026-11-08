@@ -43,7 +43,7 @@ function WalletActions({ orderId, onSent, connectFailed, resetConnect }: WalletA
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const message = error ?? (connectFailed ? "Wallet tidak bisa dihubungkan. Buka wallet, lalu coba lagi." : null);
+  const message = error ?? (connectFailed ? "The wallet could not connect. Open the wallet, then try again." : null);
 
   async function pay() {
     if (!publicKey) {
@@ -67,14 +67,14 @@ function WalletActions({ orderId, onSent, connectFailed, resetConnect }: WalletA
       {message ? <Notice tone="danger">{message}</Notice> : null}
       {publicKey ? (
         <div>
-          <p className="text-sm text-muted-foreground">Wallet terhubung</p>
+          <p className="text-sm text-muted-foreground">Wallet connected</p>
           <p className="mt-1 font-mono text-sm">{shortAddress(publicKey.toBase58())}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button className="flex-1" disabled={busy} onClick={() => void pay()}>
-              {busy ? "Menunggu wallet..." : "Bayar sekali"}
+              {busy ? "Waiting for wallet..." : "Pay once"}
             </Button>
             <Button variant="secondary" disabled={busy} onClick={() => void disconnect()}>
-              Ganti wallet
+              Switch wallet
             </Button>
           </div>
         </div>

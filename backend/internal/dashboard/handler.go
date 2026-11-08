@@ -28,7 +28,7 @@ func NewHandler(s *Service) *Handler {
 func consignorOf(r *http.Request) (auth.Principal, uuid.UUID, error) {
 	p := auth.MustFromContext(r.Context())
 	if p.ConsignorID == nil {
-		return p, uuid.Nil, apperr.New(apperr.Forbidden, "Akun ini bukan penitip.")
+		return p, uuid.Nil, apperr.New(apperr.Forbidden, "This account is not a consignor.")
 	}
 	return p, *p.ConsignorID, nil
 }

@@ -71,10 +71,10 @@ describe("StoreDashboard", () => {
     respond([order("a", 100000, dayAt(0)), order("b", 50000, dayAt(-1))]);
     render(<StoreDashboard />);
 
-    expect(await screen.findByRole("heading", { name: "Penjualan hari ini" })).toBeVisible();
-    const today = card("Penjualan hari ini");
+    expect(await screen.findByRole("heading", { name: "Sales today" })).toBeVisible();
+    const today = card("Sales today");
     expect(today.getByText(/Rp\s?100\.000/)).toBeVisible();
-    expect(today.getByText("Naik 100% dari kemarin")).toBeVisible();
+    expect(today.getByText("Up 100% from yesterday")).toBeVisible();
     expect(today.getByText("40%")).toBeVisible();
   });
 
@@ -82,39 +82,39 @@ describe("StoreDashboard", () => {
     respond([]);
     render(<StoreDashboard />);
 
-    await screen.findByRole("heading", { name: "Penjualan bulan ini" });
-    const month = card("Penjualan bulan ini");
+    await screen.findByRole("heading", { name: "Sales this month" });
+    const month = card("Sales this month");
     expect(month.getByText(/Rp\s?250\.000/)).toBeVisible();
-    expect(month.getByText("Naik 100% dari bulan lalu")).toBeVisible();
+    expect(month.getByText("Up 100% from last month")).toBeVisible();
   });
 
   it("menghitung bagian penitip dari penjualan dikurangi komisi", async () => {
     respond([]);
     render(<StoreDashboard />);
 
-    await screen.findByRole("heading", { name: "Bagian penitip" });
-    expect(card("Bagian penitip").getByText(/Rp\s?270\.000/)).toBeVisible();
-    expect(card("Komisi toko").getByText("10% dari penjualan")).toBeVisible();
-    expect(card("Jumlah transaksi").getByText(/Rata-rata Rp\s?100\.000/)).toBeVisible();
+    await screen.findByRole("heading", { name: "Consignor share" });
+    expect(card("Consignor share").getByText(/Rp\s?270\.000/)).toBeVisible();
+    expect(card("Shop commission").getByText("10% of sales")).toBeVisible();
+    expect(card("Transactions").getByText(/Average Rp\s?100\.000/)).toBeVisible();
   });
 
   it("tidak mengarang persen saat kemarin belum ada penjualan", async () => {
     respond([order("a", 100000, hoursAgo(0))]);
     render(<StoreDashboard />);
 
-    await screen.findByRole("heading", { name: "Penjualan hari ini" });
-    expect(card("Penjualan hari ini").getByText("Belum ada pembanding dari kemarin")).toBeVisible();
+    await screen.findByRole("heading", { name: "Sales today" });
+    expect(card("Sales today").getByText("No comparison with yesterday")).toBeVisible();
   });
 
   it("menampilkan tujuh hari dengan nilai tertulis", async () => {
     respond([order("a", 100000, dayAt(0))]);
     render(<StoreDashboard />);
 
-    await screen.findByRole("heading", { name: "7 hari terakhir" });
-    const week = card("7 hari terakhir");
+    await screen.findByRole("heading", { name: "Last 7 days" });
+    const week = card("Last 7 days");
     expect(week.getAllByRole("listitem")).toHaveLength(7);
-    expect(within(week.getByText("Hari ini").closest("li") as HTMLElement).getByText(/Rp\s?100\.000/)).toBeVisible();
-    expect(within(week.getByText("Kemarin").closest("li") as HTMLElement).getByText(/Rp\s?0/)).toBeVisible();
+    expect(within(week.getByText("Today").closest("li") as HTMLElement).getByText(/Rp\s?100\.000/)).toBeVisible();
+    expect(within(week.getByText("Yesterday").closest("li") as HTMLElement).getByText(/Rp\s?0/)).toBeVisible();
   });
 
   it("menampilkan transaksi beserta bukti di Explorer", async () => {
@@ -122,14 +122,14 @@ describe("StoreDashboard", () => {
     render(<StoreDashboard />);
 
     expect(await screen.findByRole("link", { name: "Explorer" })).toHaveAttribute("href", "https://explorer.test/a");
-    expect(screen.getByText(/2 barang · komisi Rp\s?10\.000/)).toBeVisible();
+    expect(screen.getByText(/2 items · commission Rp\s?10\.000/)).toBeVisible();
   });
 
   it("tetap hemat panggilan API supaya tidak kena batas permintaan", async () => {
     respond([]);
     render(<StoreDashboard />);
 
-    await screen.findByRole("heading", { name: "Penjualan hari ini" });
+    await screen.findByRole("heading", { name: "Sales today" });
     expect(get.mock.calls.length).toBeLessThanOrEqual(5);
   });
 
@@ -139,13 +139,13 @@ describe("StoreDashboard", () => {
     );
     render(<StoreDashboard />);
 
-    expect(await screen.findByText("Angka harian dihitung dari 1000 transaksi terbaru.")).toBeVisible();
+    expect(await screen.findByText("Daily figures cover the 1000 latest transactions.")).toBeVisible();
   });
 
   it("memberi keterangan saat belum ada transaksi", async () => {
     respond([], summary(0, 0, 0));
     render(<StoreDashboard />);
 
-    expect(await screen.findByText("Belum ada transaksi.")).toBeVisible();
+    expect(await screen.findByText("No transactions yet.")).toBeVisible();
   });
 });

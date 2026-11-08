@@ -9,8 +9,8 @@ import { useDebounced, usePagedList } from "@/lib/hooks";
 import { addBlock, type Cart, type Item } from "./cart";
 
 const BLOCK_LABELS = {
-  out_of_stock: "Stok habis",
-  too_many_consignors: "Keranjang sudah 5 penitip",
+  out_of_stock: "Out of stock",
+  too_many_consignors: "Cart already has 5 consignors",
 };
 
 // Enam kotak menahan tempat katalog selama dimuat, cukup untuk mendorong keranjang ke bawah layar HP seperti katalog asli.
@@ -45,14 +45,14 @@ export function Catalog({ cart, onAdd }: { cart: Cart; onAdd: (item: Item) => vo
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold">Katalog</h2>
+      <h2 className="text-lg font-semibold">Catalog</h2>
       <div className="mt-3">
         <TextField
-          label="Cari barang"
+          label="Search items"
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Nama barang"
+          placeholder="Item name"
         />
       </div>
       {message ? (
@@ -61,7 +61,7 @@ export function Catalog({ cart, onAdd }: { cart: Cart; onAdd: (item: Item) => vo
         </div>
       ) : null}
       {status === "loading" ? <CatalogSkeleton /> : null}
-      {status !== "loading" && status !== "error" && items.length === 0 ? <EmptyState>Barang tidak ditemukan.</EmptyState> : null}
+      {status !== "loading" && status !== "error" && items.length === 0 ? <EmptyState>No items found.</EmptyState> : null}
       <ul className="mt-4 grid gap-2 empty:hidden sm:grid-cols-2">
         {items.map((item) => {
           const block = addBlock(cart, item);
@@ -78,7 +78,7 @@ export function Catalog({ cart, onAdd }: { cart: Cart; onAdd: (item: Item) => vo
                 <span className="mt-2 flex items-baseline justify-between gap-2">
                   <span className="font-semibold">{formatRupiah(item.price_idr)}</span>
                   <span className="text-sm text-muted-foreground">
-                    {block ? BLOCK_LABELS[block] : `Stok ${item.stock_available}`}
+                    {block ? BLOCK_LABELS[block] : `Stock ${item.stock_available}`}
                   </span>
                 </span>
               </button>

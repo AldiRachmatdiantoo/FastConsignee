@@ -46,20 +46,19 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
   if (available.length === 0 && mobile) {
     return (
       <div>
-        <p className="font-medium">Di HP, wallet tersambung lewat aplikasi Phantom</p>
+        <p className="font-medium">On a phone, wallets connect through the Phantom app</p>
         {openInPhantom ? (
           <>
             <p className="mt-1 text-sm text-muted-foreground">
-              Aktifkan Testnet Mode dan pilih Solana Devnet di Phantom, lalu buka halaman ini di sana. Kamu juga bisa memindai QR
-              pembayaran dengan Phantom.
+              Turn on Testnet Mode and choose Solana Devnet in Phantom, then open this page there. You can also scan the payment QR with Phantom.
             </p>
             <a className={buttonClassName("primary", "mt-3 w-full")} href={phantomBrowseLink(location.href, location.origin)}>
-              Buka di aplikasi Phantom
+              Open in the Phantom app
             </a>
           </>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            Phantom tidak bisa tersambung ke browser biasa di HP. Buka halaman ini di laptop yang memasang Phantom.
+            Phantom cannot connect to a regular phone browser. Open this page on a laptop with Phantom installed.
           </p>
         )}
         <a
@@ -68,7 +67,7 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
           rel="noreferrer"
           className="mt-3 inline-block text-sm font-semibold text-accent-foreground underline underline-offset-4"
         >
-          Belum punya Phantom? Pasang dulu
+          No Phantom yet? Install it first
         </a>
       </div>
     );
@@ -77,9 +76,9 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
   if (available.length === 0) {
     return (
       <div>
-        <p className="font-medium">Belum ada wallet di browser ini</p>
+        <p className="font-medium">No wallet in this browser yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pasang Phantom, aktifkan Testnet Mode, pilih Solana Devnet, lalu muat ulang halaman ini.
+          Install Phantom, turn on Testnet Mode, choose Solana Devnet, then reload this page.
         </p>
         <a
           href={PHANTOM_DOWNLOAD}
@@ -87,7 +86,7 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
           rel="noreferrer"
           className="mt-3 inline-block font-semibold text-accent-foreground underline underline-offset-4"
         >
-          Pasang Phantom
+          Install Phantom
         </a>
       </div>
     );
@@ -95,7 +94,7 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
 
   return (
     <div>
-      <p className="font-medium">Pilih wallet</p>
+      <p className="font-medium">Choose a wallet</p>
       <ul className="mt-3 grid gap-2">
         {available.map(({ adapter }) => (
           <li key={adapter.name}>
@@ -108,7 +107,7 @@ export function WalletPicker({ onPick, openInPhantom = false }: WalletPickerProp
                 select(adapter.name);
               }}
             >
-              {connecting ? "Menghubungkan..." : adapter.name}
+              {connecting ? "Connecting..." : adapter.name}
             </Button>
           </li>
         ))}

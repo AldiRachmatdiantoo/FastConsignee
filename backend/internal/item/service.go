@@ -32,7 +32,7 @@ func CatalogPrefix(storeID uuid.UUID) string {
 }
 
 func notFound() error {
-	return apperr.New(apperr.NotFound, "Barang tidak ditemukan.")
+	return apperr.New(apperr.NotFound, "Item not found.")
 }
 
 // List membaca katalog. Halaman pertama tanpa pencarian di-cache sebentar.
@@ -78,7 +78,7 @@ func (s *Service) Create(ctx context.Context, storeID uuid.UUID, c Create) (Item
 		return Item{}, err
 	}
 	if !ok {
-		return Item{}, apperr.New(apperr.NotFound, "Penitip tidak ditemukan.")
+		return Item{}, apperr.New(apperr.NotFound, "Consignor not found.")
 	}
 	id := uuid.New()
 	if err := s.repo.Insert(ctx, id, c); err != nil {
@@ -101,7 +101,7 @@ func (s *Service) Update(ctx context.Context, storeID, id uuid.UUID, u Update) (
 		}
 		apply(i, u)
 		if i.StockOnHand < i.StockReserved {
-			return apperr.New(apperr.StockBelowReserved, "Stok tidak boleh lebih kecil dari stok yang tertahan order.").
+			return apperr.New(apperr.StockBelowReserved, "Stock cannot be lower than the stock held by orders.").
 				WithDetails(map[string]any{"stock_reserved": i.StockReserved})
 		}
 		if err := s.repo.Save(ctx, *i); err != nil {
