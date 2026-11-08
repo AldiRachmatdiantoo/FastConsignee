@@ -320,7 +320,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 
 Bagian ini butuh akun pemilik proyek.
 
-- [x] Merge mockup HP ke `main`, 8 November 2026. `main` dimajukan ke `frontend` tanpa commit merge, jadi isinya sama persis. Sebelumnya Vitest 156 uji lolos dan tsc bersih
+- [x] Merge mockup HP ke `main`, 8 November 2026. `main` dimajukan ke `frontend` tanpa commit merge, jadi isinya sama persis. Sebelumnya Vitest 156 uji lolos dan tsc bersih. Hari yang sama `main` dimajukan lagi supaya Render ikut membawa migrasi `00002`
 - [x] Proyek Supabase di Singapore dengan paket gratis, 8 November 2026. Migrasi `00001` dan `00002` sudah jalan, dan seed membuat 1 toko, 5 akun, 3 penitip, dan 9 barang. Pemilik toko dan penitip Sari Anyaman memakai email Google pemilik proyek, sedangkan penitip lain dan kasir memakai email `.test`. Seed kedua tidak membuat data baru. Proyek tidak disambungkan ke GitHub karena migrasi dijalankan goose dari API Go, dan Data API dianjurkan tetap mati
 - [x] Akses tabel lewat Data API Supabase ditutup, 8 November 2026. Bawaan Supabase memberi peran anon dan authenticated hak penuh atas 13 tabel di schema `public`, termasuk menulis dan menghapus, padahal anon key ikut terkirim ke browser. Migrasi `00002` mencabut hak itu, juga untuk tabel baru, lalu menyalakan RLS tanpa policy. Diuji di Supabase: hak anon dan authenticated tinggal 0 dari 13 tabel, RLS menyala di 13 tabel, `SET ROLE anon` lalu membaca `users` ditolak "permission denied", dan pemilik tabel tetap bisa menulis dan membaca. `go test` penuh lolos lokal dengan uji RLS baru
 - [ ] Google OAuth di Supabase dan Google Cloud
