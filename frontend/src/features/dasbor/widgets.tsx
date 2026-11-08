@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowDownIcon, ArrowUpIcon } from "@/components/icons";
-import { Card } from "@/components/ui";
+import { Card, LoadingBlock, Skeleton, SkeletonBlock } from "@/components/ui";
 import type { Change } from "./stats";
 
 export function Meter({ percent }: { percent: number }) {
@@ -128,5 +128,90 @@ export function ExplorerPill({ href }: { href: string }) {
     >
       Explorer
     </a>
+  );
+}
+
+// Kerangka di bawah ini menahan tempat kartu selama angkanya dihitung. Susunan dan tingginya
+// sama dengan kartu asli, jadi isi di bawahnya tidak meloncat saat angka muncul.
+function StatCardSkeleton() {
+  return (
+    <Card className="grid grid-cols-1 content-start gap-3">
+      <Skeleton className="w-1/2" />
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className="w-3/5 text-2xl" />
+        <Skeleton className="w-10 text-sm" />
+      </div>
+      <Skeleton className="w-4/5 text-sm" />
+      <Meter percent={0} />
+      <Skeleton className="w-3/5 text-xs" />
+    </Card>
+  );
+}
+
+function MetricCardSkeleton() {
+  return (
+    <Card flush className="grid grid-cols-1 content-start gap-4">
+      <div className="flex items-start justify-between gap-3 px-5 pt-5">
+        <SkeletonBlock className="size-11 rounded-full" />
+        <div className="grid flex-1 justify-items-end">
+          <Skeleton className="w-1/2 text-sm" />
+          <Skeleton className="w-3/5 text-2xl" />
+          <Skeleton className="w-4/5 text-sm" />
+        </div>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-4 border-t border-border px-5 pt-4 pb-5 text-sm">
+        {[0, 1].map((part) => (
+          <div key={part} className="grid content-start gap-2">
+            <Skeleton className="mx-auto w-3/5" />
+            <Skeleton className="mx-auto w-4/5" />
+            <Meter percent={0} />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// TilesSkeleton menggantikan tiga kartu angka dan tiga kartu rincian di kedua dasbor.
+export function TilesSkeleton() {
+  return (
+    <LoadingBlock className="grid gap-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        {[0, 1, 2].map((card) => (
+          <StatCardSkeleton key={card} />
+        ))}
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {[0, 1, 2].map((card) => (
+          <MetricCardSkeleton key={card} />
+        ))}
+      </div>
+    </LoadingBlock>
+  );
+}
+
+// DailyBarsSkeleton dimuat bersama TilesSkeleton, jadi status "Memuat..." cukup diumumkan sekali di sana.
+export function DailyBarsSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <Card className="grid grid-cols-1 content-start gap-4">
+        <Skeleton className="w-2/5" />
+        <div>
+          <Skeleton className="w-3/5 text-3xl" />
+          <Skeleton className="w-4/5 text-sm" />
+        </div>
+        <div className="grid gap-3 text-sm">
+          {Array.from({ length: 7 }, (_, day) => (
+            <div key={day} className="grid gap-1.5">
+              <div className="flex justify-between gap-3">
+                <Skeleton className="w-1/4" />
+                <Skeleton className="w-1/3" />
+              </div>
+              <Meter percent={0} />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }

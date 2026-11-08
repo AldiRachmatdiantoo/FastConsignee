@@ -2,14 +2,14 @@
 
 import { useCallback } from "react";
 import { CoinsIcon, ReceiptIcon, UsersIcon } from "@/components/icons";
-import { Card, EmptyState, InlineLoading, LoadMore, Notice, PageTitle } from "@/components/ui";
+import { Card, EmptyState, ListSkeleton, LoadMore, Notice, PageTitle } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatRupiah } from "@/lib/format";
 import { usePagedList, useResource } from "@/lib/hooks";
 import { change, isWithin, lastDays, monthPeriod, share, sumBy, walkPages, type DayPeriod, type Period } from "./stats";
-import { DailyBars, ExplorerPill, MetricCard, StatCard } from "./widgets";
+import { DailyBars, DailyBarsSkeleton, ExplorerPill, MetricCard, StatCard, TilesSkeleton } from "./widgets";
 
 type OrderSummary = components["schemas"]["OrderSummary"];
 type Summary = components["schemas"]["StoreSummary"];
@@ -76,13 +76,14 @@ export function StoreDashboard() {
       <PageTitle title="Dasbor toko" text="Ringkasan ini bisa terlambat sampai 30 detik." />
 
       {state.status === "error" ? <Notice tone="danger">{state.message}</Notice> : null}
-      {state.status === "loading" ? <InlineLoading /> : null}
+      {state.status === "loading" ? <TilesSkeleton /> : null}
       {state.status === "ready" && !state.data.complete ? (
         <Notice tone="info">Angka harian dihitung dari {PAGE_SIZE * MAX_PAGES} transaksi terbaru.</Notice>
       ) : null}
       {state.status === "ready" ? <Tiles overview={state.data} /> : null}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        {state.status === "loading" ? <DailyBarsSkeleton /> : null}
         {state.status === "ready" ? <WeekCard overview={state.data} /> : null}
         <Orders />
       </div>
@@ -209,9 +210,9 @@ function Orders() {
           <Notice tone="danger">{orders.message}</Notice>
         </div>
       ) : null}
-      {orders.status === "loading" ? <InlineLoading /> : null}
+      {orders.status === "loading" ? <ListSkeleton rows={3} icon rowClassName="px-5" /> : null}
       {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada transaksi.</EmptyState> : null}
-      <ul className="divide-y divide-border text-sm">
+      <ul className="divide-y divide-border text-sm empty:hidden">
         {orders.items.map((order) => (
           <li key={order.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
             <span className="grid size-10 flex-none place-items-center rounded-full bg-accent text-accent-foreground">

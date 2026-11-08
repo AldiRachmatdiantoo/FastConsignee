@@ -49,6 +49,67 @@ export function InlineLoading() {
   );
 }
 
+const SKELETON_FILL = "bg-foreground/10 motion-safe:animate-pulse";
+
+// Skeleton setinggi satu baris teks. Ukuran hurufnya ikut induk atau kelas `text-*`, jadi kerangka setinggi baris aslinya.
+export function Skeleton({ className = "" }: { className?: string }) {
+  return (
+    <span aria-hidden="true" className={`flex h-[1lh] items-center ${className}`}>
+      <span className={`h-[0.7em] w-full rounded-md ${SKELETON_FILL}`} />
+    </span>
+  );
+}
+
+// SkeletonBlock menggantikan bentuk yang bukan teks, misalnya ikon bulat atau tombol.
+export function SkeletonBlock({ className }: { className: string }) {
+  return <span aria-hidden="true" className={`block flex-none ${SKELETON_FILL} ${className}`} />;
+}
+
+// LoadingBlock membungkus kerangka isi. Pembaca layar mendengar "Memuat...", bukan garis-garis kosong.
+export function LoadingBlock({ className = "", children }: { className?: string; children: ReactNode }) {
+  return (
+    <div role="status" className={className}>
+      <span className="sr-only">Memuat...</span>
+      {children}
+    </div>
+  );
+}
+
+type ListSkeletonProps = {
+  rows: number;
+  lines?: number;
+  icon?: boolean;
+  action?: boolean;
+  boxed?: boolean;
+  className?: string;
+  rowClassName?: string;
+};
+
+const LINE_WIDTHS = ["w-2/5", "w-3/5", "w-1/2"];
+
+// ListSkeleton menahan tempat daftar selama data dimuat. Tinggi barisnya sama dengan baris asli,
+// jadi isi di bawahnya tidak meloncat saat data muncul.
+export function ListSkeleton({ rows, lines = 2, icon = false, action = false, boxed = false, className = "", rowClassName = "" }: ListSkeletonProps) {
+  return (
+    <LoadingBlock className={`text-sm ${boxed ? "grid gap-2" : "divide-y divide-border"} ${className}`}>
+      {Array.from({ length: rows }, (_, row) => (
+        <div
+          key={row}
+          className={`flex items-center gap-4 ${boxed ? "rounded-lg border border-border p-3" : "py-3"} ${rowClassName}`}
+        >
+          {icon ? <SkeletonBlock className="size-10 rounded-full" /> : null}
+          <div className="min-w-0 flex-1">
+            {Array.from({ length: lines }, (_, line) => (
+              <Skeleton key={line} className={LINE_WIDTHS[line % LINE_WIDTHS.length]} />
+            ))}
+          </div>
+          {action ? <SkeletonBlock className="h-11 w-18 rounded-lg" /> : null}
+        </div>
+      ))}
+    </LoadingBlock>
+  );
+}
+
 type CardProps = { className?: string; flush?: boolean; children: ReactNode };
 
 // Kartu `flush` tidak punya padding, supaya garis pemisah di dalamnya bisa selebar kartu.

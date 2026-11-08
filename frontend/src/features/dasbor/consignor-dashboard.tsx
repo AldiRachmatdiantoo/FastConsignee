@@ -2,14 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { BoxIcon, RefundIcon, TagIcon } from "@/components/icons";
-import { Card, EmptyState, InlineLoading, LoadMore, Notice, PageTitle } from "@/components/ui";
+import { Card, EmptyState, ListSkeleton, LoadMore, Notice, PageTitle } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatRupiah, formatSol } from "@/lib/format";
 import { usePagedList, useResource } from "@/lib/hooks";
 import { change, isWithin, lastDays, monthPeriod, share, sumBy, walkPages, type Period } from "./stats";
-import { DailyBars, ExplorerPill, MetricCard, StatCard } from "./widgets";
+import { DailyBars, DailyBarsSkeleton, ExplorerPill, MetricCard, StatCard, TilesSkeleton } from "./widgets";
 
 type Sale = components["schemas"]["ConsignorSale"];
 type Deduction = components["schemas"]["Deduction"];
@@ -68,13 +68,14 @@ export function ConsignorDashboard() {
       <PageTitle title="Dasbor penitip" text="Tiap penjualan bisa kamu periksa sendiri di Solana Explorer." />
 
       {state.status === "error" ? <Notice tone="danger">{state.message}</Notice> : null}
-      {state.status === "loading" ? <InlineLoading /> : null}
+      {state.status === "loading" ? <TilesSkeleton /> : null}
       {state.status === "ready" && !state.data.complete ? (
         <Notice tone="info">Ringkasan ini dihitung dari {PAGE_SIZE * MAX_PAGES} data terbaru.</Notice>
       ) : null}
       {state.status === "ready" ? <Tiles overview={state.data} /> : null}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        {state.status === "loading" ? <DailyBarsSkeleton /> : null}
         {state.status === "ready" ? <WeekCard overview={state.data} /> : null}
         <Sales />
       </div>
@@ -215,9 +216,9 @@ function Sales() {
           <Notice tone="danger">{message}</Notice>
         </div>
       ) : null}
-      {status === "loading" ? <InlineLoading /> : null}
+      {status === "loading" ? <ListSkeleton rows={3} lines={3} icon rowClassName="px-5" /> : null}
       {status === "ready" && items.length === 0 ? <EmptyState>Belum ada barang yang terjual.</EmptyState> : null}
-      <ul className="divide-y divide-border text-sm">
+      <ul className="divide-y divide-border text-sm empty:hidden">
         {items.map((sale) => (
           <li key={sale.order_line_id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
             <span className="grid size-10 flex-none place-items-center rounded-full bg-accent text-accent-foreground">
@@ -278,9 +279,9 @@ function Deductions() {
         </p>
       </div>
       {message ? <Notice tone="danger">{message}</Notice> : null}
-      {status === "loading" ? <InlineLoading /> : null}
+      {status === "loading" ? <ListSkeleton rows={3} className="mt-2" /> : null}
       {status === "ready" && items.length === 0 ? <EmptyState>Tidak ada potongan.</EmptyState> : null}
-      <ul className="mt-2 divide-y divide-border text-sm">
+      <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((deduction) => (
           <li key={deduction.id} className="flex items-baseline justify-between gap-3 py-3">
             <div>
@@ -313,9 +314,9 @@ function StockList() {
     <Card>
       <h2 className="font-semibold">Stok titipan</h2>
       {message ? <Notice tone="danger">{message}</Notice> : null}
-      {status === "loading" ? <InlineLoading /> : null}
+      {status === "loading" ? <ListSkeleton rows={3} className="mt-2" /> : null}
       {status === "ready" && items.length === 0 ? <EmptyState>Belum ada barang titipan.</EmptyState> : null}
-      <ul className="mt-2 divide-y divide-border text-sm">
+      <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((stock) => (
           <li key={stock.item_id} className="flex items-baseline justify-between gap-3 py-3">
             <div>

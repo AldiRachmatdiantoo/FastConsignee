@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Card, EmptyState, InlineLoading, LoadMore, Notice, TextField } from "@/components/ui";
+import { Card, EmptyState, LoadingBlock, LoadMore, Notice, Skeleton, TextField } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { unwrap } from "@/lib/api/client";
 import { formatRupiah } from "@/lib/format";
@@ -12,6 +12,24 @@ const BLOCK_LABELS = {
   out_of_stock: "Stok habis",
   too_many_consignors: "Keranjang sudah 5 penitip",
 };
+
+// Enam kotak menahan tempat katalog selama dimuat, cukup untuk mendorong keranjang ke bawah layar HP seperti katalog asli.
+function CatalogSkeleton() {
+  return (
+    <LoadingBlock className="mt-4 grid gap-2 sm:grid-cols-2">
+      {Array.from({ length: 6 }, (_, item) => (
+        <div key={item} className="flex min-h-24 flex-col justify-between rounded-lg border border-border p-3">
+          <Skeleton className="w-3/5" />
+          <Skeleton className="w-2/5 text-sm" />
+          <div className="mt-2 flex justify-between gap-2">
+            <Skeleton className="w-1/3" />
+            <Skeleton className="w-1/5 text-sm" />
+          </div>
+        </div>
+      ))}
+    </LoadingBlock>
+  );
+}
 
 export function Catalog({ cart, onAdd }: { cart: Cart; onAdd: (item: Item) => void }) {
   const { api } = useSession();
@@ -42,9 +60,9 @@ export function Catalog({ cart, onAdd }: { cart: Cart; onAdd: (item: Item) => vo
           <Notice tone="danger">{message}</Notice>
         </div>
       ) : null}
-      {status === "loading" ? <InlineLoading /> : null}
+      {status === "loading" ? <CatalogSkeleton /> : null}
       {status !== "loading" && status !== "error" && items.length === 0 ? <EmptyState>Barang tidak ditemukan.</EmptyState> : null}
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+      <ul className="mt-4 grid gap-2 empty:hidden sm:grid-cols-2">
         {items.map((item) => {
           const block = addBlock(cart, item);
           return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, type FormEvent } from "react";
-import { Button, Card, EmptyState, InlineLoading, LoadMore, Notice, PageTitle, TextField } from "@/components/ui";
+import { Button, Card, EmptyState, ListSkeleton, LoadMore, Notice, PageTitle, TextField } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { shortAddress } from "@/features/wallet/link-wallet";
 import { unwrap } from "@/lib/api/client";
@@ -49,9 +49,9 @@ export function PenitipScreen() {
 
       <Card>
         {message ? <Notice tone="danger">{message}</Notice> : null}
-        {status === "loading" ? <InlineLoading /> : null}
+        {status === "loading" ? <ListSkeleton rows={4} lines={3} action /> : null}
         {status === "ready" && items.length === 0 ? <EmptyState>Belum ada penitip.</EmptyState> : null}
-        <ul className="divide-y divide-border text-sm">
+        <ul className="divide-y divide-border text-sm empty:hidden">
           {items.map((consignor) => (
             <li key={consignor.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div className="min-w-0">

@@ -2,7 +2,7 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useRef, useState } from "react";
-import { Button, Card, EmptyState, ExplorerLink, InlineLoading, LoadMore, Notice, PageTitle } from "@/components/ui";
+import { Button, Card, EmptyState, ExplorerLink, InlineLoading, ListSkeleton, LoadMore, Notice, PageTitle, SkeletonBlock } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { shortAddress } from "@/features/wallet/link-wallet";
 import { decodeTransaction } from "@/features/wallet/transaction";
@@ -21,6 +21,8 @@ type RefundDraft = components["schemas"]["RefundDraft"];
 type RefundStatus = components["schemas"]["RefundStatus"];
 
 const POLL_MS = 2000;
+// Order dimuat lima-lima. Refund biasanya untuk order terbaru, dan daftar pendek membuat rincian order tetap dekat di HP.
+const ORDER_PAGE = 5;
 
 const STATUS_LABELS: Record<RefundStatus, string> = {
   awaiting_signature: "Menunggu tanda tangan",
@@ -47,7 +49,7 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
   const [round, setRound] = useState(0);
 
   const loadOrders = useCallback(
-    (cursor?: string) => unwrap(api.GET("/api/v1/orders", { params: { query: { status: "confirmed", limit: 20, cursor } } })),
+    (cursor?: string) => unwrap(api.GET("/api/v1/orders", { params: { query: { status: "confirmed", limit: ORDER_PAGE, cursor } } })),
     [api],
   );
   const orders = usePagedList<OrderSummary>(loadOrders);
@@ -66,9 +68,17 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
         <Card>
           <h2 className="text-lg font-semibold">Order terkonfirmasi</h2>
           {orders.message ? <Notice tone="danger">{orders.message}</Notice> : null}
-          {orders.status === "loading" ? <InlineLoading /> : null}
+          {/* Kerangka setinggi satu halaman penuh beserta tombol "Muat lagi", jadi rincian dan riwayat di bawahnya tidak bergeser. */}
+          {orders.status === "loading" ? (
+            <>
+              <ListSkeleton rows={ORDER_PAGE} boxed className="mt-2" />
+              <div className="mt-4 flex justify-center">
+                <SkeletonBlock className="h-11 w-28 rounded-lg" />
+              </div>
+            </>
+          ) : null}
           {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada order.</EmptyState> : null}
-          <ul className="mt-2 grid gap-2">
+          <ul className="mt-2 grid gap-2 empty:hidden">
             {orders.items.map((order) => (
               <li key={order.id}>
                 <button
@@ -283,9 +293,9 @@ function RefundHistory() {
     <Card>
       <h2 className="text-lg font-semibold">Riwayat refund</h2>
       {message ? <Notice tone="danger">{message}</Notice> : null}
-      {status === "loading" ? <InlineLoading /> : null}
+      {status === "loading" ? <ListSkeleton rows={2} lines={3} className="mt-2" /> : null}
       {status === "ready" && items.length === 0 ? <EmptyState>Belum ada refund.</EmptyState> : null}
-      <ul className="mt-2 divide-y divide-border text-sm">
+      <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
         {items.map((refund) => (
           <li key={refund.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
             <div>

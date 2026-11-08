@@ -7,6 +7,26 @@ async function fits(actor: Actor, path: string) {
   expect(overflow, `${path} melebar ${overflow} px`).toBeLessThanOrEqual(0);
 }
 
+// Total pergeseran tata letak sejak halaman dibuka sampai data selesai dimuat, tanpa geseran akibat sentuhan pengguna.
+async function shiftAfterLoad(actor: Actor, path: string): Promise<number> {
+  await actor.page.goto(path);
+  await expect(actor.page.getByRole("heading").first()).toBeVisible();
+  await expect(actor.page.getByText("Memuat...")).toHaveCount(0);
+  await actor.page.waitForTimeout(500);
+  return actor.page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let total = 0;
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
+            total += entry.hadRecentInput ? 0 : entry.value;
+          }
+        }).observe({ type: "layout-shift", buffered: true });
+        setTimeout(() => resolve(total), 200);
+      }),
+  );
+}
+
 test("menu samping tampil di desktop dan terbuka lewat tombol di HP", async ({ browser }) => {
   const owner = await openActor(browser);
   await owner.page.setViewportSize({ width: 1440, height: 900 });
@@ -53,4 +73,24 @@ test("semua layar muat di lebar 375 px", async ({ browser }) => {
   await login(consignor.page, "Rina Batik");
   await linkWallet(consignor.page);
   await fits(consignor, "/dasbor");
+});
+
+// Kerangka isi menahan tempat data, jadi layar tidak meloncat saat angka dan daftar muncul.
+test("layar aplikasi tidak meloncat saat data selesai dimuat di HP", async ({ browser, browserName }) => {
+  test.skip(browserName !== "chromium", "Layout Instability API hanya ada di Chromium");
+  const owner = await openActor(browser);
+  await owner.page.setViewportSize({ width: 390, height: 780 });
+  await login(owner.page, "Pemilik Demo");
+  await linkWallet(owner.page);
+  for (const path of ["/kasir", "/dasbor", "/barang", "/penitip", "/refund"]) {
+    const shift = await shiftAfterLoad(owner, path);
+    expect(shift, `${path} bergeser ${shift.toFixed(3)}`).toBeLessThan(0.05);
+  }
+
+  const consignor = await openActor(browser);
+  await consignor.page.setViewportSize({ width: 390, height: 780 });
+  await login(consignor.page, "Rina Batik");
+  const shift = await shiftAfterLoad(consignor, "/dasbor");
+  expect(shift, `dasbor penitip bergeser ${shift.toFixed(3)}`).toBeLessThan(0.05);
+  expect(owner.errors).toEqual([]);
 });

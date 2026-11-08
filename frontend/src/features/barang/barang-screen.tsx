@@ -5,7 +5,7 @@ import {
   Button,
   Card,
   EmptyState,
-  InlineLoading,
+  ListSkeleton,
   LoadMore,
   Notice,
   PageTitle,
@@ -78,9 +78,9 @@ export function BarangScreen() {
             <Notice tone="danger">{message}</Notice>
           </div>
         ) : null}
-        {status === "loading" ? <InlineLoading /> : null}
+        {status === "loading" ? <ListSkeleton rows={5} lines={3} action className="mt-2" /> : null}
         {status === "ready" && items.length === 0 ? <EmptyState>Barang tidak ditemukan.</EmptyState> : null}
-        <ul className="mt-2 divide-y divide-border text-sm">
+        <ul className="mt-2 divide-y divide-border text-sm empty:hidden">
           {items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div className="min-w-0">
