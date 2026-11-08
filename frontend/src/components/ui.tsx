@@ -9,14 +9,13 @@ const BUTTON_STYLES = {
   secondary: "border border-border bg-card text-foreground hover:bg-muted",
 };
 
+// buttonClassName dipakai juga oleh tautan yang tampil sebagai tombol.
+export function buttonClassName(variant: keyof typeof BUTTON_STYLES = "primary", className = "") {
+  return `inline-flex min-h-11 items-center justify-center rounded-lg px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 ${BUTTON_STYLES[variant]} ${className}`;
+}
+
 export function Button({ variant = "primary", className = "", type = "button", ...props }: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 ${BUTTON_STYLES[variant]} ${className}`}
-      {...props}
-    />
-  );
+  return <button type={type} className={buttonClassName(variant, className)} {...props} />;
 }
 
 const NOTICE_STYLES = {

@@ -80,6 +80,7 @@ function WalletActions({ orderId, onSent, connectFailed, resetConnect }: WalletA
         </div>
       ) : (
         <WalletPicker
+          openInPhantom
           onPick={() => {
             setError(null);
             resetConnect();

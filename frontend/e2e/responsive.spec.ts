@@ -1,3 +1,4 @@
+import { devices } from "@playwright/test";
 import { expect, linkWallet, login, openActor, test, type Actor } from "./fixtures";
 
 async function fits(actor: Actor, path: string) {
@@ -93,4 +94,25 @@ test("layar aplikasi tidak meloncat saat data selesai dimuat di HP", async ({ br
   const shift = await shiftAfterLoad(consignor, "/dasbor");
   expect(shift, `dasbor penitip bergeser ${shift.toFixed(3)}`).toBeLessThan(0.05);
   expect(owner.errors).toEqual([]);
+});
+
+test("layar bayar di HP tanpa wallet menawarkan buka di aplikasi Phantom", async ({ browser }) => {
+  const cashier = await openActor(browser);
+  await login(cashier.page, "Kasir Demo");
+  await cashier.page.getByRole("button", { name: /Kopi Toraja 250 g/ }).click();
+  await cashier.page.getByRole("button", { name: "Buat QR pembayaran" }).click();
+  const href = await cashier.page.getByRole("link", { name: "Buka layar bayar di browser" }).getAttribute("href");
+  // Seperti Safari di iPhone: aplikasi Phantom sudah terpasang, tetapi browser biasa tidak mendapat wallet darinya.
+  const { userAgent, viewport, deviceScaleFactor, isMobile, hasTouch } = devices["iPhone 15"];
+  const phone = await browser.newContext({ userAgent, viewport, deviceScaleFactor, isMobile, hasTouch });
+  const page = await phone.newPage();
+  await page.goto(href ?? "");
+  await page.getByRole("button", { name: "Bayar dengan wallet" }).click();
+  const open = page.getByRole("link", { name: "Buka di aplikasi Phantom" });
+  await expect(open).toBeVisible();
+  const url = page.url();
+  await expect(open).toHaveAttribute("href", `https://phantom.com/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(new URL(url).origin)}`);
+  await expect(page.getByText("Belum ada wallet di browser ini")).toHaveCount(0);
+  await phone.close();
+  await cashier.context.close();
 });
