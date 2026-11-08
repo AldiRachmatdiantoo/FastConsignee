@@ -2,7 +2,7 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useRef, useState } from "react";
-import { Button, Card, EmptyState, ExplorerLink, InlineLoading, ListSkeleton, LoadMore, Notice, PageTitle, SkeletonBlock } from "@/components/ui";
+import { Button, Card, EmptyState, ExplorerLink, InlineLoading, ListSkeleton, LoadMore, Notice, PageTitle } from "@/components/ui";
 import { useSession } from "@/features/auth/session";
 import { shortAddress } from "@/features/wallet/link-wallet";
 import { decodeTransaction } from "@/features/wallet/transaction";
@@ -21,8 +21,6 @@ type RefundDraft = components["schemas"]["RefundDraft"];
 type RefundStatus = components["schemas"]["RefundStatus"];
 
 const POLL_MS = 2000;
-// Order dimuat lima-lima. Refund biasanya untuk order terbaru, dan daftar pendek membuat rincian order tetap dekat di HP.
-const ORDER_PAGE = 5;
 
 const STATUS_LABELS: Record<RefundStatus, string> = {
   awaiting_signature: "Menunggu tanda tangan",
@@ -49,7 +47,7 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
   const [round, setRound] = useState(0);
 
   const loadOrders = useCallback(
-    (cursor?: string) => unwrap(api.GET("/api/v1/orders", { params: { query: { status: "confirmed", limit: ORDER_PAGE, cursor } } })),
+    (cursor?: string) => unwrap(api.GET("/api/v1/orders", { params: { query: { status: "confirmed", limit: 20, cursor } } })),
     [api],
   );
   const orders = usePagedList<OrderSummary>(loadOrders);
@@ -68,37 +66,32 @@ function RefundContent({ connectFailed, resetConnect }: { connectFailed: boolean
         <Card>
           <h2 className="text-lg font-semibold">Order terkonfirmasi</h2>
           {orders.message ? <Notice tone="danger">{orders.message}</Notice> : null}
-          {/* Kerangka setinggi satu halaman penuh beserta tombol "Muat lagi", jadi rincian dan riwayat di bawahnya tidak bergeser. */}
-          {orders.status === "loading" ? (
-            <>
-              <ListSkeleton rows={ORDER_PAGE} boxed className="mt-2" />
-              <div className="mt-4 flex justify-center">
-                <SkeletonBlock className="h-11 w-28 rounded-lg" />
-              </div>
-            </>
-          ) : null}
-          {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada order.</EmptyState> : null}
-          <ul className="mt-2 grid gap-2 empty:hidden">
-            {orders.items.map((order) => (
-              <li key={order.id}>
-                <button
-                  type="button"
-                  aria-pressed={order.id === orderId}
-                  onClick={() => setOrderId(order.id)}
-                  className={`flex w-full items-baseline justify-between gap-3 rounded-lg border p-3 text-left text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-                    order.id === orderId ? "border-primary" : "border-border"
-                  }`}
-                >
-                  <span>
-                    <span className="block font-semibold">{formatRupiah(order.total_idr)}</span>
-                    <span className="block text-muted-foreground">{order.item_count} barang</span>
-                  </span>
-                  <span className="text-muted-foreground">{formatDateTime(order.confirmed_at ?? order.created_at)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <LoadMore visible={orders.cursor !== null} busy={orders.status === "more"} onClick={() => void orders.loadMore()} />
+          {/* Daftar order setinggi tiga setengah baris dengan scroll sendiri, jadi rincian dan riwayat di bawahnya tidak bergeser berapa pun jumlah ordernya. */}
+          <div className="-mx-1 mt-2 h-60 overflow-y-auto p-1">
+            {orders.status === "loading" ? <ListSkeleton rows={3} boxed /> : null}
+            {orders.status === "ready" && orders.items.length === 0 ? <EmptyState>Belum ada order.</EmptyState> : null}
+            <ul className="grid gap-2 empty:hidden">
+              {orders.items.map((order) => (
+                <li key={order.id}>
+                  <button
+                    type="button"
+                    aria-pressed={order.id === orderId}
+                    onClick={() => setOrderId(order.id)}
+                    className={`flex w-full items-baseline justify-between gap-3 rounded-lg border p-3 text-left text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                      order.id === orderId ? "border-primary" : "border-border"
+                    }`}
+                  >
+                    <span>
+                      <span className="block font-semibold">{formatRupiah(order.total_idr)}</span>
+                      <span className="block text-muted-foreground">{order.item_count} barang</span>
+                    </span>
+                    <span className="text-muted-foreground">{formatDateTime(order.confirmed_at ?? order.created_at)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <LoadMore visible={orders.cursor !== null} busy={orders.status === "more"} onClick={() => void orders.loadMore()} />
+          </div>
         </Card>
 
         {orderId ? (

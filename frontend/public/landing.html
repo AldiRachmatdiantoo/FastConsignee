@@ -562,15 +562,14 @@
 }
 </style>
 <style data-8b-part="motion">
-@property --motion-ink { syntax: '<number>'; inherits: false; initial-value: 1; }
 @layer scenes {
 [data-8b-live] { --ease-expo-out: linear(0, 0.1587, 0.2915, 0.403, 0.4969, 0.576, 0.6429, 0.6996, 0.7476, 0.7883, 0.8229, 0.8523, 0.8772, 0.8983, 0.9162, 0.9312, 0.9438, 0.9544, 0.9632, 0.9705, 0.9766, 0.9815, 0.9855, 0.9887, 0.9913, 0.9933, 0.9949, 0.9962, 0.9971, 0.9979, 0.9984, 0.9989, 0.9992, 0.9994, 0.9996, 0.9997, 0.9998, 0.9999, 0.9999, 1, 1); }
 [data-8b-live] [data-8b-motion~="captionIn"] .line__in { animation-name: motion-captionin-line-in-translate; animation-duration: 1s; animation-delay: calc(0s + 0.09s * var(--i)); animation-timing-function: var(--ease-expo-out); animation-fill-mode: both; animation-play-state: paused; transform: none; }
 [data-8b-live] [data-8b-motion~="captionIn"].is-in .line__in { animation-play-state: running; }
 @keyframes motion-captionin-line-in-translate { 0% { translate: 0px 108%; } 100% { translate: 0px 0px; } }
 [data-8b-live] [data-8b-motion~="readAlong"] { view-timeline: --motion-read block; }
-[data-8b-live] [data-8b-motion~="readAlong"] .w { color: color-mix(in srgb, currentColor calc(var(--motion-ink) * 100%), transparent); animation-name: motion-read-along; animation-timeline: --motion-read; animation-timing-function: linear; animation-fill-mode: both; animation-range: cover calc(12vh + (100% - 72vh) * var(--i) * 0.12 / (0.48 + 0.12 * var(--n))) cover calc(12vh + (100% - 72vh) * (var(--i) * 0.12 + 0.6) / (0.48 + 0.12 * var(--n))); }
-@keyframes motion-read-along { 0% { --motion-ink: 0.22; } 100% { --motion-ink: 1; } }
+[data-8b-live] [data-8b-motion~="readAlong"] .w { display: inline-block; animation-name: motion-read-along; animation-timeline: --motion-read; animation-timing-function: linear; animation-fill-mode: both; animation-range: cover calc(12vh + (100% - 72vh) * var(--i) * 0.12 / (0.48 + 0.12 * var(--n))) cover calc(12vh + (100% - 72vh) * (var(--i) * 0.12 + 0.6) / (0.48 + 0.12 * var(--n))); }
+@keyframes motion-read-along { 0% { opacity: 0.22; } 100% { opacity: 1; } }
 [data-8b-live] [data-8b-motion~="bandRise"] { --motion-band-side: 4%; animation-name: motion-band-rise; animation-timeline: view(block); animation-range: cover 0% cover 75vh; animation-timing-function: linear; animation-fill-mode: both; }
 @media (max-width: 47.99rem) {
   [data-8b-live] [data-8b-motion~="bandRise"] { --motion-band-side: 2.5%; }
@@ -601,13 +600,11 @@
 }
 </style>
 <style data-8b-part="scene:listen">
-@property --listen-p { syntax: '<number>'; inherits: true; initial-value: 0; }
 @layer scenes {
 [data-8b-live] #listen { view-timeline: --listen-t1 block; view-timeline-inset: 0; }
-/* The stage: a tall hold with a sticky screen; --listen-p runs 0 → 1 while the stage is stuck (hold top at the top to its bottom at the bottom). */
-[data-8b-live] #listen .listen__hold { height: 250vh; view-timeline: --listen-hold block; view-timeline-inset: 0; animation-name: listen-p; animation-timeline: --listen-hold; animation-range: cover 100vh cover calc(100% - 100vh); animation-timing-function: linear; animation-fill-mode: both; }
+/* The stage: a tall hold with a sticky screen; progress p runs 0 → 1 while the stage is stuck (hold top at the top to its bottom at the bottom). */
+[data-8b-live] #listen .listen__hold { height: 250vh; view-timeline: --listen-hold block; view-timeline-inset: 0; }
 [data-8b-live] #listen .listen__stage { position: sticky; top: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; padding-block: 5.5rem 2rem; }
-@keyframes listen-p { 0% { --listen-p: 0; } 100% { --listen-p: 1; } }
 /* Entry: the sheet widens and the heading arrives, from the section's top at the bottom of the view to 20%. */
 [data-8b-live] #listen .listen__sheet, [data-8b-live] #listen-title { animation-timeline: --listen-t1; animation-range: cover 0% cover 80vh; animation-timing-function: linear; animation-fill-mode: both; }
 @keyframes listen-div-listen-sheet-clippath-d { 0% { clip-path: inset(0% 4% round 146px 146px 0px 0px); } 99.998% { clip-path: inset(0% 0.0008% round 56.018px 56.018px 0px 0px); } 100% { clip-path: inset(0% round 56px 56px 0px 0px); } }
@@ -622,8 +619,10 @@
 /* Crossing: row i and its bar copy move together from the measured shift (--listen-dx / --listen-dy, the scene script) to rest, at 0.8 i of a timeline of 0.8 (n − 1) + 1.35. */
 [data-8b-live] #listen .listen__track > .listen__row { animation-name: listen-cross; animation-timeline: --listen-hold; animation-timing-function: linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1); animation-fill-mode: both; animation-range: cover calc(100vh + (100% - 200vh) * 0.8 * var(--i) / (0.55 + 0.8 * var(--n))) cover calc(100vh + (100% - 200vh) * (0.8 * var(--i) + 1) / (0.55 + 0.8 * var(--n))); }
 @keyframes listen-cross { 0% { translate: var(--listen-dx, 0px) var(--listen-dy, 0px); } 100% { translate: 0px 0px; } }
-/* The voice waveform swells with the crossing: bar k scales to 1 − sin(πp) · 0.7 · (1 − |sin(0.45k + 18p)|). */
-[data-8b-live] #listen .listen__wave > i { scale: 1 calc(1 - sin(var(--listen-p) * pi) * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + var(--listen-p) * 18), -1 * sin(var(--listen-k, 0) * 0.45 + var(--listen-p) * 18)))); }
+/* The voice waveform swells with the crossing: bar k scales to 1 − sin(πp) · 0.7 · (1 − |sin(0.45k + 18p)|), sampled every 0.025 of p.
+   Only k comes from a variable, so each bar's keyframes resolve once and the GPU runs them. */
+[data-8b-live] #listen .listen__wave > i { animation-name: listen-wave; animation-timeline: --listen-hold; animation-range: cover 100vh cover calc(100% - 100vh); animation-timing-function: linear; animation-fill-mode: both; }
+@keyframes listen-wave { 0% { scale: 1 1; } 2.5% { scale: 1 calc(1 - 0.0785 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 0.45), -1 * sin(var(--listen-k, 0) * 0.45 + 0.45)))); } 5% { scale: 1 calc(1 - 0.1564 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 0.9), -1 * sin(var(--listen-k, 0) * 0.45 + 0.9)))); } 7.5% { scale: 1 calc(1 - 0.2334 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 1.35), -1 * sin(var(--listen-k, 0) * 0.45 + 1.35)))); } 10% { scale: 1 calc(1 - 0.309 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 1.8), -1 * sin(var(--listen-k, 0) * 0.45 + 1.8)))); } 12.5% { scale: 1 calc(1 - 0.3827 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 2.25), -1 * sin(var(--listen-k, 0) * 0.45 + 2.25)))); } 15% { scale: 1 calc(1 - 0.454 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 2.7), -1 * sin(var(--listen-k, 0) * 0.45 + 2.7)))); } 17.5% { scale: 1 calc(1 - 0.5225 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 3.15), -1 * sin(var(--listen-k, 0) * 0.45 + 3.15)))); } 20% { scale: 1 calc(1 - 0.5878 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 3.6), -1 * sin(var(--listen-k, 0) * 0.45 + 3.6)))); } 22.5% { scale: 1 calc(1 - 0.6494 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 4.05), -1 * sin(var(--listen-k, 0) * 0.45 + 4.05)))); } 25% { scale: 1 calc(1 - 0.7071 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 4.5), -1 * sin(var(--listen-k, 0) * 0.45 + 4.5)))); } 27.5% { scale: 1 calc(1 - 0.7604 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 4.95), -1 * sin(var(--listen-k, 0) * 0.45 + 4.95)))); } 30% { scale: 1 calc(1 - 0.809 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 5.4), -1 * sin(var(--listen-k, 0) * 0.45 + 5.4)))); } 32.5% { scale: 1 calc(1 - 0.8526 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 5.85), -1 * sin(var(--listen-k, 0) * 0.45 + 5.85)))); } 35% { scale: 1 calc(1 - 0.891 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 6.3), -1 * sin(var(--listen-k, 0) * 0.45 + 6.3)))); } 37.5% { scale: 1 calc(1 - 0.9239 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 6.75), -1 * sin(var(--listen-k, 0) * 0.45 + 6.75)))); } 40% { scale: 1 calc(1 - 0.9511 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 7.2), -1 * sin(var(--listen-k, 0) * 0.45 + 7.2)))); } 42.5% { scale: 1 calc(1 - 0.9724 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 7.65), -1 * sin(var(--listen-k, 0) * 0.45 + 7.65)))); } 45% { scale: 1 calc(1 - 0.9877 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 8.1), -1 * sin(var(--listen-k, 0) * 0.45 + 8.1)))); } 47.5% { scale: 1 calc(1 - 0.9969 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 8.55), -1 * sin(var(--listen-k, 0) * 0.45 + 8.55)))); } 50% { scale: 1 calc(1 - 1 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 9), -1 * sin(var(--listen-k, 0) * 0.45 + 9)))); } 52.5% { scale: 1 calc(1 - 0.9969 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 9.45), -1 * sin(var(--listen-k, 0) * 0.45 + 9.45)))); } 55% { scale: 1 calc(1 - 0.9877 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 9.9), -1 * sin(var(--listen-k, 0) * 0.45 + 9.9)))); } 57.5% { scale: 1 calc(1 - 0.9724 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 10.35), -1 * sin(var(--listen-k, 0) * 0.45 + 10.35)))); } 60% { scale: 1 calc(1 - 0.9511 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 10.8), -1 * sin(var(--listen-k, 0) * 0.45 + 10.8)))); } 62.5% { scale: 1 calc(1 - 0.9239 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 11.25), -1 * sin(var(--listen-k, 0) * 0.45 + 11.25)))); } 65% { scale: 1 calc(1 - 0.891 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 11.7), -1 * sin(var(--listen-k, 0) * 0.45 + 11.7)))); } 67.5% { scale: 1 calc(1 - 0.8526 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 12.15), -1 * sin(var(--listen-k, 0) * 0.45 + 12.15)))); } 70% { scale: 1 calc(1 - 0.809 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 12.6), -1 * sin(var(--listen-k, 0) * 0.45 + 12.6)))); } 72.5% { scale: 1 calc(1 - 0.7604 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 13.05), -1 * sin(var(--listen-k, 0) * 0.45 + 13.05)))); } 75% { scale: 1 calc(1 - 0.7071 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 13.5), -1 * sin(var(--listen-k, 0) * 0.45 + 13.5)))); } 77.5% { scale: 1 calc(1 - 0.6494 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 13.95), -1 * sin(var(--listen-k, 0) * 0.45 + 13.95)))); } 80% { scale: 1 calc(1 - 0.5878 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 14.4), -1 * sin(var(--listen-k, 0) * 0.45 + 14.4)))); } 82.5% { scale: 1 calc(1 - 0.5225 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 14.85), -1 * sin(var(--listen-k, 0) * 0.45 + 14.85)))); } 85% { scale: 1 calc(1 - 0.454 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 15.3), -1 * sin(var(--listen-k, 0) * 0.45 + 15.3)))); } 87.5% { scale: 1 calc(1 - 0.3827 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 15.75), -1 * sin(var(--listen-k, 0) * 0.45 + 15.75)))); } 90% { scale: 1 calc(1 - 0.309 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 16.2), -1 * sin(var(--listen-k, 0) * 0.45 + 16.2)))); } 92.5% { scale: 1 calc(1 - 0.2334 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 16.65), -1 * sin(var(--listen-k, 0) * 0.45 + 16.65)))); } 95% { scale: 1 calc(1 - 0.1564 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 17.1), -1 * sin(var(--listen-k, 0) * 0.45 + 17.1)))); } 97.5% { scale: 1 calc(1 - 0.0785 * 0.7 * (1 - max(sin(var(--listen-k, 0) * 0.45 + 17.55), -1 * sin(var(--listen-k, 0) * 0.45 + 17.55)))); } 100% { scale: 1 1; } }
 @media (min-width: 48rem) {
   [data-8b-live] #listen .listen__sheet { animation-name: listen-div-listen-sheet-clippath-d; }
   [data-8b-live] #listen-title { animation-name: listen-listen-title-translate-d; }
@@ -645,16 +644,19 @@
    cover calc(100vh - line + top + span · t / 5.2) of the list's view timeline. */
 [data-8b-live] #calls { timeline-scope: --calls-list; view-timeline: --calls-t1 block; view-timeline-inset: 0; --calls-line: 58vh; }
 [data-8b-live] #calls .calls__list { view-timeline: --calls-list block; view-timeline-inset: 0; }
-/* Item i lights from 0.32 at i − 0.1, dims at i + 0.9, and all light again at 4.9. */
-[data-8b-live] #calls .calls__list > li { animation-name: calls-item-in, calls-item-out, calls-item-lit; animation-timeline: --calls-list; animation-timing-function: linear; animation-fill-mode: both, forwards, forwards; animation-range:
-  cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) - 0.1) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) + 0.15) / 5.2),
-  cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) + 0.9) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) + 1.15) / 5.2),
-  cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * 4.9 / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px)); }
-[data-8b-live] #calls .calls__list > li:first-child { animation-name: none, calls-item-out, calls-item-lit; }
-[data-8b-live] #calls .calls__list > li:last-child { animation-name: calls-item-in, none, none; }
+/* Item i lights from 0.32 at i − 0.1, dims at i + 0.9, and all light again at 4.9. Each item has one opacity animation from its first change to the end (5.2),
+   with the changes as keyframes, because the GPU runs only one animation per property. Items are indexed from 0 (--i, set by the scene script). */
+[data-8b-live] #calls .calls__list > li { animation-timeline: --calls-list; animation-timing-function: linear; animation-fill-mode: both; animation-range: cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) - 0.1) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px)); }
+[data-8b-live] #calls .calls__list > li:first-child { animation-name: calls-item-1; animation-range: cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * 0.9 / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px)); }
+[data-8b-live] #calls .calls__list > li:nth-child(2) { animation-name: calls-item-2; }
+[data-8b-live] #calls .calls__list > li:nth-child(3) { animation-name: calls-item-3; }
+[data-8b-live] #calls .calls__list > li:nth-child(4) { animation-name: calls-item-4; }
+[data-8b-live] #calls .calls__list > li:last-child { animation-name: calls-item-in; animation-range: cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) - 0.1) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--i) + 0.15) / 5.2); }
+@keyframes calls-item-1 { 0% { opacity: 1; } 5.814% { opacity: 0.32; } 93.023% { opacity: 0.32; } 100% { opacity: 1; } }
+@keyframes calls-item-2 { 0% { opacity: 0.32; } 5.814% { opacity: 1; } 23.256% { opacity: 1; } 29.07% { opacity: 0.32; } 93.023% { opacity: 0.32; } 100% { opacity: 1; } }
+@keyframes calls-item-3 { 0% { opacity: 0.32; } 7.576% { opacity: 1; } 30.303% { opacity: 1; } 37.879% { opacity: 0.32; } 90.909% { opacity: 0.32; } 100% { opacity: 1; } }
+@keyframes calls-item-4 { 0% { opacity: 0.32; } 10.87% { opacity: 1; } 43.478% { opacity: 1; } 54.348% { opacity: 0.32; } 86.957% { opacity: 0.32; } 100% { opacity: 1; } }
 @keyframes calls-item-in { 0% { opacity: 0.32; } 100% { opacity: 1; } }
-@keyframes calls-item-out { 0% { opacity: 1; } 100% { opacity: 0.32; } }
-@keyframes calls-item-lit { 0% { opacity: 0.32; } 100% { opacity: 1; } }
 /* The phone's screen for step k rises over the last one at k − 1 + 0.05, for 0.3. Step 1 is the screen underneath. */
 [data-8b-live] #calls .phone [data-step] { animation-name: calls-step; animation-timeline: --calls-list; animation-timing-function: cubic-bezier(0.3333, 1, 0.6667, 1); animation-fill-mode: both; transform-origin: 50% 100%; animation-range: cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * var(--calls-at) / 5.2) cover calc(100vh - var(--calls-line) + var(--calls-top, 0px) + var(--calls-span, 0px) * (var(--calls-at) + 0.3) / 5.2); }
 [data-8b-live] #calls .phone [data-step="2"] { --calls-at: 1.05; }
@@ -695,30 +697,32 @@
 @keyframes tune-b-tune-pill-translate { 0% { translate: -100% 0px; } 100% { translate: 0px 0px; } }
 /* Entry, only right after calls (the scene script sets data-handoff with the measured path): from the top of tune at the bottom of the view to 30%,
    the card appears at the calls phone's screen (--tune-x, --tune-y, scale --tune-s) within the first 0.02 and grows along the path into place. */
-[data-8b-live] #tune[data-handoff] .tune__stage { animation-name: tune-stage-pop, tune-stage-path, tune-stage-grow, tune-stage-show, tune-div-tune-stage-backgroundcolor, tune-div-tune-stage-color; animation-timing-function: linear, linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear, linear, linear; animation-fill-mode: both, both, forwards, both, both, both; animation-range: cover 0% cover 1.4vh, cover 1.4vh cover 70vh, cover 1.4vh cover 70vh, cover 0% cover 7vh, cover 105vh cover 115vh, cover 105vh cover 115vh; }
-@keyframes tune-stage-pop { 0% { scale: 0; } 100% { scale: var(--tune-s, 1); } }
+[data-8b-live] #tune[data-handoff] .tune__stage { animation-name: tune-stage-scale, tune-stage-path, tune-stage-show, tune-div-tune-stage-backgroundcolor, tune-div-tune-stage-color; animation-timing-function: linear, linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear, linear, linear; animation-fill-mode: both; animation-range: cover 0% cover 70vh, cover 1.4vh cover 70vh, cover 0% cover 7vh, cover 105vh cover 115vh, cover 105vh cover 115vh; }
 @keyframes tune-stage-path { 0% { translate: var(--tune-x, 0px) var(--tune-y, 0px); } 100% { translate: 0px 0px; } }
-@keyframes tune-stage-grow { 0% { scale: var(--tune-s, 1); } 100% { scale: 1; } }
-@keyframes tune-stage-show { 0% { opacity: 0; visibility: hidden; } 100% { opacity: 1; visibility: visible; } }
+/* Pop to --tune-s in the first 1.4vh (2% of 70vh), then grow to full size: one scale animation, since two on the same property cannot both run on the GPU. */
+@keyframes tune-stage-scale { 0% { scale: 0; animation-timing-function: linear; } 2% { scale: var(--tune-s, 1); animation-timing-function: linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1); } 100% { scale: 1; } }
+@keyframes tune-stage-show { 0% { opacity: 0; } 100% { opacity: 1; } }
 }
 </style>
 <style data-8b-part="scene:rooms">
-@property --rooms-p { syntax: '<number>'; inherits: true; initial-value: 0; }
 @layer scenes {
-/* A tall hold with a sticky screen; --rooms-p runs 0 → 1 while the stage is stuck, the track moves by --rooms-travel (its measured overflow) over it. */
-[data-8b-live] #rooms .rooms__hold { height: calc(100vh + var(--rooms-travel, 0px) * 1.5); padding-bottom: 0; view-timeline: --rooms-hold block; view-timeline-inset: 0; animation-name: rooms-p; animation-timeline: --rooms-hold; animation-range: cover 100vh cover calc(100% - 100vh); animation-timing-function: linear; animation-fill-mode: both; }
-@keyframes rooms-p { 0% { --rooms-p: 0; } 100% { --rooms-p: 1; } }
+/* A tall hold with a sticky screen; progress p runs 0 → 1 while the stage is stuck (cover 100vh to cover 100% − 100vh, so p sits at cover 100vh + (100% − 200vh) · p),
+   and the track moves by --rooms-travel (its measured overflow) over it. */
+[data-8b-live] #rooms .rooms__hold { height: calc(100vh + var(--rooms-travel, 0px) * 1.5); padding-bottom: 0; view-timeline: --rooms-hold block; view-timeline-inset: 0; }
+@keyframes rooms-track { 0% { translate: 0px 0px; } 100% { translate: calc(var(--rooms-travel, 0px) * -1) 0px; } }
 [data-8b-live] #rooms .rooms__stage { position: sticky; top: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; padding-top: 4.5rem; overflow: clip; }
-[data-8b-live] #rooms .rooms__track { display: flex; width: max-content; max-width: none; margin: 0; gap: clamp(1rem, 2.4vw, 2.25rem); padding-inline: var(--space-1); translate: calc(var(--rooms-p) * var(--rooms-travel, 0px) * -1) 0px; }
+[data-8b-live] #rooms .rooms__track { display: flex; width: max-content; max-width: none; margin: 0; gap: clamp(1rem, 2.4vw, 2.25rem); padding-inline: var(--space-1); animation-name: rooms-track; animation-timeline: --rooms-hold; animation-range: cover 100vh cover calc(100% - 100vh); animation-timing-function: linear; animation-fill-mode: both; }
 /* The two voice lines draw ahead of the track: dash offset from 1 − lead (--rooms-dash, measured) to 0 while the stage is stuck. */
 [data-8b-live] #rooms .rooms__line { stroke-dasharray: 1; animation-name: rooms-draw; animation-timeline: --rooms-hold; animation-range: cover 100vh cover calc(100% - 100vh); animation-timing-function: linear; animation-fill-mode: both; }
 @keyframes rooms-draw { 0% { stroke-dashoffset: var(--rooms-dash, 0); } 100% { stroke-dashoffset: 0; } }
-/* Each place's own progress q: p between --rooms-a (its left edge at the right of the view) and the end line, 1 / span = --rooms-k (the scene script). */
-[data-8b-live] #rooms .rooms__place { flex: none; width: clamp(16rem, 34vw, 30rem); height: min(66vh, 40rem); aspect-ratio: auto; --rooms-q: clamp(0, (var(--rooms-p) - var(--rooms-a, 0)) * var(--rooms-k, 1), 1); }
+/* Each place's own progress q runs 0 → 1 while p goes from --rooms-a (its left edge at the right of the view) to --rooms-a + 1 / --rooms-k (the scene script). */
+[data-8b-live] #rooms .rooms__place { flex: none; width: clamp(16rem, 34vw, 30rem); height: min(66vh, 40rem); aspect-ratio: auto; }
 [data-8b-live] #rooms .rooms__place:last-child { grid-column: auto; }
-[data-8b-live] #rooms .rooms__place img { left: -8%; width: 116%; translate: calc((1 - var(--rooms-q)) * 7%) 0px; }
-/* Captions rise in turn (0.5 each, 0.3 apart, power2.out = 1 − (1 − t)³): t = (q · (0.5 + 0.3 (m − 1)) − 0.3 j) / 0.5. */
-[data-8b-live] #rooms .rooms__talk > * { --rooms-u: calc(1 - clamp(0, (var(--rooms-q) * var(--rooms-span, 0.8) - var(--rooms-j, 0) * 0.3) * 2, 1)); opacity: calc(1 - var(--rooms-u) * var(--rooms-u) * var(--rooms-u)); translate: 0px calc(var(--rooms-u) * var(--rooms-u) * var(--rooms-u) * 36px); }
+[data-8b-live] #rooms .rooms__place img { left: -8%; width: 116%; animation-name: rooms-photo; animation-timeline: --rooms-hold; animation-timing-function: linear; animation-fill-mode: both; animation-range: cover calc(100vh + (100% - 200vh) * var(--rooms-a, 0)) cover calc(100vh + (100% - 200vh) * (var(--rooms-a, 0) + 1 / var(--rooms-k, 1))); }
+@keyframes rooms-photo { 0% { translate: 7% 0px; } 100% { translate: 0px 0px; } }
+/* Captions rise in turn (0.5 each, 0.3 apart, power2.out = 1 − (1 − t)³): caption j runs while --rooms-span · q goes from 0.3 j to 0.3 j + 0.5. */
+[data-8b-live] #rooms .rooms__talk > * { animation-name: rooms-talk; animation-timeline: --rooms-hold; animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); animation-fill-mode: both; animation-range: cover calc(100vh + (100% - 200vh) * (var(--rooms-a, 0) + var(--rooms-j, 0) * 0.3 / var(--rooms-span, 0.8) / var(--rooms-k, 1))) cover calc(100vh + (100% - 200vh) * (var(--rooms-a, 0) + (var(--rooms-j, 0) * 0.3 + 0.5) / var(--rooms-span, 0.8) / var(--rooms-k, 1))); }
+@keyframes rooms-talk { 0% { opacity: 0; translate: 0px 36px; } 100% { opacity: 1; translate: 0px 0px; } }
 @media (max-width: 47.99rem) {
   [data-8b-live] #rooms .rooms__place { width: 78vw; height: min(62vh, 34rem); }
 }
@@ -807,8 +811,8 @@
 }
 </style>
 <script data-8b-part="motion-gate">
-// Touch screens get the static page: several scroll-linked effects run on the main thread, and on phones they trail the finger and shake.
-if (matchMedia('(prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine)').matches && CSS.supports('animation-timeline: view()')) document.documentElement.setAttribute('data-8b-live', '');
+// Scroll-linked effects that move things animate translate, scale or opacity only, so phones run them on the GPU in step with the finger.
+if (matchMedia('(prefers-reduced-motion: no-preference)').matches && CSS.supports('animation-timeline: view()')) document.documentElement.setAttribute('data-8b-live', '');
 </script>
 </head>
 <body class="m-text">

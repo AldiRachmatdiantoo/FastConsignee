@@ -40,23 +40,52 @@ test("HP di landing page memakai layar asli dan satu status di tiap layar", asyn
 });
 
 // Efek yang mengikuti scroll sebagian dihitung di thread utama, dan di HP layar sentuh gerakannya tertinggal dari jari sehingga terlihat bergetar.
-test("landing page di layar sentuh tampil diam, sedangkan di desktop tetap beranimasi", async ({ browser }) => {
-  const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-  const phone = await touch.newPage();
-  await phone.goto("/");
-  const fine = await phone.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches);
-  test.skip(fine, "browser ini tidak meniru layar sentuh");
-  await expect(phone.locator("html")).not.toHaveAttribute("data-8b-live", /.*/);
-  await expect(phone.getByRole("heading", { name: "One screen at the counter." })).toBeVisible();
-  await touch.close();
-
-  const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await desktop.newPage();
-  await page.goto("/");
-  if (await page.evaluate(() => CSS.supports("animation-timeline: view()"))) {
+// Animasi ikut scroll menyala di HP dan desktop. Animasi yang menggeser elemen hanya memakai translate, scale, rotate,
+// atau opacity, dan tiap properti hanya punya satu animasi per elemen, supaya GPU menjalankannya seiring jari dan HP tidak bergetar.
+test("landing page beranimasi di layar sentuh dan desktop dengan animasi yang bisa dijalankan GPU", async ({ browser }) => {
+  for (const options of [{ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }, { viewport: { width: 1440, height: 900 } }]) {
+    const context = await browser.newContext(options);
+    const page = await context.newPage();
+    await page.goto("/");
+    test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
     await expect(page.locator("html")).toHaveAttribute("data-8b-live", "");
+    const report = await page.evaluate(() => {
+      const moving = new Set(["translate", "scale", "rotate", "transform", "opacity"]);
+      const meta = new Set(["offset", "computedOffset", "easing", "composite"]);
+      const seen = new Map<Element, Set<string>>();
+      const problems: string[] = [];
+      let count = 0;
+      for (const animation of document.getAnimations()) {
+        if (animation.timeline === document.timeline || !(animation.effect instanceof KeyframeEffect)) {
+          continue;
+        }
+        count++;
+        const name = (animation as CSSAnimation).animationName;
+        const target = animation.effect.target!;
+        const props = new Set(animation.effect.getKeyframes().flatMap((frame) => Object.keys(frame).filter((key) => !meta.has(key))));
+        const moves = [...props].filter((prop) => moving.has(prop));
+        // Chromium tidak menyebut custom property di getKeyframes, jadi keyframes tanpa properti berarti custom property.
+        if (props.size === 0 || [...props].some((prop) => prop.startsWith("--"))) {
+          problems.push(`${name} menganimasikan custom property`);
+        }
+        if (moves.length > 0 && moves.length < props.size) {
+          problems.push(`${name} mencampur gerakan dengan properti yang tidak bisa dijalankan GPU`);
+        }
+        const used = seen.get(target) ?? new Set<string>();
+        for (const prop of moves) {
+          if (used.has(prop)) {
+            problems.push(`${name} menumpuk animasi ${prop} di elemen yang sama`);
+          }
+          used.add(prop);
+        }
+        seen.set(target, used);
+      }
+      return { count, problems };
+    });
+    expect(report.count).toBeGreaterThan(50);
+    expect(report.problems).toEqual([]);
+    await context.close();
   }
-  await desktop.close();
 });
 
 test("mockup HP di bagian kasir tidak menutupi teks dan muat di layar HP", async ({ browser }) => {
