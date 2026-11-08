@@ -10,7 +10,7 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | --- | --- | --- | --- |
 | 1 | ~~Merge mockup HP ke `main`~~ | Selesai 8 November 2026 | Tidak ada |
 | 2 | Google OAuth. Proyek Supabase, migrasi, dan seed sudah jalan | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 3 | `FRONTEND_URL` Render, URL Supabase, dan bukti cron. Render dan Vercel sudah Live | Akun pemilik proyek | PageSpeed, latensi API |
+| 3 | `FRONTEND_URL` Render, URL Supabase, dan bukti cron. Render dan Vercel sudah Live | Akun pemilik proyek | PageSpeed layar bayar, latensi API |
 | 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB dan tampil di Phantom, sedangkan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
@@ -226,7 +226,8 @@ Kebutuhan: belum ada di PRD. Angkanya diukur dari build produksi lokal pada 6 No
 - [x] Uji tab yang masih terbuka saat ada deploy baru, dengan dua build berbeda. Tab lama tetap login, tetap bisa pindah layar, dan kasir tetap bisa membuat QR. Layar yang belum di-prefetch dimuat ulang penuh oleh Next.js
 - [x] Foto latar login sekarang berupa `img`, jadi browser memintanya bersamaan dengan CSS. Nilai Lighthouse tidak ikut naik, yaitu 96 dengan LCP 2,7 detik, karena unduhan foto hanya 6% dari LCP di simulasi
 - [x] Foto hero landing dan login disimpan di server sendiri, dalam AVIF dengan cadangan WebP. Lima foto landing lain masih dari Unsplash, dan semuanya di bawah layar pertama
-- [ ] Ukur PageSpeed beberapa kali setelah web online, lalu ambil nilai tengahnya
+- [x] Ukur PageSpeed setelah web online, 8 November 2026. Lighthouse 12.8.2 mode HP ke https://fast-consignee.vercel.app, nilai tengah 3 kali uji: landing performa 100 (100, 99, 100) dengan LCP 1,7 detik, bobot 159 KB, dan aksesibilitas 96, lalu login 98 (98, 98, 98) dengan LCP 2,3 detik, bobot 286 KB, dan aksesibilitas 100. PageSpeed Insights resmi untuk landing di HP: performa 100, aksesibilitas 96, praktik terbaik 100, SEO 100, dan LCP 1,5 detik. PageSpeed resmi untuk login belum keluar karena analisis di situs Google macet, dan kuota API tanpa kunci sudah habis hari itu
+- [ ] Ukur layar bayar dengan order asli di produksi, setelah order pertama dibuat
 - [ ] Ukur latensi API setelah deploy, karena angka lokal belum memuat jarak ke Render dan Supabase. Render gratis juga tidur kalau tidak ada lalu lintas, jadi cron `/healthz` harus jalan sebelum demo. Angka awal dari jaringan lokal di Indonesia ke Render Singapore: `/healthz` dengan ping database 0,14 sampai 0,17 detik, dan `/api/v1/me` yang ditolak 0,13 sampai 0,16 detik. Endpoint yang butuh login diukur setelah login Google pertama
 
 Kesimpulan: web ini kencang untuk HP, selama diukur di lokal. Tidak ada halaman yang berat kecuali refund dan wallet, karena keduanya memuat `@solana/web3.js`.
