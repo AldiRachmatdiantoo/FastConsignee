@@ -11,12 +11,12 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | 1 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
 | 2 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
 | 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 4 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
+| 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
 | 7 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
 
-Saldo Devnet hanya membuka uji pembayaran dan NFT. Login, deploy, uji di HP, video, dan submit tetap harus dikerjakan terpisah. Wallet yang butuh saldo adalah wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat.
+Uji pembayaran, refund, dan NFT nyata di Devnet sudah lolos memakai wallet uji. Saldo di Phantom tetap dibutuhkan untuk demo: wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat. Login, deploy, uji di HP, video, dan submit dikerjakan terpisah.
 
 Satu item menunggu pihak luar, yaitu GO-2026-5932 di `golang.org/x/crypto`.
 
@@ -137,10 +137,10 @@ Kebutuhan: FR-21, FR-24, NFR-02, NFR-15, NFR-25.
 - [x] Cara menjalankan backend di dokumentasi
 - [x] Uji beban, `gosec`, dan `govulncheck`
 - [x] Koleksi Postman dari kontrak, diuji lewat Newman
-- [ ] Pembayaran nyata di Devnet. Transaksinya sudah lolos simulasi di Devnet, tetapi `requestAirdrop` dijawab `410` karena faucet RPC ditutup, dan faucet web memakai CAPTCHA. Uji ini butuh wallet Devnet yang sudah punya saldo
+- [x] Pembayaran dan refund nyata di Devnet, 8 November 2026. `TestDevnetPaymentAndRefund` lolos, dengan [transaksi bayar](https://explorer.solana.com/tx/5D8Q88vm6te8LsSaTRjSGGKvDuTioK5uqpHDLsa2jWDCiCMM2C1G2aGoDvLQRQgCTAF2cKQbBbjZMZj68bMSvAiY?cluster=devnet) dan [transaksi refund](https://explorer.solana.com/tx/5BNLCkgXnRbcD7wEDTkLtS4WPJ3ikYFxueERcvp2VngBmSktBUBCoRE3atSjPJpgxTiu71JWxuyRddYUMXp2uBW5?cluster=devnet)
 - [ ] Login dengan token Supabase asli
 - [x] Kode pengiriman NFT sertifikat, lolos uji worker dan simulasi di program Token, Associated Token, dan Token Metadata yang asli di Devnet
-- [ ] Pengiriman NFT sertifikat nyata di Devnet, menunggu wallet yang punya saldo. Satu sertifikat memakai sekitar 0,0163 SOL. Perintah ujinya ada di `backend/README.md`, dan `TestDevnetCertificateMints` belum pernah berjalan nyata
+- [x] NFT sertifikat nyata di Devnet, 8 November 2026. `TestDevnetCertificateMints` lolos: order dibayar, lalu NFT-nya sampai di wallet pembeli dan punya akun metadata. [Lihat NFT di Explorer](https://explorer.solana.com/address/CBaJANZpLCHZeBkLpzuqv3KVyodmHvxBoVg94dgiioU8?cluster=devnet)
 
 Testing: beban, keamanan, Solana Devnet.
 
@@ -324,7 +324,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Proyek Supabase, Google OAuth, dan migrasi
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
-- [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT. Wallet ujinya sudah dibuat di lokal dengan kunci di luar repo, dan saldonya masih 0 pada 8 November 09:30 WIB
+- [x] Wallet uji Devnet diisi 1 SOL dari faucet. Dua uji nyata memakai sekitar 0,16 SOL, jadi sisanya 0,84 SOL. Kuncinya ada di luar repo
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit. Syarat ini baru tertulis di panduan lokal, dan halaman resmi MLH yang terbuka tanpa login tidak menyebutnya. Kepastiannya ada di form submit, yang butuh login
 - [x] Check-in lomba di halaman MLH. Register dan Check In sudah tercentang pada 7 November 2026, dan tahap berikutnya Submit Project
