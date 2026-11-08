@@ -49,6 +49,8 @@ Di Supabase, aktifkan provider Google, lalu masukkan `<alamat frontend>/login` k
 
 Email harus sudah terdaftar di toko. Akun lokal dengan email yang sama berpindah ke akun Google saat login pertama.
 
+Tanpa pengaturan lain, layar izin Google menyebut alamat proyek Supabase, karena Google kembali lewat Supabase. Supaya yang disebut alamat situs ini, isi `NEXT_PUBLIC_GOOGLE_CLIENT_ID` dengan Client ID yang sama, lalu tambahkan `<alamat frontend>/login` ke *Authorized redirect URIs* client itu di Google Cloud. Google lalu mengirim ID token langsung ke `/login`, dan frontend menukarnya dengan sesi Supabase lewat `signInWithIdToken`. Nonce mentah hanya disimpan di tab itu, sedangkan Google menerima hash-nya.
+
 ## Testing
 
 ```bash
