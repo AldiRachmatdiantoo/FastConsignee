@@ -266,6 +266,50 @@ test("halaman login tidak sempat bisa di-scroll saat animasi pembuka", async ({ 
   }
 });
 
+test("latar di sekitar halaman login di HP gelap, bukan putih", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 780 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto("/login");
+  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  const result = await page.evaluate(() => {
+    const login = document.querySelector(".login") as HTMLElement;
+    return {
+      login: getComputedStyle(login).backgroundColor,
+      html: getComputedStyle(document.documentElement).backgroundColor,
+      body: getComputedStyle(document.body).backgroundColor,
+      gap: document.documentElement.scrollHeight - login.getBoundingClientRect().bottom,
+    };
+  });
+  // Safari iOS 26 memakai latar html dan body untuk area di bawah toolbarnya, jadi warnanya harus sama dengan halaman login.
+  expect(result.html).toBe(result.login);
+  expect(result.body).toBe(result.login);
+  // scrollHeight dibulatkan ke piksel penuh, jadi selisih di bawah 1 px hanya pembulatan.
+  expect(result.gap).toBeLessThan(1);
+  await context.close();
+});
+
+test("halaman login di HP kembali ke atas saat di-refresh", async ({ browser }) => {
+  // Tinggi 560 px membuat isi login lebih tinggi dari layar, baik dengan maupun tanpa tombol akun demo.
+  const context = await browser.newContext({ viewport: { width: 390, height: 560 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto("/login");
+  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  expect(maxScroll).toBeGreaterThan(0);
+  // Heading sudah tampil dari HTML server sebelum React aktif, jadi tunggu halaman tenang dulu supaya scroll tidak didahului hydration.
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(500);
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await expect(page.locator(".login__nav")).toBeInViewport();
+  await context.close();
+});
+
 test("isi halaman login tetap terbaca tanpa animasi", async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();

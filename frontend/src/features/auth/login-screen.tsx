@@ -74,6 +74,17 @@ export function LoginScreen() {
     }
   }, [session, router]);
 
+  // Saat di-refresh, browser mengembalikan posisi scroll terakhir, dan di HP yang pendek nav jadi tertinggal di atas layar.
+  // Halaman login selalu dibuka dari atas.
+  useEffect(() => {
+    const previous = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    return () => {
+      history.scrollRestoration = previous;
+    };
+  }, []);
+
   async function choose(email: string) {
     setPending(email);
     await signInLocal(email);
