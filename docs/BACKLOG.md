@@ -321,7 +321,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 Bagian ini butuh akun pemilik proyek.
 
 - [x] Merge mockup HP ke `main`, 8 November 2026. `main` dimajukan ke `frontend` tanpa commit merge, jadi isinya sama persis. Sebelumnya Vitest 156 uji lolos dan tsc bersih
-- [ ] Proyek Supabase, Google OAuth, dan migrasi
+- [ ] Proyek Supabase, Google OAuth, dan migrasi. Saat membuat proyek, matikan Enable Data API dan jangan sambungkan GitHub. Tabel kita ada di schema `public` dan anon key ikut terkirim ke browser, jadi Data API yang menyala membuat siapa pun bisa membaca dan mengubah tabel lewat REST. Frontend hanya memakai `/auth/v1`, dan Auth tetap jalan tanpa Data API. Migrasi dijalankan goose dari API Go, bukan dari integrasi GitHub Supabase
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
 - [x] Wallet uji Devnet diisi 1 SOL dari faucet. Dua uji nyata memakai sekitar 0,16 SOL, jadi sisanya 0,84 SOL. Kuncinya ada di luar repo
