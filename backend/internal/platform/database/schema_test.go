@@ -36,6 +36,28 @@ func TestEveryForeignKeyHasAnIndex(t *testing.T) {
 	}
 }
 
+// RLS tanpa policy menutup tabel dari peran anon Supabase. API Go tetap bisa membaca karena memakai pemilik tabel.
+func TestEveryTableHasRowLevelSecurity(t *testing.T) {
+	db := testkit.NewDB(t)
+	rows, err := db.Pool.Query(context.Background(), `
+		SELECT relname FROM pg_class
+		WHERE relnamespace = 'public'::regnamespace AND relkind = 'r' AND NOT relrowsecurity`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var table string
+		if err := rows.Scan(&table); err != nil {
+			t.Fatal(err)
+		}
+		t.Errorf("tabel %s belum memakai RLS", table)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestSchemaHasTwelveTables(t *testing.T) {
 	db := testkit.NewDB(t)
 	var n int

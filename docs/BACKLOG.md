@@ -9,7 +9,7 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | Urutan | Pekerjaan | Butuh | Item yang ikut terbuka |
 | --- | --- | --- | --- |
 | 1 | ~~Merge mockup HP ke `main`~~ | Selesai 8 November 2026 | Tidak ada |
-| 2 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
+| 2 | Google OAuth. Proyek Supabase, migrasi, dan seed sudah jalan | Akun pemilik proyek | Login token Supabase asli, login Google |
 | 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
 | 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB dan tampil di Phantom, sedangkan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
@@ -321,7 +321,9 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 Bagian ini butuh akun pemilik proyek.
 
 - [x] Merge mockup HP ke `main`, 8 November 2026. `main` dimajukan ke `frontend` tanpa commit merge, jadi isinya sama persis. Sebelumnya Vitest 156 uji lolos dan tsc bersih
-- [ ] Proyek Supabase, Google OAuth, dan migrasi. Saat membuat proyek, matikan Enable Data API dan jangan sambungkan GitHub. Tabel kita ada di schema `public` dan anon key ikut terkirim ke browser, jadi Data API yang menyala membuat siapa pun bisa membaca dan mengubah tabel lewat REST. Frontend hanya memakai `/auth/v1`, dan Auth tetap jalan tanpa Data API. Migrasi dijalankan goose dari API Go, bukan dari integrasi GitHub Supabase
+- [x] Proyek Supabase di Singapore dengan paket gratis, 8 November 2026. Migrasi `00001` dan `00002` sudah jalan, dan seed membuat 1 toko, 5 akun, 3 penitip, dan 9 barang. Pemilik toko dan penitip Sari Anyaman memakai email Google pemilik proyek, sedangkan penitip lain dan kasir memakai email `.test`. Seed kedua tidak membuat data baru. Proyek tidak disambungkan ke GitHub karena migrasi dijalankan goose dari API Go, dan Data API dianjurkan tetap mati
+- [x] Akses tabel lewat Data API Supabase ditutup, 8 November 2026. Bawaan Supabase memberi peran anon dan authenticated hak penuh atas 13 tabel di schema `public`, termasuk menulis dan menghapus, padahal anon key ikut terkirim ke browser. Migrasi `00002` mencabut hak itu, juga untuk tabel baru, lalu menyalakan RLS tanpa policy. Diuji di Supabase: hak anon dan authenticated tinggal 0 dari 13 tabel, RLS menyala di 13 tabel, `SET ROLE anon` lalu membaca `users` ditolak "permission denied", dan pemilik tabel tetap bisa menulis dan membaca. `go test` penuh lolos lokal dengan uji RLS baru
+- [ ] Google OAuth di Supabase dan Google Cloud
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
 - [x] Wallet uji Devnet diisi 1 SOL dari faucet. Dua uji nyata memakai sekitar 0,16 SOL, jadi sisanya 0,84 SOL. Kuncinya ada di luar repo
