@@ -165,6 +165,74 @@ test("kartu Every rupiah muncul dan hilang perlahan saat di-scroll", async ({ br
   await context.close();
 });
 
+test("kartu Every rupiah tetap di layar HP calls selama memudar", async ({ browser }) => {
+  for (const size of [{ width: 390, height: 844, mobile: true }, { width: 1440, height: 900, mobile: false }]) {
+    const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, hasTouch: size.mobile, isMobile: size.mobile });
+    const page = await context.newPage();
+    await page.goto("/");
+    test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
+    await expect(page.locator("#tune")).toHaveAttribute("data-handoff", "");
+    for (const share of [0.05, 0.1, 0.15, 0.2]) {
+      await page.evaluate((share) => {
+        const tune = document.getElementById("tune")!;
+        scrollTo(0, tune.getBoundingClientRect().top + scrollY - innerHeight * (1 - share));
+      }, share);
+      await page.waitForTimeout(150);
+      const { distance, limit } = await page.evaluate(() => {
+        const card = document.querySelector("#tune .tune__stage")!.getBoundingClientRect();
+        const screen = document.querySelector("#calls .phone__screen")!.getBoundingClientRect();
+        return {
+          distance: Math.hypot(card.x + card.width / 2 - (screen.x + screen.width / 2), card.y + card.height / 2 - (screen.y + screen.height / 2)),
+          limit: screen.height * 0.08,
+        };
+      });
+      // Selama memudar, kartu ikut bergerak bersama layar HP, jadi tidak keluar dari HP dalam keadaan setengah transparan.
+      expect(distance, `lebar ${size.width} px, puncak tune ${share * 100}% di atas bawah layar`).toBeLessThanOrEqual(limit);
+    }
+    await context.close();
+  }
+});
+
+test("tulisan kartu Every rupiah tetap terbaca saat warnanya berbalik", async ({ browser }) => {
+  for (const size of [{ width: 390, height: 844, mobile: true }, { width: 1440, height: 900, mobile: false }]) {
+    const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, hasTouch: size.mobile, isMobile: size.mobile });
+    const page = await context.newPage();
+    await page.goto("/");
+    test.skip(!(await page.evaluate(() => CSS.supports("animation-timeline: view()"))), "browser ini belum mendukung animation-timeline");
+    let lowest = Infinity;
+    const underBar: string[] = [];
+    for (let step = 80; step <= 120; step++) {
+      const sample = await page.evaluate((share) => {
+        const tune = document.getElementById("tune")!;
+        scrollTo(0, tune.getBoundingClientRect().top + scrollY - innerHeight * (1 - share));
+        return new Promise<{ bg: number[]; fg: number[]; top: number; bar: number }>((resolve) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const stage = document.querySelector("#tune .tune__stage")!;
+              const style = getComputedStyle(stage);
+              const rgb = (value: string) => value.match(/\d+(\.\d+)?/g)!.slice(0, 3).map(Number);
+              resolve({ bg: rgb(style.backgroundColor), fg: rgb(style.color), top: stage.getBoundingClientRect().top, bar: document.getElementById("nav")!.getBoundingClientRect().bottom });
+            }),
+          ),
+        );
+      }, step / 100);
+      const luminance = (rgb: number[]) => {
+        const [r, g, b] = rgb.map((c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const [light, dark] = [luminance(sample.bg), luminance(sample.fg)].sort((a, b) => b - a);
+      lowest = Math.min(lowest, (light + 0.05) / (dark + 0.05));
+      const midFlip = sample.bg[0] > 45 && sample.bg[0] < 250;
+      if (size.mobile && midFlip && sample.top < sample.bar) underBar.push(`${step / 100}`);
+    }
+    // Latar dan tulisan dulu memudar bersamaan, sehingga di tengah jalan keduanya abu-abu yang sama.
+    expect(lowest, `lebar ${size.width} px`).toBeGreaterThanOrEqual(3);
+    // Di HP warnanya berbalik saat seluruh kartu masih di bawah navbar, bukan saat kartu masuk ke bawahnya.
+    expect(underBar, `lebar ${size.width} px`).toEqual([]);
+    await context.close();
+  }
+});
+
 test("label suara di HP tidak tertimpa gelombang", async ({ browser }) => {
   for (const width of [320, 390]) {
     const context = await browser.newContext({ viewport: { width, height: 800 }, hasTouch: true, isMobile: true });

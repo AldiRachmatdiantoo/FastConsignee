@@ -704,16 +704,25 @@
 @keyframes tune-size-thumb { 0% { translate: calc(var(--tune-track, 0px) * -0.45) 0px; } 100% { translate: 0px 0px; } }
 @keyframes tune-weight-thumb { 0% { translate: calc(var(--tune-track, 0px) * -0.6) 0px; } 44.4444% { translate: calc(var(--tune-track, 0px) * 0.4) 0px; } 64.4444% { translate: calc(var(--tune-track, 0px) * 0.4) 0px; } 100% { translate: 0px 0px; } }
 @keyframes tune-div-tune-stage-backgroundcolor { 0% { background-color: var(--color-2); } 100% { background-color: var(--color-1); } }
-@keyframes tune-div-tune-stage-color { 0% { color: var(--color-1); } 100% { color: var(--color-2); } }
+/* The text switches at once where the fading background gives both inks the same contrast, about 58%. Blending it alongside the background
+   made text and background the same grey halfway through. */
+@keyframes tune-div-tune-stage-color { 0%, 58% { color: var(--color-1); } 58.01%, 100% { color: var(--color-2); } }
 @keyframes tune-b-tune-pill-translate { 0% { translate: -100% 0px; } 100% { translate: 0px 0px; } }
-/* Entry, only right after calls (the scene script sets data-handoff with the measured path): from the top of tune at the bottom of the view to 30%,
-   the card fades in over the calls phone's screen (--tune-x, --tune-y, scale --tune-s) during the first 30% and grows along the path into place.
-   Scrolling back up runs it in reverse, so the card shrinks into the phone and fades out gradually instead of vanishing at once. */
-[data-8b-live] #tune[data-handoff] .tune__stage { animation-name: tune-stage-scale, tune-stage-path, tune-stage-show, tune-div-tune-stage-backgroundcolor, tune-div-tune-stage-color; animation-timing-function: linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear, linear, linear; animation-fill-mode: both; animation-range: cover 0% cover 70vh, cover 0% cover 70vh, cover 0% cover 21vh, cover 105vh cover 115vh, cover 105vh cover 115vh; }
+/* Entry, only right after calls (the scene script sets data-handoff with the measured path): from the top of tune at the bottom of the view to 21vh
+   the card fades in over the calls phone's screen (--tune-x, --tune-y, scale --tune-s). The phone scrolls with the page by then, so the card holds its
+   offset and rides along on the screen until it is fully shown, then grows along the path into place by 70vh. Scrolling back up runs it in reverse:
+   the card shrinks back into the phone screen first and only then fades out, instead of drifting out of the phone while half transparent. */
+[data-8b-live] #tune[data-handoff] .tune__stage { animation-name: tune-stage-scale, tune-stage-path, tune-stage-show, tune-div-tune-stage-backgroundcolor, tune-div-tune-stage-color; animation-timing-function: linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear(0, 0.0013, 0.005, 0.0112, 0.02, 0.0313, 0.045, 0.0612, 0.08, 0.1013, 0.125, 0.1512, 0.18, 0.2112, 0.245, 0.2813, 0.32, 0.3613, 0.405, 0.4512, 0.5, 0.5487, 0.595, 0.6388, 0.68, 0.7188, 0.755, 0.7887, 0.82, 0.8488, 0.875, 0.8988, 0.92, 0.9387, 0.955, 0.9688, 0.98, 0.9888, 0.995, 0.9988, 1), linear, linear, linear; animation-fill-mode: both; animation-range: cover 21vh cover 70vh, cover 21vh cover 70vh, cover 0% cover 21vh, cover 105vh cover 115vh, cover 105vh cover 115vh; }
 @keyframes tune-stage-path { 0% { translate: var(--tune-x, 0px) var(--tune-y, 0px); } 100% { translate: 0px 0px; } }
 /* One scale animation from the phone screen's size to full size, on the same curve as the path, since two on the same property cannot both run on the GPU. */
 @keyframes tune-stage-scale { 0% { scale: var(--tune-s, 1); } 100% { scale: 1; } }
 @keyframes tune-stage-show { 0% { opacity: 0; } 100% { opacity: 1; } }
+/* On a phone the card flips at 1.05 while it slides under the navigation bar, so only a strip of it turns dark and it reads as a glitch.
+   There the flip runs while the whole card is still below the bar. svh keeps that true whether or not the Safari toolbar is shown. */
+@media (max-width: 47.99rem) {
+  [data-8b-live] #tune .tune__stage { animation-range: cover 86svh cover 96svh, cover 86svh cover 96svh; }
+  [data-8b-live] #tune[data-handoff] .tune__stage { animation-range: cover 21vh cover 70vh, cover 21vh cover 70vh, cover 0% cover 21vh, cover 86svh cover 96svh, cover 86svh cover 96svh; }
+}
 }
 </style>
 <style data-8b-part="scene:rooms">
