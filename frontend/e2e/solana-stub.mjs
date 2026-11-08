@@ -143,14 +143,21 @@ const server = createServer((request, response) => {
     response.writeHead(204).end();
     return;
   }
-  if (request.method === "GET") {
+  if (request.method === "GET" || request.method === "HEAD") {
     response.writeHead(200).end("ok");
     return;
   }
   let body = "";
   request.on("data", (chunk) => (body += chunk));
   request.on("end", () => {
-    const call = JSON.parse(body);
+    // Pemeriksa kesiapan server bisa mengirim body kosong. Tanpa ini, stub mati dan semua uji pembayaran gagal 503.
+    let call;
+    try {
+      call = JSON.parse(body);
+    } catch {
+      response.writeHead(400, { "Content-Type": "application/json" }).end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }));
+      return;
+    }
     const result = Array.isArray(call) ? call.map(answer) : answer(call);
     response.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(result));
   });

@@ -350,13 +350,17 @@
   #calls .phone__balances code { color: #262626; font-size: 0.857em; }
   #calls .phone__balances strong { margin-left: 0.5em; color: #166534; }
   @media (max-width: 47.99rem) {
+    #calls { overflow-x: clip; }
     #calls .calls__head { grid-template-columns: 1fr; }
     #calls .calls__grid { grid-template-columns: 1fr; gap: 0; }
     #calls .calls__aside, #calls .calls__list { grid-area: 1 / 1; }
     #calls .calls__aside { z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
     #calls .calls__sticky { top: auto; bottom: 0.5rem; }
-    #calls .phone { font-size: 0.66rem; height: 32.25em; }
-    #calls .calls__list { padding-bottom: calc(32.25 * 0.66rem + 2.5rem); }
+    /* A full-width band behind the phone hides the next step's text, so it no longer peeks out on both sides of the mockup. */
+    #calls .calls__sticky::before { content: ""; position: absolute; z-index: -1; top: -2.5rem; bottom: -0.5rem; left: 50%; width: 100vw; translate: -50% 0; background: linear-gradient(to bottom, transparent, var(--color-6) 2.5rem); }
+    /* The phone follows the screen height, so short phones keep room for the text above it. */
+    #calls .phone { font-size: min(0.66rem, 1.3vh); height: 32.25em; }
+    #calls .calls__list { padding-bottom: calc(32.25 * min(0.66rem, 1.3vh) + 2.5rem); }
     #calls .calls__item { min-height: 44vh; justify-content: flex-start; padding-top: 1.5rem; }
   }
 }
@@ -803,7 +807,8 @@
 }
 </style>
 <script data-8b-part="motion-gate">
-if (matchMedia('(prefers-reduced-motion: no-preference)').matches && CSS.supports('animation-timeline: view()')) document.documentElement.setAttribute('data-8b-live', '');
+// Touch screens get the static page: several scroll-linked effects run on the main thread, and on phones they trail the finger and shake.
+if (matchMedia('(prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine)').matches && CSS.supports('animation-timeline: view()')) document.documentElement.setAttribute('data-8b-live', '');
 </script>
 </head>
 <body class="m-text">

@@ -276,8 +276,8 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 | Newman, 29 request | 87 dari 87 assertion lolos |
 | Verifikasi JWKS dengan ES256 dan RS256 | Lolos, sekarang juga di `go test` |
 | ESLint, typecheck, Vitest 156 test, build produksi | Lolos |
-| Playwright Edge, 19 uji | Lolos di database baru, 8 November 2026 |
-| Playwright WebKit, 19 uji | Lolos di database baru, 8 November 2026 |
+| Playwright Edge, 21 uji | Lolos di database baru, 8 November 2026 |
+| Playwright WebKit, 21 uji | Lolos di database baru, 8 November 2026 |
 | Playwright landing di Edge, 8 uji termasuk mockup HP | Lolos di build produksi |
 | axe di 12 layar | Semua bersih |
 | Layar saat API mati, `500`, `429`, dan sesi habis | Lolos, tanpa error halaman |
@@ -304,6 +304,9 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 - [x] Halaman `404` masih bawaan Next.js berbahasa Inggris
 - [x] Saat API tidak terjangkau ketika halaman dimuat ulang, pengguna dilempar ke `/login`. Sekarang tokennya tetap tersimpan, dan layar "Belum tersambung" memberi tombol coba lagi
 - [x] `/bayar/bukan-uuid` menampilkan "Harus berupa UUID." ke pembeli. Sekarang tautan itu menuju halaman 404
+- [x] Landing page terasa bergetar saat discroll di HP, 8 November 2026. Lighthouse produksi mencatat 48 animasi yang tidak bisa dijalankan GPU, termasuk efek ikut scroll yang menggerakkan elemen lewat custom property (`--listen-p`, `--rooms-p`), `clip-path`, `filter`, dan `stroke-dashoffset`. Di HP layar sentuh, gerakan itu tertinggal dari jari lalu menyusul. Sekarang efek ikut scroll hanya menyala di perangkat dengan mouse atau touchpad (`hover: hover` dan `pointer: fine`), sedangkan HP dan tablet mendapat versi diam yang sudah ada untuk *reduced motion*. Diuji di HP tiruan 412, 390, 360, dan 320 px: 0 animasi ikut scroll, 0 pergeseran tata letak dan 0 lompatan posisi selama scroll penuh, serta halaman tidak bisa digeser ke samping
+- [x] Di HP, mockup di bagian *One screen at the counter* menutupi teks langkah berikutnya, yang mengintip di kiri dan kanan mockup, dan bagian bawahnya terpotong layar. Sekarang ada pita gelap selebar layar di belakang mockup, dan tinggi mockup ikut tinggi layar (`min(0.66rem, 1.3vh)` per em), jadi di 360 x 640 px mockup setinggi 268 px dan muat utuh. Di desktop yang dipersempit, animasi langkah tetap berjalan di atas pita itu
+- [ ] Layar aplikasi meloncat sekali saat data selesai dimuat, karena teks "Memuat..." diganti isi yang lebih tinggi. Diukur di 390 x 780 px: dasbor penitip 0,60, kasir 0,29, dasbor toko 0,27, refund 0,08, dan barang 0,08. Saat discroll tidak ada pergeseran, tidak ada lompatan, dan tidak ada scroll samping. Perbaikannya kerangka isi dengan tinggi tetap selama memuat
 
 ### Uji dan dependency
 
@@ -315,6 +318,8 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 - [x] `npm audit` frontend menemukan 18 celah moderate. Sekarang 0, setelah `jayson` dan `minimatch` dinaikkan lewat `overrides`
 - [x] `npm audit` folder `api` menemukan 4 high dan 2 moderate. Sekarang 0, karena `openapi-to-postmanv2` diganti generator sendiri di `api/scripts/postman.mjs`. Isi koleksinya sama, kecuali petunjuk pilihan nilai yang sekarang berbahasa Indonesia, teks kontak di deskripsi yang hilang, dan variabel baru `certificate_id`
 - [x] Playwright penuh diulang setelah mockup HP diganti dan kepala layar 320 px diperbaiki. Edge dan WebKit sama-sama lolos 19 dari 19
+- [x] Stub Solana untuk uji mati kalau menerima request kosong, misalnya dari pemeriksa kesiapan server, sehingga semua langkah pembayaran gagal `503`. Sekarang request kosong dijawab `400` dengan error JSON-RPC, dan stub tetap hidup
+- [x] Playwright penuh diulang setelah landing page diam di layar sentuh, 8 November 2026. Edge dan WebKit sama-sama lolos 21 dari 21, termasuk uji layar sentuh dan uji mockup HP yang baru
 - [ ] `govulncheck` mencatat GO-2026-5932 di `golang.org/x/crypto`. Kode tidak memanggilnya, dan perbaikannya baru ada di versi pseudo
 
 ## Deploy
