@@ -8,10 +8,10 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 
 | Urutan | Pekerjaan | Butuh | Item yang ikut terbuka |
 | --- | --- | --- | --- |
-| 1 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
+| 1 | ~~Merge mockup HP ke `main`~~ | Selesai 8 November 2026 | Tidak ada |
 | 2 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
 | 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB, dan Toko belum | Demo dengan Phantom |
+| 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB dan tampil di Phantom, sedangkan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
 | 7 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
@@ -320,7 +320,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 
 Bagian ini butuh akun pemilik proyek.
 
-- [ ] Merge mockup HP ke `main`
+- [x] Merge mockup HP ke `main`, 8 November 2026. `main` dimajukan ke `frontend` tanpa commit merge, jadi isinya sama persis. Sebelumnya Vitest 156 uji lolos dan tsc bersih
 - [ ] Proyek Supabase, Google OAuth, dan migrasi
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
