@@ -10,7 +10,7 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | --- | --- | --- | --- |
 | 1 | ~~Merge mockup HP ke `main`~~ | Selesai 8 November 2026 | Tidak ada |
 | 2 | Google OAuth. Proyek Supabase, migrasi, dan seed sudah jalan | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 3 | Proyek Vercel dan cron `/healthz`. Render sudah Live | Akun pemilik proyek | PageSpeed, latensi API |
+| 3 | `FRONTEND_URL` Render, URL Supabase, dan bukti cron. Render dan Vercel sudah Live | Akun pemilik proyek | PageSpeed, latensi API |
 | 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB dan tampil di Phantom, sedangkan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
@@ -326,7 +326,9 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Google OAuth di Supabase dan Google Cloud. Provider Google sudah menyala, dan pada 8 November 2026 Google menerima Client ID serta Callback URL-nya, karena permintaan login diteruskan ke halaman masuk Google tanpa error. Client Secret baru terbukti saat login pertama. Aplikasi Google tetap di mode Testing dengan dua email pemilik proyek sebagai test user
 - [x] Layanan Render `fastconsignee-api` di Singapore dengan paket gratis, Live di https://fastconsignee-api.onrender.com pada 8 November 2026. JWKS proyek Supabase memakai kunci ES256, jadi Render cukup diberi `SUPABASE_JWKS_URL` tanpa `SUPABASE_JWT_SECRET`. Diuji dari luar: `/healthz` menjawab `200` dengan ping database, `/api/v1/me` tanpa token dan dengan token palsu menjawab `401` beserta header rate limit, order publik acak menjawab `404` dari tabel `orders`, preflight CORS dari `https://fastconsignee.vercel.app` diterima, dan origin lain tidak mendapat header izin
 - [ ] Cron `/healthz` tiap 10 menit di cron-job.org, supaya Render gratis tidak tidur. Cronjob `fastconsignee-cron` sudah dibuat pada 8 November 2026, dengan notifikasi setelah 2 kegagalan berturut-turut. Dicentang setelah terbukti: Render tetap menjawab cepat walaupun 20 menit lebih tidak ada permintaan selain dari cron
-- [ ] Proyek Vercel
+- [x] Proyek Vercel Live di https://fast-consignee.vercel.app pada 8 November 2026, bukan `fastconsignee.vercel.app` seperti rencana awal. Diuji dari luar: `/`, `/landing.html`, `/login`, `/kasir`, `/bayar/...`, dan `/icon.png` menjawab `200`. JS hasil build memuat alamat API Render, Project URL Supabase, dan publishable key, tanpa `localhost:8080`, tanpa `sb_secret_`, dan tanpa `service_role`. Halaman login menampilkan tombol "Masuk dengan Google", jadi login lokal tidak ikut terpasang
+- [ ] `FRONTEND_URL` di Render diganti ke `https://fast-consignee.vercel.app`. Sebelum diganti, preflight CORS dari alamat itu tidak mendapat header izin, jadi web belum bisa memanggil API
+- [ ] Site URL dan Redirect URLs Supabase diisi `https://fast-consignee.vercel.app` dan `https://fast-consignee.vercel.app/login`
 - [x] Wallet uji Devnet diisi 1 SOL dari faucet. Dua uji nyata memakai sekitar 0,16 SOL, jadi sisanya 0,84 SOL. Kuncinya ada di luar repo
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit. Syarat ini baru tertulis di panduan lokal, dan halaman resmi MLH yang terbuka tanpa login tidak menyebutnya. Kepastiannya ada di form submit, yang butuh login
