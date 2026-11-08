@@ -10,7 +10,7 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | --- | --- | --- | --- |
 | 1 | ~~Merge mockup HP ke `main`~~ | Selesai 8 November 2026 | Tidak ada |
 | 2 | Google OAuth. Proyek Supabase, migrasi, dan seed sudah jalan | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
+| 3 | Proyek Vercel dan cron `/healthz`. Render sudah Live | Akun pemilik proyek | PageSpeed, latensi API |
 | 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB dan tampil di Phantom, sedangkan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
@@ -227,7 +227,7 @@ Kebutuhan: belum ada di PRD. Angkanya diukur dari build produksi lokal pada 6 No
 - [x] Foto latar login sekarang berupa `img`, jadi browser memintanya bersamaan dengan CSS. Nilai Lighthouse tidak ikut naik, yaitu 96 dengan LCP 2,7 detik, karena unduhan foto hanya 6% dari LCP di simulasi
 - [x] Foto hero landing dan login disimpan di server sendiri, dalam AVIF dengan cadangan WebP. Lima foto landing lain masih dari Unsplash, dan semuanya di bawah layar pertama
 - [ ] Ukur PageSpeed beberapa kali setelah web online, lalu ambil nilai tengahnya
-- [ ] Ukur latensi API setelah deploy, karena angka lokal belum memuat jarak ke Render dan Supabase. Render gratis juga tidur kalau tidak ada lalu lintas, jadi cron `/healthz` harus jalan sebelum demo
+- [ ] Ukur latensi API setelah deploy, karena angka lokal belum memuat jarak ke Render dan Supabase. Render gratis juga tidur kalau tidak ada lalu lintas, jadi cron `/healthz` harus jalan sebelum demo. Angka awal dari jaringan lokal di Indonesia ke Render Singapore: `/healthz` dengan ping database 0,14 sampai 0,17 detik, dan `/api/v1/me` yang ditolak 0,13 sampai 0,16 detik. Endpoint yang butuh login diukur setelah login Google pertama
 
 Kesimpulan: web ini kencang untuk HP, selama diukur di lokal. Tidak ada halaman yang berat kecuali refund dan wallet, karena keduanya memuat `@solana/web3.js`.
 
@@ -324,7 +324,8 @@ Bagian ini butuh akun pemilik proyek.
 - [x] Proyek Supabase di Singapore dengan paket gratis, 8 November 2026. Migrasi `00001` dan `00002` sudah jalan, dan seed membuat 1 toko, 5 akun, 3 penitip, dan 9 barang. Pemilik toko dan penitip Sari Anyaman memakai email Google pemilik proyek, sedangkan penitip lain dan kasir memakai email `.test`. Seed kedua tidak membuat data baru. Proyek tidak disambungkan ke GitHub karena migrasi dijalankan goose dari API Go, dan Data API dianjurkan tetap mati
 - [x] Akses tabel lewat Data API Supabase ditutup, 8 November 2026. Bawaan Supabase memberi peran anon dan authenticated hak penuh atas 13 tabel di schema `public`, termasuk menulis dan menghapus, padahal anon key ikut terkirim ke browser. Migrasi `00002` mencabut hak itu, juga untuk tabel baru, lalu menyalakan RLS tanpa policy. Diuji di Supabase: hak anon dan authenticated tinggal 0 dari 13 tabel, RLS menyala di 13 tabel, `SET ROLE anon` lalu membaca `users` ditolak "permission denied", dan pemilik tabel tetap bisa menulis dan membaca. `go test` penuh lolos lokal dengan uji RLS baru
 - [ ] Google OAuth di Supabase dan Google Cloud. Provider Google sudah menyala, dan pada 8 November 2026 Google menerima Client ID serta Callback URL-nya, karena permintaan login diteruskan ke halaman masuk Google tanpa error. Client Secret baru terbukti saat login pertama. Aplikasi Google tetap di mode Testing dengan dua email pemilik proyek sebagai test user
-- [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`. JWKS proyek Supabase sudah memakai kunci ES256, jadi Render cukup diberi `SUPABASE_JWKS_URL` tanpa `SUPABASE_JWT_SECRET`. Nama `fastconsignee-api.onrender.com` dan `fastconsignee.vercel.app` masih kosong saat dicek 8 November 2026
+- [x] Layanan Render `fastconsignee-api` di Singapore dengan paket gratis, Live di https://fastconsignee-api.onrender.com pada 8 November 2026. JWKS proyek Supabase memakai kunci ES256, jadi Render cukup diberi `SUPABASE_JWKS_URL` tanpa `SUPABASE_JWT_SECRET`. Diuji dari luar: `/healthz` menjawab `200` dengan ping database, `/api/v1/me` tanpa token dan dengan token palsu menjawab `401` beserta header rate limit, order publik acak menjawab `404` dari tabel `orders`, preflight CORS dari `https://fastconsignee.vercel.app` diterima, dan origin lain tidak mendapat header izin
+- [ ] Cron `/healthz` tiap 10 menit di cron-job.org, supaya Render gratis tidak tidur
 - [ ] Proyek Vercel
 - [x] Wallet uji Devnet diisi 1 SOL dari faucet. Dua uji nyata memakai sekitar 0,16 SOL, jadi sisanya 0,84 SOL. Kuncinya ada di luar repo
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
