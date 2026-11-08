@@ -328,6 +328,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit. Syarat ini baru tertulis di panduan lokal, dan halaman resmi MLH yang terbuka tanpa login tidak menyebutnya. Kepastiannya ada di form submit, yang butuh login
 - [x] Check-in lomba di halaman MLH. Register dan Check In sudah tercentang pada 7 November 2026, dan tahap berikutnya Submit Project
+- [x] Riwayat git dipindai sebelum repo dibuka, 8 November 2026. Isinya hanya nilai test, contoh di `.env.example`, dan hash lockfile, tanpa kunci atau password asli
 - [ ] Repo dibuat publik sebelum submit
 - [x] Pernyataan template di README
 - [x] Draf pernyataan AI di README. Pembuat proyek perlu membacanya sebelum submit
