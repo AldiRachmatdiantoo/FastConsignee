@@ -11,7 +11,7 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 | 1 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
 | 2 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
 | 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Demo dengan Phantom |
+| 4 | Saldo Devnet di akun Phantom Pembeli dan Toko | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya. Pembeli sudah berisi 1 SOL sejak 8 November 10:00 WIB, dan Toko belum | Demo dengan Phantom |
 | 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
 | 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
 | 7 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
