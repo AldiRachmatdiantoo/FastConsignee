@@ -3,7 +3,7 @@
 A point of sale for consignment shops, built on Solana. The buyer pays once, and every consignor's share and the shop's commission go out in the same Solana transaction.
 
 - **Live app:** https://fast-consignee.vercel.app
-- **API:** https://fastconsignee-api.onrender.com
+- **API health check:** https://fastconsignee-api.onrender.com/healthz (the API serves its endpoints under `/api/v1`, so the bare domain returns 404)
 - **Network:** Solana Devnet, so no real money is involved
 
 ## The problem
