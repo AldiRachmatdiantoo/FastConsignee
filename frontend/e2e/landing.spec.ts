@@ -311,23 +311,30 @@ test("halaman login tidak sempat bisa di-scroll saat animasi pembuka", async ({ 
     const page = await context.newPage();
     await page.addInitScript(() => {
       const samples: number[] = [];
-      Object.assign(window, { scrollSamples: samples });
-      const start = performance.now();
-      const tick = () => {
+      const state = { samples, done: false };
+      Object.assign(window, { scrollSampling: state });
+      // Jendela 1,5 detik dihitung dari frame pertama, karena di jaringan lambat CSS bisa menahan render lebih lama dari itu,
+      // dan animasi pembuka baru berjalan setelah halaman dirender.
+      let start: number | undefined;
+      const tick = (now: number) => {
+        start ??= now;
         const root = document.documentElement;
         if (root) {
           samples.push(root.scrollHeight - root.clientHeight);
         }
-        if (performance.now() - start < 1500) {
+        if (now - start < 1500) {
           requestAnimationFrame(tick);
+        } else {
+          state.done = true;
         }
       };
       requestAnimationFrame(tick);
     });
+    type Sampling = { scrollSampling: { samples: number[]; done: boolean } };
     await page.goto("/login");
     await expect(page.getByRole("heading", { level: 2, name: "Masuk" })).toBeVisible();
-    await page.waitForTimeout(1600);
-    const samples = await page.evaluate(() => (window as unknown as { scrollSamples: number[] }).scrollSamples);
+    await page.waitForFunction(() => (window as unknown as Sampling).scrollSampling.done);
+    const samples = await page.evaluate(() => (window as unknown as Sampling).scrollSampling.samples);
     expect(samples.length).toBeGreaterThan(10);
     expect(Math.max(...samples), `${viewport.width} x ${viewport.height}`).toBeLessThanOrEqual(0);
     await context.close();
