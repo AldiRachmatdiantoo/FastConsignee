@@ -8,14 +8,13 @@ Semua fitur sudah dibuat. Yang tersisa adalah uji nyata, deploy, dan submit. Rin
 
 | Urutan | Pekerjaan | Butuh | Item yang ikut terbuka |
 | --- | --- | --- | --- |
-| 1 | Cek kasir di lebar 320 px, ulang Playwright penuh | Tidak butuh akun | Tidak ada |
-| 2 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
-| 3 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
-| 4 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
-| 5 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
-| 6 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
-| 7 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
-| 8 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
+| 1 | Merge mockup HP ke `main` | Keputusan pemilik proyek | Tidak ada |
+| 2 | Proyek Supabase, Google OAuth, dan migrasi | Akun pemilik proyek | Login token Supabase asli, login Google |
+| 3 | Layanan Render dan proyek Vercel | Akun pemilik proyek | PageSpeed, latensi API |
+| 4 | Wallet Devnet berisi saldo | SOL Devnet gratis dari [faucet](https://faucet.solana.com), maksimal 2 permintaan tiap 8 jam. Login GitHub menaikkan batasnya | Pembayaran nyata, NFT nyata |
+| 5 | Uji Phantom di HP, demo 5 kali, dan Firefox | HP dan Firefox pemilik proyek | Tidak ada |
+| 6 | Video demo 1 sampai 2 menit | Pemilik proyek | Tombol utama landing |
+| 7 | Repo publik, pernyataan di halaman submit, lalu submit | Akun pemilik proyek | Tidak ada |
 
 Saldo Devnet hanya membuka uji pembayaran dan NFT. Login, deploy, uji di HP, video, dan submit tetap harus dikerjakan terpisah. Wallet yang butuh saldo adalah wallet pembeli untuk membayar, wallet toko untuk refund, dan wallet khusus NFT untuk sertifikat.
 
@@ -206,7 +205,7 @@ Kebutuhan: belum ada di PRD. Rencana dan keputusannya ada di [FRONTEND.md](FRONT
 - [ ] Tombol utama mengarah ke video demo
 - [x] Halaman login mengikuti template Linea
 - [x] Mockup HP di landing menyalin layar kasir dan bayar yang asli. Sebelumnya berbentuk chat berbahasa Inggris dengan tab bawah yang tidak ada di aplikasi, dan "Waiting for payment" tampil bersama "Confirmed"
-- [ ] Cek kepala layar kasir di lebar 320 px. Hitungan dari mockup menunjukkan logo bisa menimpa label Devnet, tetapi aplikasi aslinya belum diuji di lebar itu
+- [x] Kepala layar kasir di lebar 320 px. Nama FastConsignee menimpa label Devnet sejauh 35 px. Sekarang logonya disembunyikan di bawah 360 px, jaraknya jadi 7 px, dan uji Playwright menjaganya
 
 Testing: Playwright di lebar 375 dan 1440 px, dengan reduced motion, dan rewrite `/` di `next start`. Halaman login juga diuji begitu, termasuk kembali ke `/`. Firefox belum diuji langsung.
 
@@ -276,9 +275,9 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 | Newman, 29 request | 87 dari 87 assertion lolos |
 | Verifikasi JWKS dengan ES256 dan RS256 | Lolos, sekarang juga di `go test` |
 | ESLint, typecheck, Vitest 156 test, build produksi | Lolos |
-| Playwright Edge, 17 uji | Lolos di database baru |
-| Playwright WebKit, 17 uji | Lolos di database baru |
-| Playwright landing di Edge, 8 uji termasuk mockup HP | Lolos di build produksi. Uji penuh yang kini berisi 18 uji belum diulang |
+| Playwright Edge, 19 uji | Lolos di database baru, 8 November 2026 |
+| Playwright WebKit, 19 uji | Lolos di database baru, 8 November 2026 |
+| Playwright landing di Edge, 8 uji termasuk mockup HP | Lolos di build produksi |
 | axe di 12 layar | Semua bersih |
 | Layar saat API mati, `500`, `429`, dan sesi habis | Lolos, tanpa error halaman |
 
@@ -314,7 +313,7 @@ Pengujian menyeluruh dijalankan di lokal pada 6 November 2026, memakai database 
 - [x] `NewJWKSVerifier` belum tersentuh `go test`. Sekarang ada uji kunci ES256 dan RS256, serta token palsu
 - [x] `npm audit` frontend menemukan 18 celah moderate. Sekarang 0, setelah `jayson` dan `minimatch` dinaikkan lewat `overrides`
 - [x] `npm audit` folder `api` menemukan 4 high dan 2 moderate. Sekarang 0, karena `openapi-to-postmanv2` diganti generator sendiri di `api/scripts/postman.mjs`. Isi koleksinya sama, kecuali petunjuk pilihan nilai yang sekarang berbahasa Indonesia, teks kontak di deskripsi yang hilang, dan variabel baru `certificate_id`
-- [ ] Ulang Playwright penuh, 18 uji, di Edge dan WebKit setelah mockup HP diganti
+- [x] Playwright penuh diulang setelah mockup HP diganti dan kepala layar 320 px diperbaiki. Edge dan WebKit sama-sama lolos 19 dari 19
 - [ ] `govulncheck` mencatat GO-2026-5932 di `golang.org/x/crypto`. Kode tidak memanggilnya, dan perbaikannya baru ada di versi pseudo
 
 ## Deploy
@@ -325,7 +324,7 @@ Bagian ini butuh akun pemilik proyek.
 - [ ] Proyek Supabase, Google OAuth, dan migrasi
 - [ ] Layanan Render, environment termasuk `FIXED_IDR_PER_SOL`, dan cron `/healthz`
 - [ ] Proyek Vercel
-- [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT
+- [ ] Wallet buangan Devnet berisi sekitar 0,3 SOL dari faucet, untuk uji pembayaran, refund, dan NFT. Wallet ujinya sudah dibuat di lokal dengan kunci di luar repo, dan saldonya masih 0 pada 8 November 09:30 WIB
 - [ ] `CERTIFICATE_SIGNER_SECRET` di Render diisi kunci wallet khusus NFT yang punya saldo. Kalau kosong, sertifikat tidak dikirim
 - [ ] Video demo 1 sampai 2 menit. Syarat ini baru tertulis di panduan lokal, dan halaman resmi MLH yang terbuka tanpa login tidak menyebutnya. Kepastiannya ada di form submit, yang butuh login
 - [x] Check-in lomba di halaman MLH. Register dan Check In sudah tercentang pada 7 November 2026, dan tahap berikutnya Submit Project

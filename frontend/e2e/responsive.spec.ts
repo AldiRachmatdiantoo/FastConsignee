@@ -27,6 +27,18 @@ test("menu samping tampil di desktop dan terbuka lewat tombol di HP", async ({ b
   expect(owner.errors).toEqual([]);
 });
 
+test("kepala layar kasir tidak bertumpuk di lebar 320 px", async ({ browser }) => {
+  const cashier = await openActor(browser);
+  await cashier.page.setViewportSize({ width: 320, height: 640 });
+  await login(cashier.page, "Kasir Demo");
+  const header = cashier.page.locator("header");
+  const brand = await header.getByRole("link", { name: "FastConsignee" }).boundingBox();
+  const devnet = await header.getByText("Devnet", { exact: true }).boundingBox();
+  expect(brand && devnet && brand.x + brand.width <= devnet.x).toBe(true);
+  const overflow = await cashier.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
 test("semua layar muat di lebar 375 px", async ({ browser }) => {
   const owner = await openActor(browser);
   await owner.page.setViewportSize({ width: 375, height: 812 });

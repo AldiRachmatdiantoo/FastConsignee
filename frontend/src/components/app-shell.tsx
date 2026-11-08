@@ -29,13 +29,21 @@ function groupLinks(links: NavLink[]) {
   return [...groups];
 }
 
-function Brand({ href }: { href: string }) {
+// compact menyembunyikan logo di HP di bawah 360 px, supaya nama tidak menimpa label Devnet di kepala layar.
+function Brand({ href, compact = false }: { href: string; compact?: boolean }) {
   return (
     <Link
       href={href}
       className="inline-flex items-center gap-2.5 text-lg font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
-      <svg viewBox="0 0 40 28" aria-hidden="true" className="h-5 w-8 flex-none" fill="none" strokeWidth={3} strokeLinecap="round">
+      <svg
+        viewBox="0 0 40 28"
+        aria-hidden="true"
+        className={`h-5 w-8 flex-none ${compact ? "max-[359px]:hidden" : ""}`}
+        fill="none"
+        strokeWidth={3}
+        strokeLinecap="round"
+      >
         <path className="stroke-primary" d="M3 19C10 5 17 5 21 14s11 9 16-6" />
         <path stroke="currentColor" d="M3 10c7 13 14 13 18 4s11-10 16 5" />
       </svg>
@@ -161,7 +169,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
               </button>
             ) : (
               <div className="min-w-0">
-                <Brand href={home} />
+                <Brand href={home} compact />
                 <p className="truncate text-sm text-muted-foreground">{me.store.name}</p>
               </div>
             )}
