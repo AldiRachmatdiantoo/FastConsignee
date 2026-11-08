@@ -211,6 +211,43 @@ test("mockup HP di bagian kasir tidak menutupi teks dan muat di layar HP", async
   }
 });
 
+test("judul bagian tidak menempel di bawah navbar setelah lompat lewat menu", async ({ browser }) => {
+  const screens = [
+    { viewport: { width: 393, height: 659 }, phone: true },
+    { viewport: { width: 375, height: 812 }, phone: true },
+    { viewport: { width: 1366, height: 768 }, phone: false },
+  ];
+  for (const { viewport, phone } of screens) {
+    const context = await browser.newContext({ viewport, hasTouch: phone, isMobile: phone });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    for (const id of ["listen", "calls", "rooms", "voices", "faq"]) {
+      await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+      if (phone) {
+        await page.locator("#nav .nav__toggle").click();
+        await page.locator(`#menu a[href="#${id}"]`).click();
+      } else {
+        await page.locator(`#nav .nav__links a[href="#${id}"]`).click();
+      }
+      await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#${id}`);
+      const gap = await page.evaluate(
+        (id) =>
+          new Promise<number>((resolve) =>
+            requestAnimationFrame(() => {
+              const title = document.querySelector(`#${id} h2`)!.getBoundingClientRect();
+              const bar = document.querySelector("#nav .nav__bar")!.getBoundingClientRect();
+              resolve(title.top - bar.bottom);
+            }),
+          ),
+        id,
+      );
+      expect(gap, `#${id} pada ${viewport.width} x ${viewport.height}`).toBeGreaterThanOrEqual(16);
+    }
+    await context.close();
+  }
+});
+
 test("tombol masuk di landing page sampai ke halaman login", async ({ browser }) => {
   const { page } = await openActor(browser);
   await page.goto("/");
